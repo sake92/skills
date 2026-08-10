@@ -3,6 +3,7 @@
 Skills for hardcore engineering:
 
 - [`pragmatic-architecture/`](./pragmatic-architecture) — opinionated software design/architecture principles (grugbrain.dev + Ousterhout-inspired): minimal API surface, cycle-free modules, hexagonal architecture, newtypes, principle of least power.
+- [`scalpel/`](./scalpel) — measure the dependency graph before cutting: analyze package/module dependencies with [codeps](https://github.com/sake92/codeps) (SemanticDB, jdeps, or any JSON-exported graph), find cycles/hubs/oversized packages, plan evidence-backed refactorings, and verify them on a re-run.
 
 ## Install
 

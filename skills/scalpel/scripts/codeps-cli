@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# codeps CLI bootstrap + runner for the scalpel skill.
+#
+# Usage:
+#   bash /path/to/scripts/codeps-cli <codeps-args...>
+#
+# - Downloads the prebuilt codeps jar on first use, cached at ~/.cache/codeps/.
+# - Set CODESP_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
+# - Set CODESP_CACHE_DIR to change the cache location.
+set -euo pipefail
+
+CACHE_DIR="${CODESP_CACHE_DIR:-$HOME/.cache/codeps}"
+JAR="${CODESP_JAR:-$CACHE_DIR/codeps.jar}"
+RELEASE_URL="https://github.com/sake92/codeps/releases/download/main/codeps-cli-main.jar"
+
+if [[ -n "${CODESP_JAR:-}" && ! -f "$CODESP_JAR" ]]; then
+  echo "error: CODESP_JAR is set but file does not exist: $CODESP_JAR" >&2
+  exit 1
+fi
+
+if [[ ! -f "$JAR" ]]; then
+  mkdir -p "$CACHE_DIR"
+  echo "Downloading codeps jar to $JAR ..." >&2
+  curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
+  # sanity check: the jar must support the 'json' subcommand (stale-release guard).
+  # note: `json` with no args exits 1, so ignore its exit code and match on output.
+  if ! grep -qi "json" <<<"$(java -jar "$JAR" json 2>&1 || true)"; then
+    echo "error: downloaded jar does not support the 'json' subcommand; set CODESP_JAR to a newer build" >&2
+    rm -f "$JAR"
+    exit 1
+  fi
+fi
+
+exec java -jar "$JAR" "$@"
