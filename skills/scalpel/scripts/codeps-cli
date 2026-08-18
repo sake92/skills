@@ -4,28 +4,49 @@
 # Usage:
 #   bash /path/to/scripts/codeps-cli <codeps-args...>
 #
-# - Downloads the prebuilt codeps jar on first use, cached at ~/.cache/codeps/.
-# - Set CODESP_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
-# - Set CODESP_CACHE_DIR to change the cache location.
+# Subcommands (see https://sake92.github.io/codeps/reference/cli.html):
+#   export --from semanticdb|jdeps <inputs...>   producer: parses compiler output -> deps.json
+#   draw -g package|file|type|member -f dot|mermaid <deps.json>   renderer
+#   report [-i ...] <deps.json>                 analyzer: graded cycles, knots, hub metrics
+#
+# - Downloads the pinned codeps release jar on first use, cached at ~/.cache/codeps/.
+# - Set CODEPS_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
+# - Set CODEPS_CACHE_DIR to change the cache location.
 set -euo pipefail
 
-CACHE_DIR="${CODESP_CACHE_DIR:-$HOME/.cache/codeps}"
-JAR="${CODESP_JAR:-$CACHE_DIR/codeps.jar}"
-RELEASE_URL="https://github.com/sake92/codeps/releases/download/main/codeps-cli-main.jar"
+CACHE_DIR="${CODEPS_CACHE_DIR:-$HOME/.cache/codeps}"
+# Pinned release — bump when a new codeps release lands (https://github.com/sake92/codeps/releases)
+RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.1.0/codeps-cli-0.1.0.jar"
 
-if [[ -n "${CODESP_JAR:-}" && ! -f "$CODESP_JAR" ]]; then
-  echo "error: CODESP_JAR is set but file does not exist: $CODESP_JAR" >&2
-  exit 1
+if [[ -n "${CODEPS_JAR:-}" ]]; then
+  if [[ ! -f "$CODEPS_JAR" ]]; then
+    echo "error: CODEPS_JAR is set but file does not exist: $CODEPS_JAR" >&2
+    exit 1
+  fi
+  JAR="$CODEPS_JAR"
+else
+  JAR="$CACHE_DIR/codeps.jar"
 fi
 
 if [[ ! -f "$JAR" ]]; then
   mkdir -p "$CACHE_DIR"
   echo "Downloading codeps jar to $JAR ..." >&2
   curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
-  # sanity check: the jar must support the 'json' subcommand (stale-release guard).
-  # note: `json` with no args exits 1, so ignore its exit code and match on output.
-  if ! grep -qi "json" <<<"$(java -jar "$JAR" json 2>&1 || true)"; then
-    echo "error: downloaded jar does not support the 'json' subcommand; set CODESP_JAR to a newer build" >&2
+fi
+
+# sanity check on every run: the jar must support the export/draw/report subcommands
+# (rejects old-style jars with semdb/jdeps/json, and self-heals stale caches
+# left over from previous versions of this skill).
+if ! grep -q "export, draw, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
+  if [[ -n "${CODEPS_JAR:-}" ]]; then
+    echo "error: CODEPS_JAR does not support the export/draw/report subcommands; use a newer build" >&2
+    exit 1
+  fi
+  echo "warning: cached jar is an outdated codeps (no export/draw/report), replacing with the pinned release ..." >&2
+  rm -f "$JAR"
+  curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
+  if ! grep -q "export, draw, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
+    echo "error: downloaded jar does not support the export/draw/report subcommands; set CODEPS_JAR to a newer build" >&2
     rm -f "$JAR"
     exit 1
   fi
