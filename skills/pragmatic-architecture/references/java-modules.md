@@ -80,6 +80,7 @@ Then `ServiceLoader.load(OrderRepository.class)` in `Main` gets the wired implem
 
 ## Gotchas
 
+- **JPMS enforces your `exports`, not your `requires`.** Nothing stops `http-in` from declaring `requires app.db` — the module graph's *shape* (adapters depend only on `domain`) is still an ArchUnit concern (references/enforcement.md). JPMS makes leakage of unexported packages impossible; ArchUnit makes the intended dependency arrows visible and checked.
 - **Reflection frameworks need `opens`.** Jackson, Hibernate, Mockito read private fields or generate subclasses. Without `opens` (or `--add-opens`) they throw `InaccessibleObjectException` — that's the module system working as designed. Open the narrowest package to the specific module: `opens com.app.domain to org.hibernate.orm.core`.
 - **Split packages are illegal** — the same package name in two modules fails resolution. (Another reason the §1/§2 discipline must exist before JPMS does.)
 - **Tests usually run on the classpath** (Surefire/JUnit don't require modules). Mockito's inline mockmaker may need `--add-opens java.base/java.lang=ALL-UNNAMED` etc.; once everything has `module-info.java`, run tests on the module path too so visibility violations show up in tests as well as main code.
