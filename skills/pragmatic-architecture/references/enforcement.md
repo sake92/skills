@@ -29,4 +29,13 @@ Build-tool module boundaries (sbt/Maven/Gradle modules, Cargo crates, npm/pnpm w
 
 ## General / cross-language
 
-- Whatever the tool, the useful CI check is the same shape: **"fail the build if package X imports anything from package/crate/module Y."** Pick the lightest tool in the language's own ecosystem that can express that rule — don't reach for a heavyweight architecture-governance product if a five-line ESLint or ArchUnit rule does the job (this is §6, principle of least power, applied to the tooling itself).
+- Whatever the tool, the useful CI check is the same shape: **"fail the build if package X imports anything from package/crate/module Y."** Pick the lightest tool in the language's own ecosystem that can express that rule — don't reach for a heavyweight architecture-governance product if a five-line ESLint or ArchUnit rule does the job (this is §5, principle of least power, applied to the tooling itself).
+
+## Schemas, codegen, and implicit dependencies (SKILL.md §8)
+
+- **OpenAPI**: [openapi-generator](https://openapi-generator.tech/) (or a language-specific generator); CI check: regenerate from the spec and `git diff --exit-code` so spec and generated code can't drift.
+- **Protobuf/gRPC**: [buf](https://buf.build/) — `buf lint`, `buf breaking`, `buf generate` in CI; fail on divergence.
+- **Avro/Kafka**: generate producer and consumer types from the same Avro schema; enforce compatibility via the schema registry.
+- **DB schema ↔ mapping layer**: generate the data-access layer from the schema (jOOQ, sqlc, Prisma) and gate migrations in CI (Flyway/Liquibase) — the SQL strings and your DTOs stay in lockstep.
+- **Ban runtime reflection** where the compiler could do the job: ArchUnit rule `noClasses().should().dependOnClassesThat().resideInAPackage("java.lang.reflect..")` (JVM languages) — and remember `Class.forName` lives in `java.lang`, so forbid direct calls to it too; equivalent lints elsewhere. Allow-list the genuinely unavoidable cases instead of banning outright.
+- The CI check has the same shape as §2: **fail the build when two artifacts that must agree are out of sync.** Regenerate + diff is the standard trick — the "make it mechanical" version of §8.

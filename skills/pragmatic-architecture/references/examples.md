@@ -145,4 +145,22 @@ Checkable rule: if testing a component's business logic requires mocking `fetch`
 
 Don't barrel-export everything from `index.ts` "just in case" — export only what another module actually imports today (this is §1, Minimal API surface, applied to a frontend package).
 
-**HTMX case:** the same domain/adapters split still holds even without a client-side framework — `domain/` is server-side pure logic, `adapters/` are DB/HTTP calls, and the HTML-fragment-returning route handlers are the equivalent of `ui/`. Reach for this instead of a React SPA when the feature is mostly server-rendered CRUD without heavy client-side state (see SKILL.md §6, principle of least power).
+**HTMX case:** the same domain/adapters split still holds even without a client-side framework — `domain/` is server-side pure logic, `adapters/` are DB/HTTP calls, and the HTML-fragment-returning route handlers are the equivalent of `ui/`. Reach for this instead of a React SPA when the feature is mostly server-rendered CRUD without heavy client-side state (see SKILL.md §5, principle of least power).
+
+## Edge validation and generated schemas
+
+**Validate at the edge (SKILL.md §7)** — the adapter turns raw input into known-good types, so core logic never re-validates:
+
+```scala
+// http-in adapter: parse + validate at the boundary
+case class CreateOrderRequest(email: String, quantity: Int)
+
+def handle(raw: CreateOrderRequest): Either[ApiError, OrderId] =
+  for
+    email <- ValidatedEmail.parse(raw.email).left.map(_.toApiError)
+    qty   <- PositiveInt.from(raw.quantity).left.map(_.toApiError)
+    id    <- orders.create(email, qty).left.map(_.toApiError)   // domain: assumes known-good email/qty; its error is translated to the consumer's shape at the edge
+  yield id
+```
+
+**Generate, don't hand-maintain (SKILL.md §8)** — for a RabbitMQ/Kafka pair, check in one Avro or protobuf schema and generate both producer and consumer types from it (`buf generate` / avro-maven-plugin or sbt-avro in CI, plus regeneration + `git diff --exit-code`). Two hand-written JSON payload definitions will drift, and the queue will not tell you when.
