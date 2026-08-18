@@ -69,6 +69,31 @@ public class Main {
 
 Same rule: `domain`'s `pom.xml`/`build.gradle` has zero dependency on JDBC, a web framework, or Jackson annotations on domain classes.
 
+On the JVM, `module-info.java` upgrades this from build-tool-enforced to compiler-enforced (SKILL.md §9): a `public` class in a non-exported package is unreachable from other modules.
+
+```java
+// domain/src/main/java/module-info.java
+module app.domain {
+    exports app.domain;
+}
+
+// db/src/main/java/module-info.java
+module app.db {
+    requires app.domain;
+    requires java.sql;
+    // exports nothing — SqliteOrderRepository is an implementation detail
+}
+
+// composition/src/main/java/module-info.java
+module app.composition {
+    requires app.domain;
+    requires app.db;
+    requires app.httpin;
+}
+```
+
+With services (`uses`/`provides`), `composition` doesn't even name the adapter class: `uses com.app.domain.OrderRepository` in `composition`, `provides ... with com.app.db.SqliteOrderRepository` in `db`, and `ServiceLoader.load(OrderRepository.class)` in `Main` — see `references/java-modules.md`.
+
 ## Rust (Cargo workspace)
 
 ```rust

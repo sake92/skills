@@ -13,7 +13,7 @@ Build-tool module boundaries (sbt/Maven/Gradle modules, Cargo crates, npm/pnpm w
 
 - **ArchUnit** is the standard tool here too — same package-dependency rules, plus rules like "classes in `..domain..` must not be annotated with `@Entity`/`@JsonProperty`" to catch serialization/persistence leakage into domain types.
 - **jdeps** (bundled with the JDK) can print the module dependency graph for compiled `.class`/`.jar` output — useful as a sanity check that a `domain.jar` really has zero references to a DB driver package.
-- **jpackage** / the Java Platform Module System (`module-info.java`) can enforce visibility at the JVM level (`exports` only what's meant to be public) if you want compiler-enforced rather than lint-enforced boundaries — heavier to set up but the strongest guarantee.
+- **The Java Platform Module System** (`module-info.java`) upgrades the boundary from lint-enforced to compiler- and runtime-enforced: `public` classes in non-exported packages are unreachable from other modules — the strongest guarantee available. See SKILL.md §9 and `references/java-modules.md` for the hexagonal mapping, ServiceLoader wiring, incremental adoption, and reflection gotchas.
 
 ## Rust
 

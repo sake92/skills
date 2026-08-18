@@ -1,6 +1,6 @@
 ---
 name: pragmatic-architecture
-description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language, inspired by grugbrain.dev and John Ousterhout's "A Philosophy of Software Design". Covers minimal API surface and encapsulation, cycle-free module boundaries, hexagonal/ports-and-adapters architecture, judicious newtypes, principle of least power, locality (things that change together live together), validating at the edges, and eliminating implicit dependencies (spec-driven codegen over runtime reflection). Use this whenever writing new code, designing a module/package/directory structure, starting a new feature or service, doing a code review, refactoring code where one change touches many files, or when the user asks "how should I structure this" — even if they don't explicitly mention architecture or design. Applies to backend and frontend code alike.
+description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language, inspired by grugbrain.dev and John Ousterhout's "A Philosophy of Software Design". Covers minimal API surface and encapsulation, cycle-free module boundaries, hexagonal/ports-and-adapters architecture, judicious newtypes, principle of least power, locality (things that change together live together), validating at the edges, eliminating implicit dependencies (spec-driven codegen over runtime reflection), compiler-enforced encapsulation (Java modules), and integration-first testing. Use this whenever writing new code, designing a module/package/directory structure, starting a new feature or service, doing a code review, refactoring code where one change touches many files, or when the user asks "how should I structure this" — even if they don't explicitly mention architecture or design. Applies to backend and frontend code alike.
 ---
 
 # Pragmatic Architecture
@@ -42,6 +42,8 @@ A "module" here means something enforced by the build tool: an sbt/Maven module,
 
 If you find yourself needing a cycle between two modules, that's not a tooling problem — it's a sign the boundary is drawn in the wrong place. Either merge the two modules, or extract a third one that both depend on.
 
+On the JVM, the strongest version of this boundary is the Java module system (`module-info.java`), which upgrades it from build-tool-enforced to compiler- and runtime-enforced — see §9.
+
 ## 3. Hexagonal architecture — prefer duplication over premature coupling
 
 Structure code so the core logic doesn't know how it's invoked or what it talks to:
@@ -59,7 +61,7 @@ The dependency arrow only ever points *toward* `domain/`, never away from it.
 
 **What `domain/` may depend on:** the standard library, and pure utility/newtype libraries that do no I/O (e.g. a `NonEmptyList`, a validated-`Email` type, `Instant`). **What it must not depend on:** anything that does I/O (DB driver, HTTP client, message queue client), a serialization framework (no Circe/Jackson annotations on domain classes), or a concrete infra type in a signature (`java.sql.Connection`, a specific effect type). If the domain needs something from the outside world, it defines a trait/interface (a port) — an adapter implements it, and `composition/` wires the two together.
 
-This costs you some duplication and boilerplate up front (a port trait plus its implementation, instead of calling the DB driver directly). That's the trade you're making on purpose: it stays trivial to swap the database, mock the port in a domain-level test, or later pull `domain/` out into its own library or module. See `references/examples.md` for concrete code across Scala/Java/Rust/TypeScript, and how this maps onto frontend code (React or HTMX).
+This costs you some duplication and boilerplate up front (a port trait plus its implementation, instead of calling the DB driver directly). That's the trade you're making on purpose: it stays trivial to swap the database, fake the port (a hand-written in-memory implementation) in a domain-level test (§10), or later pull `domain/` out into its own library or module. See `references/examples.md` for concrete code across Scala/Java/Rust/TypeScript, and how this maps onto frontend code (React or HTMX).
 
 ## 4. Newtypes, judiciously
 
@@ -80,7 +82,7 @@ For every library or abstraction you're about to introduce, be able to state in 
 1. it's local to a function and never escapes (e.g. accumulating in a loop before returning an immutable result), or
 2. an algorithm or hot path genuinely needs it for performance — and then say so with a comment, so a future reader knows it's a deliberate trade-off and not an oversight.
 
-Mutable state that leaks outside a function or module is exactly the kind of premature complexity this whole skill exists to avoid (see §8) — it creates hidden coupling between whoever reads and whoever writes it.
+Mutable state that leaks outside a function or module is exactly the kind of premature complexity this whole skill exists to avoid (see §6) — it creates hidden coupling between whoever reads and whoever writes it.
 
 ## 6. Locality — related things close together
 
@@ -114,6 +116,24 @@ A dependency is *implicit* when two things must change together but nothing in t
 
 Two definitions that must change together (a constant copied into two files, a flag and its string name) — merge them, or generate one from the other.
 
+## 9. Compiler-enforced encapsulation: Java modules (JPMS)
+
+On the JVM, the Java module system (`module-info.java`) upgrades the §2 boundary from build-tool-enforced to **compiler- and runtime-enforced**: a `public` class in a non-exported package is simply unreachable from outside its module. `public` stops meaning "everyone" — `exports` decides. This is the strongest encapsulation a mainstream language offers, because the module graph is checked by `javac`/`java`/`jdeps` and cannot rot the way lint rules or conventions can.
+
+Map it onto §3: one `module-info` per build module. `domain` exports only its entities and ports; adapters export nothing and `requires` only `domain` + their drivers; `composition` wires ports to implementations declaratively with `uses`/`provides` (ServiceLoader — ports become first-class services); `exports ... to` restricts a package to exactly one consumer module when needed.
+
+Adopt it incrementally — plain JARs become automatic modules on the module path, so you can modularize one module at a time, leaf-first. Expect to add `opens` for reflection-heavy frameworks (Jackson, Hibernate, Mockito): a named module breaking them is the system doing its job. Note `module-info.java` is Java-only source; Scala/Kotlin JVM projects get the same guarantee from build-tool modules + ArchUnit. Full details, directive table, and gotchas: `references/java-modules.md`.
+
+## 10. Write tests. Not too many. Mostly integration.
+
+The default test is an **integration test**: bring the real thing up (Testcontainers, docker-compose) and exercise behavior through the public API — a real HTTP call into the fully wired app, a real SQL roundtrip against the real database. One test through the real wiring gives more confidence than five unit tests with mocks, because mocking removes exactly the integration confidence you need (Kent C. Dodds: "Write tests. Not too many. Mostly integration.").
+
+- **Unit tests are for real logic only** — pure domain rules, algorithms, parsers, validation. Framework plumbing (controllers that delegate, DAOs that wrap a library call) is not worth a unit test; the composed integration test covers it transitively. A "slice test" with a mocked service is the worst of both worlds: slow-ish, and it tests mocks.
+- **Mock only what can't be used cheaply/safely:** sending email, charging cards, third-party APIs with real cost or side effects. Never mock code you own — write a hand-written in-memory fake of the port, or use the real adapter against a real database. An in-memory DB substitute (H2 instead of Postgres) is a dialect lie — use the real thing in a container.
+- **The testing pyramid is outdated.** Its premise was that higher-level tests are slow and expensive; Testcontainers and modern tooling broke that premise. Optimize for *confidence per test*, not count or coverage %: static types/lints at the base, mostly integration, some unit for real logic, a few E2E (the "trophy" shape). Coverage % is a vanity metric — a test that passes while the behavior is broken is worse than no test.
+- **Test behavior, not implementation details.** Private methods, internal state, mock-call sequences are all implementation. A test that breaks when you refactor is testing the wrong thing — §1's public-API rule is the testing rule.
+- **Prove the tests assert real behavior mechanically:** mutation testing (PITest/Stryker) on the domain module, property-based testing (ScalaCheck/jqwik) for pure rules. Per-language tooling and per-layer recipes: `references/testing.md`.
+
 ---
 
 ## When these rules don't apply
@@ -143,8 +163,14 @@ Before calling a change done, check:
 - [ ] Errors returned in a format wrong for the consumer (raw exception to a machine, error code to a human)? → §7.
 - [ ] Any pair of artifacts hand-maintained in parallel (spec ↔ code, producer ↔ consumer) that could be codegen'd from one source of truth? → §8.
 - [ ] Any runtime reflection / annotation scanning / auto-wiring where compile-time codegen or plain DI would do? → §8.
+- [ ] Any unit test mocking code you own (ports, adapters, services) instead of a hand-written fake or real infra? → §10.
+- [ ] Any test asserting implementation details (private methods, internal state, mock-call sequences)? → rewrite through the public API (§1, §10).
+- [ ] Framework plumbing (controllers, DAO wrappers) covered by mocked slice tests instead of one composed integration test through the real wiring? → §10.
+- [ ] (JVM) `module-info.java` exporting more than the module's intended API, or reflection frameworks breaking for lack of `opens`? → §9.
 
 ## Reference files
 
 - `references/examples.md` — full ports-and-adapters example with real code across Scala, Java, Rust, and TypeScript, plus how the same shape maps onto frontend code (React vs. HTMX).
-- `references/enforcement.md` — per-language/build-tool commands and libraries for enforcing no-cycles and visibility rules (ArchUnit, Scalafix, `cargo-modules`/`cargo-deny`, ESLint boundary plugins, jdeps/jpackage).
+- `references/enforcement.md` — per-language/build-tool commands and libraries for enforcing no-cycles and visibility rules (ArchUnit, Scalafix, `cargo-modules`/`cargo-deny`, ESLint boundary plugins, jdeps).
+- `references/java-modules.md` — JPMS (`module-info.java`): directive reference table, hexagonal mapping, ServiceLoader wiring, incremental adoption, and gotchas (SKILL.md §9).
+- `references/testing.md` — integration-first testing: per-layer recipes and tooling (Testcontainers, fakes, WireMock, mutation testing, property-based testing) (SKILL.md §10).
