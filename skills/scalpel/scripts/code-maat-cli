@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# code-maat CLI bootstrap for the scalpel skill (evolutionary-coupling evidence).
+#
+# Usage:
+#   bash /path/to/scripts/code-maat-cli <code-maat-args...>
+#
+# Example:
+#   bash /path/to/scripts/code-maat-cli -l /tmp/maat.log -c git2 -a coupling
+#
+# - Downloads the pinned code-maat standalone jar on first use, cached at ~/.cache/code-maat/.
+# - Set CODE_MAAT_JAR=/path/to/jar to use a specific jar instead.
+# - Set CODE_MAAT_CACHE_DIR to change the cache location.
+# - Always adds -Djava.awt.headless=true: code-maat's Incanter would create an awt frame otherwise.
+# - Pass JVM options via JAVA_TOOL_OPTIONS (e.g. JAVA_TOOL_OPTIONS=-Xmx4g for large logs).
+set -euo pipefail
+
+CACHE_DIR="${CODE_MAAT_CACHE_DIR:-$HOME/.cache/code-maat}"
+# Pinned release — bump when a new code-maat release lands (https://github.com/adamtornhill/code-maat/releases)
+RELEASE_URL="https://github.com/adamtornhill/code-maat/releases/download/v1.0.4/code-maat-1.0.4-standalone.jar"
+
+if [[ -n "${CODE_MAAT_JAR:-}" ]]; then
+  if [[ ! -f "$CODE_MAAT_JAR" ]]; then
+    echo "error: CODE_MAAT_JAR is set but file does not exist: $CODE_MAAT_JAR" >&2
+    exit 1
+  fi
+  JAR="$CODE_MAAT_JAR"
+else
+  JAR="$CACHE_DIR/code-maat.jar"
+fi
+
+if [[ ! -f "$JAR" ]]; then
+  mkdir -p "$CACHE_DIR"
+  echo "Downloading code-maat jar to $JAR ..." >&2
+  curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
+fi
+
+# sanity check on every run: the jar must print the v1.x analysis list with the
+# coupling analysis in its usage (rejects broken downloads/foreign jars and
+# self-heals stale caches).
+if ! grep -q "coupling" <<<"$(java -Djava.awt.headless=true -jar "$JAR" -h 2>&1 || true)"; then
+  if [[ -n "${CODE_MAAT_JAR:-}" ]]; then
+    echo "error: CODE_MAAT_JAR does not look like a code-maat jar (no coupling analysis in its usage output); use a v1.x release" >&2
+    exit 1
+  fi
+  echo "warning: cached jar is not a valid code-maat jar, replacing with the pinned release ..." >&2
+  rm -f "$JAR"
+  curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
+  if ! grep -q "coupling" <<<"$(java -Djava.awt.headless=true -jar "$JAR" -h 2>&1 || true)"; then
+    echo "error: downloaded jar does not support the coupling analysis; set CODE_MAAT_JAR to a working jar" >&2
+    rm -f "$JAR"
+    exit 1
+  fi
+fi
+
+exec java -Djava.awt.headless=true -jar "$JAR" "$@"
