@@ -5,8 +5,8 @@
 #   bash /path/to/scripts/codeps-cli <codeps-args...>
 #
 # Subcommands (see https://sake92.github.io/codeps/reference/cli.html):
-#   export --from semanticdb <dirs...>          producer: parses compiler output -> deps.json
-#   report --scope packages|files <deps.json>   analyzer: cycles, exposed surface, orphans
+#   export --from semanticdb|jdeps -i <path>... [--root DIR] [-o out]   producer: compiler output -> deps.json
+#   report -s/--scope packages|files -i <deps.json|-> [--format table|json] [--include inc] [-e exc] [-c collapse] [--skip-tests] [-o out]
 #
 # - Downloads the pinned codeps release jar on first use, cached at ~/.cache/codeps/.
 # - Set CODEPS_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
@@ -15,7 +15,8 @@ set -euo pipefail
 
 CACHE_DIR="${CODEPS_CACHE_DIR:-$HOME/.cache/codeps}"
 # Pinned release — bump when a new codeps release lands (https://github.com/sake92/codeps/releases)
-RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.2.0/codeps-cli-0.2.0.jar"
+# v0.3.0 = the strict CLI: inputs via -i/--input everywhere, no positional args, --include long-only.
+RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.3.0/codeps-cli-0.3.0.jar"
 
 if [[ -n "${CODEPS_JAR:-}" ]]; then
   if [[ ! -f "$CODEPS_JAR" ]]; then
@@ -27,26 +28,35 @@ else
   JAR="$CACHE_DIR/codeps.jar"
 fi
 
+download_pinned() {
+  if ! curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"; then
+    echo "error: failed to download the pinned codeps release ($RELEASE_URL)" >&2
+    echo "  if the release is not published yet, set CODEPS_JAR=/path/to/codeps.jar (e.g. a local build)" >&2
+    rm -f "$JAR"
+    exit 1
+  fi
+}
+
 if [[ ! -f "$JAR" ]]; then
   mkdir -p "$CACHE_DIR"
   echo "Downloading codeps jar to $JAR ..." >&2
-  curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
+  download_pinned
 fi
 
-# sanity check on every run: the jar must support the export/report subcommands
-# (rejects pre-v2 jars — those print "export, draw, report", which does not
-# contain the substring "export, report" — and self-heals stale caches left
-# over from previous versions of this skill).
-if ! grep -q "export, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
+# sanity check on every run: the jar must speak the strict v0.3.0 CLI — input
+# via -i/--input, no positional args (--help lists "-i --input <str>" for both
+# subcommands). Rejects pre-v0.3.0 jars ("-i --include", positional "leftover")
+# and self-heals stale caches left over from previous versions of this skill.
+if ! grep -qF -- "-i --input" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
   if [[ -n "${CODEPS_JAR:-}" ]]; then
-    echo "error: CODEPS_JAR does not support the export/report subcommands; use a newer build" >&2
+    echo "error: CODEPS_JAR is a pre-v0.3.0 codeps (no -i/--input syntax); use a v0.3.0+ build" >&2
     exit 1
   fi
-  echo "warning: cached jar is an outdated codeps (no export/report), replacing with the pinned release ..." >&2
+  echo "warning: cached jar is an outdated codeps (pre-v0.3.0 CLI), replacing with the pinned release ..." >&2
   rm -f "$JAR"
-  curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
-  if ! grep -q "export, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
-    echo "error: downloaded jar does not support the export/report subcommands; set CODEPS_JAR to a newer build" >&2
+  download_pinned
+  if ! grep -qF -- "-i --input" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
+    echo "error: downloaded jar does not support the -i/--input syntax; set CODEPS_JAR to a v0.3.0+ build" >&2
     rm -f "$JAR"
     exit 1
   fi

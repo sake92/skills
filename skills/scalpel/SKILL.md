@@ -5,7 +5,7 @@ description: Use when analyzing a codebase's package/file dependency structure t
 
 # Scalpel
 
-**Measure the dependency graph before cutting.** codeps ([github.com/sake92/codeps](https://github.com/sake92/codeps)) turns compiler output into a package/file dependency graph and emits a flat metrics report: cycles with simulated cut candidates, per-node exposed-surface metrics and orphans. This skill is the analyze → diagnose → plan → verify workflow on top of it. Every recommendation must cite evidence: a cycle row, a surface row, the summary — or, when the move is "split by cohesion", a code-maat coupling row (Step 3b).
+**Measure the dependency graph before cutting.** codeps ([github.com/sake92/codeps](https://github.com/sake92/codeps)) turns compiler output into a package/file dependency graph and emits a flat metrics report: cycles with cut solutions (up to 3 complete ways to break each one), change propagators, per-node exposed-surface metrics and orphans. This skill is the analyze → diagnose → plan → verify workflow on top of it. Every recommendation must cite evidence: a cycle row, a surface row, the summary — or, when the move is "split by cohesion", a code-maat coupling row (Step 3b).
 
 ## When to use
 
@@ -40,7 +40,7 @@ codeps never compiles anything — point it at output your build already produce
 | mill | `out/**/compile.dest/classes/META-INF/semanticdb` |
 | deder | `.deder/out` — pass the whole root; `export` walks it recursively |
 
-Other languages: emit the standard JSON export format with your ecosystem tool (madge, pydeps, `go list`, …) and pipe it into `report` stdin. Nodes are `{"id", "kind", "parentId"?, "file"?, "isExposed"?, "ports"?, "mutPorts"?}` with kinds `package`/`file` (`type`/`member` still accepted on input for backward compatibility); edges are `{"source", "target", "weight"?}`.
+Other languages: emit the standard JSON export format with your ecosystem tool (madge, pydeps, `go list`, …) and pipe it into `report` stdin (`-i -`). Java/JVM deps skip the JSON step and use the native producer: `export --from jdeps -i jdeps.txt` (jdeps `-verbose:class` output; package-level only — no file nodes, so `--scope files` errors on it). Nodes are `{"id", "kind", "parentId"?, "file"?, "isExposed"?, "ports"?, "mutPorts"?}` with kinds `package`/`file` (`type`/`member` still accepted on input for backward compatibility); edges are `{"source", "target", "weight"?}`.
 
 ## The pipeline
 
@@ -48,15 +48,16 @@ Two subcommands, a two-step pipeline:
 
 ```
 export (producer) ──> deps.json ──> report (analyzer) ──> table | JSON report
-  (parse once,        (package +        --scope packages|files
-   aggregate to        file nodes)      --format table|json
+  (-i <path>...,        (package +         -s/--scope packages|files
+   parse once,          file nodes)        --format table|json
+   aggregate to                            -i <deps.json|-> (stdin)
    package/file level)
 ```
 
-- `export --from semanticdb [--root DIR] <dirs...> [-o deps.json]` — pure parser; no filter flags. Walks directories recursively for `*.semanticdb`; unparseable files warn on stderr and are skipped. Output has **package and file nodes only** — types/members are collapsed into their file (or root package) at export time, with `ports`/`mutPorts` summed and edges aggregated with summed weights.
-- `report --scope packages|files [--format table|json] [-i inc] [-e exc] [-c collapse] [--skip-tests] [--test-pattern PAT] [-o out] deps.json` — `--scope` is **required**, one scope per run. Default format is `table`; `--format json` emits the same data machine-readably. Reads exactly one input: a deps.json file, or `-` for stdin.
+- `export --from semanticdb|jdeps -i <path>... [--root DIR] [-o out]` — pure parser; no filter flags. `-i/--input` is **repeatable and required** (directories for `semanticdb`, walked recursively for `*.semanticdb`; files for `jdeps`). Unparseable files warn on stderr and are skipped. Output has **package and file nodes only** — types/members are collapsed into their file (or root package) at export time, with `ports`/`mutPorts` summed and edges aggregated with summed weights.
+- `report -s/--scope packages|files [-f/--format table|json] [--include inc] [-e exc] [-c collapse] [--skip-tests] [--test-pattern PAT] [-o out] -i <deps.json|->` — `--scope` is **required**, one scope per run. Default format is `table`; `--format json` emits the same data machine-readably. `-i/--input` is **required**, exactly one value: a deps.json file, or `-` for stdin. The include flag is long-only `--include` — `-i` is taken by input; `-o` is output.
 
-`--scope packages` = the whole package graph (module-splitting decisions). `--scope files` = the file graph of the packages selected with `-i` (compile-time decisions — incremental compilers recompile by file).
+`--scope packages` = the whole package graph (module-splitting decisions). `--scope files` = the file graph of the packages selected with `--include` (compile-time decisions — incremental compilers recompile by file).
 
 Report JSON shape (camelCase):
 
@@ -64,33 +65,34 @@ Report JSON shape (camelCase):
 {"scope": "packages", "generatedAt": "...",
  "summary": {"nodes", "edges", "nodesInCycles", "orphans", "criticalPathLength"},
  "cycles": [{"id": "scc:<min-member>", "members": [...], "size", "extFanIn", "minCutsEstimate",
-             "cutCandidates": [{"edge": [s, t], "weight"}]}],
+             "solutions": [{"cuts": [{"edge": [s, t], "weight": w}]}]}],
+ "propagators": [{"node", "fanIn", "fanOut", "score"}],
  "surface": [{"node", "fanIn", "fanOut", "ports", "mutPorts", "exposure", "utilization|null"}],
  "orphans": [...]}
 ```
 
-Include/exclude (`-i`/`-e`) match each node's **root package** by whole-segment prefix (`-i com.example.b` matches `com.example.b` and below, not `com.example.big`); excludes win. Edges survive only when both endpoints survive (self-edges dropped); childless packages are pruned. `-c` collapses subtrees (`com.example.**`, `org.lib.*`) for readable reports. `--skip-tests` drops nodes in test files (`**/test/**`, `*Spec`/`*Test`/`*Tests`/`*Suite` conventions); `--test-pattern` replaces those globs (requires `--skip-tests`).
+Include/exclude (`--include`/`-e`, both repeatable) match each node's **root package** by whole-segment prefix (`--include com.example.b` matches `com.example.b` and below, not `com.example.big`); excludes win. Edges survive only when both endpoints survive (self-edges dropped); childless packages are pruned (package nodes are kept when the input is package-only, e.g. jdeps). `-c` collapses subtrees (`com.example.**`, `org.lib.*`) for readable reports. `--skip-tests` drops nodes in test files (`**/test/**`, `*Spec`/`*Test`/`*Tests`/`*Suite` conventions); `--test-pattern` replaces those globs (requires `--skip-tests`).
 
 ## Workflow
 
 ### Step 1 — Export once, save deps.json
 
 ```bash
-bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" export --from semanticdb .deder/out -o /tmp/deps.json
+bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" export --from semanticdb -i .deder/out -o /tmp/deps.json
 ```
 
-`export` merges all inputs into one graph, so pass every module dir (or the build root) at once. `--root <dir>` re-bases **absolute** source URIs relative to that directory (default: the current working directory) — pass it only when file ids come out absolute or with a machine prefix. Modules compiled with different sourceroots can produce **mixed** ids in one export (some relative, some absolute-looking); `--root` fixes only the truly absolute ones, the rest stay as their build emitted them. Prefer writing to `/tmp`, not the repo.
+`export` merges all inputs into one graph, so pass every module dir (or the build root) at once — `-i` is repeatable (`-i modules/a/classes -i modules/b/classes`). `--root <dir>` re-bases **absolute** source URIs relative to that directory (default: the current working directory) — pass it only when file ids come out absolute or with a machine prefix. Modules compiled with different sourceroots can produce **mixed** ids in one export (some relative, some absolute-looking); `--root` fixes only the truly absolute ones, the rest stay as their build emitted them. Prefer writing to `/tmp`, not the repo.
 
 ### Step 2 — Report always, read the table
 
 ```bash
-bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope packages /tmp/deps.json
+bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope packages -i /tmp/deps.json
 ```
 
-This is the evidence base. Read it before reading any code. Keep the JSON for scripts/diffs:
+This is the evidence base. Read it before reading any code. Keep the JSON for scripts/diffs (`SOURCE_DATE_EPOCH=<epoch-seconds>` pins `generatedAt` for deterministic diffs):
 
 ```bash
-bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope packages --format json /tmp/deps.json -o /tmp/report.json
+bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope packages --format json -i /tmp/deps.json -o /tmp/report.json
 ```
 
 ### Step 3 — Drill down to file level
@@ -98,10 +100,10 @@ bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope packages --
 The package report names package cycles; file-level cycles matter for incremental compilation. Descend into the packages of interest:
 
 ```bash
-bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope files -i com.example /tmp/deps.json
+bash "/abs/path/to/skills/scalpel/scripts/codeps-cli" report --scope files --include com.example -i /tmp/deps.json
 ```
 
-Use the *shared* root package: filtering to just one side (`-i p.a`) drops the other side's nodes and the crossing edges with them. `--scope files` on a package is also the fat-package check: each file is one surface row, so a package with dozens of rows is a long compile unit.
+Use the *shared* root package: filtering to just one side (`--include p.a`) drops the other side's nodes and the crossing edges with them. `--scope files` on a package is also the fat-package check: each file is one surface row, so a package with dozens of rows is a long compile unit.
 
 ### Step 3b — Evolutionary coupling (optional, when splitting is on the table)
 
@@ -160,7 +162,8 @@ Also in the report:
 - `summary.orphans` / `orphans` — nodes with zero fan-in AND zero fan-out: dead-code-removal candidates (step 1 of the improvement loop).
 - `cycles[].extFanIn` — how much outside stuff depends into the cycle's blast radius (rank tiebreaker after `size`).
 - `cycles[].minCutsEstimate` — greedy estimate of the cuts needed to dissolve the cycle (heuristic, not a minimum feedback-edge set). Computed per scope run: re-filter or descend and the number changes — it is a property of this report's graph, not of the code.
-- `cycles[].cutCandidates` — the cycle's **internal** edges whose removal **resolves** it, each simulated; sorted by weight ascending, top 6. Edges that merely shrink the cycle are deliberately absent — cutting them wouldn't dissolve it. Can be **empty** even when `minCutsEstimate` > 0: a dense knot where no single edge dissolves the SCC. Then read the member files the cycle names and break by extraction/inversion — don't hunt for a magic edge.
+- `cycles[].solutions` — up to 3 **complete** ways to break the cycle, simplest first (fewest cuts, then cheapest total weight, then lexicographic). Each solution is a list of `cuts` (`{edge, weight}`); removing ALL of them together dissolves the cycle. The solutions are alternatives — the cuts within one solution are not (dropping just one may merely shrink the cycle). A single-edge solution is one cut; a dense interlocking knot gets multi-cut sets (2–3 edges together). Search bounds: set size ≤ `minCutsEstimate` (capped at 4); SCCs with > 60 internal edges fall back to the greedy plan as one solution. Can be **empty**: nothing was found within the bounds — then read the member files the cycle names and break by extraction/inversion — don't hunt for a magic edge.
+- `propagators` — top 10 nodes whose changes propagate most: `score` = `(fanIn/avgFanIn + fanOut/avgFanOut)/2` (baseline 1.0 = exactly average, `avg = edges/nodes`); only nodes scoring > 1.0 are listed, `fanIn`/`fanOut` repeated for context. A hub with twice the average fan-in and no fan-out scores 2.0. A change-amplification ranking across the graph — see Step 5.
 - `surface` rows — `ports` (weighted exposed surface: 3 per exposed type/object, 1 per exposed def/val, 0.5 per sealed-hierarchy member, +1 per given/implicit), `mutPorts` (exposed `var`s or mutable-collection-typed vals/defs — a coupling channel with no graph edge), `exposure` = `ports + 3*mutPorts`, `utilization` = `fanIn / ports` (`null` when no consumers — meaningful, not a 0). Sorted by utilization ascending: the most exposed-for-its-use nodes first.
 - High `fanIn` = change amplification (every edit ripples to all dependents).
 
@@ -168,7 +171,8 @@ Also in the report:
 
 | Signature | Evidence | Move |
 |---|---|---|
-| Cycle | cycles row + its `cutCandidates` | cut the lowest-weight resolving edge (or, when `cutCandidates` is empty, break the dense knot by extraction/inversion — Step 4); extract the shared part into a third package both can depend on; invert the dependency (move the closing references down); merge the two if small. Cut until `nodesInCycles` is 0. |
+| Cycle | cycles row + its `solutions` | pick one solution (a set of cuts together: `solutions[0]` is simplest — fewest cuts, then cheapest) and cut those edges (or, when `solutions` is empty, break the dense knot by extraction/inversion — Step 4); extract the shared part into a third package both can depend on; invert the dependency (move the closing references down); merge the two if small. Cut until `nodesInCycles` is 0. |
+| Change propagator | `propagators` row: `score` well above 1 | a node whose changes ripple widest across the graph — split by consumer or push stable abstractions down; verify the score drops on re-run. |
 | Over-exposed, under-used | surface: high `ports`, `utilization` null/low | narrow the API: make members `private` (export already drops private symbols, so their ports vanish) → re-run → verify; split by consumer. |
 | Mutable leak | `mutPorts` > 0 | encapsulate the mutable state — an exposed var/mutable collection is a hidden channel (weighted 3× in `exposure`). |
 | Hub (high fan-in) | surface | split by consumer; push stable abstractions down; narrow the API. |
@@ -193,21 +197,23 @@ Coupling is planning evidence, not a post-refactor metric: after splitting a fil
 
 A hub of shared "common" model types is a double cost: (1) coupling — every change recompiles everything importing it; (2) payload bloat — API edge code serializing the shared types puts every field on the wire, including ones clients never read.
 
-Graph signs: an edge/API package with high `fanIn` (imported by many non-edge packages) and high `ports` (shared model types on the wire). Descend with `--scope files -i <api-package>` to see which files hold the types; then read the serialization code for verbatim reuse.
+Graph signs: an edge/API package with high `fanIn` (imported by many non-edge packages) and high `ports` (shared model types on the wire). Descend with `--scope files --include <api-package>` to see which files hold the types; then read the serialization code for verbatim reuse.
 
 Fix: give the edge its own DTOs (small, per-consumer types) instead of reusing the shared model for transport; keep shared types internal-only. Expect the hub's `fanIn`/`ports` to drop. Duplicating 2–3 fields beats coupling every client to the hub — see pragmatic-architecture (duplication vs wrong abstraction).
 
 ## Common mistakes
 
 - Looking for a `draw` subcommand or a `-g` granularity flag → gone in v2. codeps has `export` + `report --scope packages|files` only.
-- Running `report` without `--scope` → `Missing argument: -s --scope <scope>`; `--scope` is required.
+- Passing the input positionally → gone in v0.3.0: `report --scope packages deps.json` errors with `Missing argument: -i --input <str>` + `Unknown argument: "deps.json"`. Input is only `-i`/`--input` (required, one value; `-` = stdin). Same for `export` — inputs are `-i <path>` (repeatable, required).
+- Running `report` without `--scope` → `Missing argument: -s --scope <scope>`; `--scope` is required. Running `report` without `-i` → `Missing argument: -i --input <str>`; passing `-i` twice → `Duplicate arguments for -i --input <str>`.
+- `-i` means **input** in v0.3.0 (v0.2.0's `report -i` was include — old invocations now read the include pattern as a file and fail). The include flag is long-only `--include`; `-o` is output. See the CLI reference at sake92.github.io/codeps/reference/cli.html.
 - Expecting `--format json` on `export` → no: `export` always emits deps.json (the graph). `report --format json` emits the report JSON. Two different JSONs.
-- Feeding semanticdb dirs to `report` → it reads exactly one deps.json (file or `-`); a directory produces an uncaught `java.io.IOException: Is a directory` stack trace. Merge everything in `export` instead.
-- Over-filtering → `no nodes remain after filtering` (hard error on `report`).
-- `report` has no `--help` — it is parsed as an input path and errors. Usage errors print the full option signature; the CLI reference is at sake92.github.io/codeps/reference/cli.html.
+- Feeding semanticdb dirs to `report` → it reads exactly one deps.json (file or `-`); a directory is a clean `error: not a file: <path>` (exit 1) since v0.3.0. Merge everything in `export` instead. `export` errors on other input problems too: `at least one input is required`, `input path does not exist: <path>`, `not a directory: <path>` (semanticdb), `not a file: <path>` (jdeps), `no .semanticdb files found`.
+- Over-filtering → `no nodes remain after filtering` (hard error on `report`). `--scope files` on a graph without file nodes (jdeps export, package-only JSON) → `no file nodes found in the input (jdeps data has no file-level info)`.
+- `report --help` prints usage for all subcommands; `-h` is rejected (`Unknown argument: "-h"`). `codeps --version` prints the version — there is no `version` subcommand. Usage errors print the full option signature.
 - `--test-pattern` without `--skip-tests` → error; it replaces the built-in patterns.
 - `export` warns and skips unparseable files (exit 0); `report` hard-errors on malformed JSON — fix the input, don't ignore.
-- Old granular deps.json (type/member nodes) still parses — the analyzer aggregates it the way `export` does; new exports never emit it.
+- Old granular deps.json (type/member nodes) still parses: the analyzer aggregates type/member nodes via `parentId` into packages, or via their `file` attribute into files; new exports never emit them. Without `file` info there is nothing to aggregate for `--scope files` (see the error above).
 - Eyeballing files instead of running the pipeline — file-level cycles are invisible to file reading; the report is one command.
 - Running code-maat coupling with the defaults (`-i 30 -m 5 -n 5`) and concluding "no coupling" — defaults hide weak pairs and empty out young codebases; lower them deliberately (`-i 10 -m 3 -n 3`) when the split boundary matters (Step 3b).
 - Trusting a 100% `degree` with a tiny `average-revs` — coincidence, not coupling.
