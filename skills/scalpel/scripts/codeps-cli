@@ -5,9 +5,8 @@
 #   bash /path/to/scripts/codeps-cli <codeps-args...>
 #
 # Subcommands (see https://sake92.github.io/codeps/reference/cli.html):
-#   export --from semanticdb|jdeps <inputs...>   producer: parses compiler output -> deps.json
-#   draw -g package|file|type|member -f dot|mermaid <deps.json>   renderer
-#   report [-i ...] <deps.json>                 analyzer: graded cycles, knots, hub metrics
+#   export --from semanticdb <dirs...>          producer: parses compiler output -> deps.json
+#   report --scope packages|files <deps.json>   analyzer: cycles, exposed surface, orphans
 #
 # - Downloads the pinned codeps release jar on first use, cached at ~/.cache/codeps/.
 # - Set CODEPS_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
@@ -16,7 +15,7 @@ set -euo pipefail
 
 CACHE_DIR="${CODEPS_CACHE_DIR:-$HOME/.cache/codeps}"
 # Pinned release — bump when a new codeps release lands (https://github.com/sake92/codeps/releases)
-RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.1.0/codeps-cli-0.1.0.jar"
+RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.2.0/codeps-cli-0.2.0.jar"
 
 if [[ -n "${CODEPS_JAR:-}" ]]; then
   if [[ ! -f "$CODEPS_JAR" ]]; then
@@ -34,19 +33,20 @@ if [[ ! -f "$JAR" ]]; then
   curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
 fi
 
-# sanity check on every run: the jar must support the export/draw/report subcommands
-# (rejects old-style jars with semdb/jdeps/json, and self-heals stale caches
-# left over from previous versions of this skill).
-if ! grep -q "export, draw, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
+# sanity check on every run: the jar must support the export/report subcommands
+# (rejects pre-v2 jars — those print "export, draw, report", which does not
+# contain the substring "export, report" — and self-heals stale caches left
+# over from previous versions of this skill).
+if ! grep -q "export, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
   if [[ -n "${CODEPS_JAR:-}" ]]; then
-    echo "error: CODEPS_JAR does not support the export/draw/report subcommands; use a newer build" >&2
+    echo "error: CODEPS_JAR does not support the export/report subcommands; use a newer build" >&2
     exit 1
   fi
-  echo "warning: cached jar is an outdated codeps (no export/draw/report), replacing with the pinned release ..." >&2
+  echo "warning: cached jar is an outdated codeps (no export/report), replacing with the pinned release ..." >&2
   rm -f "$JAR"
   curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"
-  if ! grep -q "export, draw, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
-    echo "error: downloaded jar does not support the export/draw/report subcommands; set CODEPS_JAR to a newer build" >&2
+  if ! grep -q "export, report" <<<"$(java -jar "$JAR" 2>&1 || true)"; then
+    echo "error: downloaded jar does not support the export/report subcommands; set CODEPS_JAR to a newer build" >&2
     rm -f "$JAR"
     exit 1
   fi
