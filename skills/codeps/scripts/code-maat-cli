@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# code-maat CLI bootstrap for the scalpel skill (evolutionary-coupling evidence).
+# code-maat CLI bootstrap retained with the Codeps skill for evolutionary-coupling evidence.
 #
 # Usage:
 #   bash /path/to/scripts/code-maat-cli <code-maat-args...>

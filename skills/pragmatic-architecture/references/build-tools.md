@@ -13,4 +13,4 @@ Use build-tool modules only for a boundary that needs independent ownership, rel
 
 The exact configuration syntax is version-sensitive. When editing a build definition, consult the tool's current documentation and the repository's existing build conventions.
 
-Use Scalpel when the request is broader refactoring: deciding extraction boundaries, finding cycles, assessing compile-time impact, or measuring dependency and encapsulation metrics.
+Use Codeps when the request is broader refactoring: deciding extraction boundaries, finding cycles, assessing compile-time impact, or measuring dependency and encapsulation metrics.

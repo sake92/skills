@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# codeps CLI bootstrap + runner for the scalpel skill.
+# codeps CLI bootstrap + runner for the Codeps skill.
 #
 # Usage:
 #   bash /path/to/scripts/codeps-cli <codeps-args...>
 #
 # Subcommands (see https://sake92.github.io/codeps/reference/cli.html):
-#   export --from semanticdb|jdeps -i <path>... [--root DIR] [-o out]   producer: compiler output -> deps.json
-#   report -s/--scope packages|files -i <deps.json|-> [--format table|json] [--include inc] [-e exc] [-c collapse] [--skip-tests] [-o out]
+#   status [--config path] [--project id]... [--commit sha] [--generated-at instant] [--out index.html]
+#   inspect-cycle --id <cycle-id> [--project id] [--scope packages|files] [--format table|json]
+#   inspect-node --id <node-id> [--project id] [--scope packages|files] [--format table|json]
 #
 # - Downloads the pinned codeps release jar on first use, cached at ~/.cache/codeps/.
 # - Set CODEPS_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
@@ -15,8 +16,8 @@ set -euo pipefail
 
 CACHE_DIR="${CODEPS_CACHE_DIR:-$HOME/.cache/codeps}"
 # Pinned release — bump when a new codeps release lands (https://github.com/sake92/codeps/releases)
-# v0.3.0 = the strict CLI: inputs via -i/--input everywhere, no positional args, --include long-only.
-RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.3.0/codeps-cli-0.3.0.jar"
+# v0.4.0 = repository-configured status, combined package/file metrics, history, and HTML dashboard.
+RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.4.0/codeps-cli-0.4.0.jar"
 
 if [[ -n "${CODEPS_JAR:-}" ]]; then
   if [[ ! -f "$CODEPS_JAR" ]]; then
@@ -43,20 +44,18 @@ if [[ ! -f "$JAR" ]]; then
   download_pinned
 fi
 
-# sanity check on every run: the jar must speak the strict v0.3.0 CLI — input
-# via -i/--input, no positional args (--help lists "-i --input <str>" for both
-# subcommands). Rejects pre-v0.3.0 jars ("-i --include", positional "leftover")
-# and self-heals stale caches left over from previous versions of this skill.
-if ! grep -qF -- "-i --input" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
+# Sanity-check on every run. Reject and replace cached pre-v0.4 jars so the
+# skill cannot accidentally use the removed export/report workflow.
+if ! grep -qF -- "status" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
   if [[ -n "${CODEPS_JAR:-}" ]]; then
-    echo "error: CODEPS_JAR is a pre-v0.3.0 codeps (no -i/--input syntax); use a v0.3.0+ build" >&2
+    echo "error: CODEPS_JAR does not support the Codeps v0.4 status workflow; use a v0.4.0+ build" >&2
     exit 1
   fi
-  echo "warning: cached jar is an outdated codeps (pre-v0.3.0 CLI), replacing with the pinned release ..." >&2
+  echo "warning: cached jar is an outdated codeps, replacing it with the pinned v0.4.0 release ..." >&2
   rm -f "$JAR"
   download_pinned
-  if ! grep -qF -- "-i --input" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
-    echo "error: downloaded jar does not support the -i/--input syntax; set CODEPS_JAR to a v0.3.0+ build" >&2
+  if ! grep -qF -- "status" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
+    echo "error: downloaded jar does not support the Codeps v0.4 status workflow; set CODEPS_JAR to a v0.4.0+ build" >&2
     rm -f "$JAR"
     exit 1
   fi

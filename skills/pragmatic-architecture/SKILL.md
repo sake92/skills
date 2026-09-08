@@ -1,6 +1,6 @@
 ---
 name: pragmatic-architecture
-description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language. Covers minimal API surface, feature-first layering, cycle-free module boundaries, encapsulation, judicious newtypes, locality, edge validation, explicit dependencies, and integration-first testing. Use this for new code, code review, feature or module design, and broad refactors; use Scalpel when the request specifically needs dependency metrics, cycle analysis, module extraction, or compile-time diagnosis.
+description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language. Covers minimal API surface, feature-first layering, cycle-free module boundaries, encapsulation, judicious newtypes, locality, edge validation, explicit dependencies, and integration-first testing. Use this for new code, code review, feature or module design, and broad refactors; use Codeps when the request specifically needs dependency metrics, cycle analysis, module extraction, or compile-time diagnosis.
 ---
 
 # Pragmatic Architecture
@@ -18,7 +18,7 @@ Three ideas underpin everything:
 Everything below is meant to be *checkable*, not just aspirational. 
 When reviewing code, run the checklist at the bottom.
 
-For language-specific choices, read only the relevant file in `references/` (`scala.md`, `java.md`, `kotlin.md`, `typescript.md`, or `python.md`). For a real build-module boundary, also read `build-tools.md`; for broader dependency, extraction, or compilation analysis, use the Scalpel skill.
+For language-specific choices, read only the relevant file in `references/` (`scala.md`, `java.md`, `kotlin.md`, `typescript.md`, or `python.md`). For a real build-module boundary, also read `build-tools.md`; for broader dependency, extraction, or compilation analysis, use the Codeps skill.
 
 ---
 
@@ -36,7 +36,7 @@ A member becomes visible outside its enclosing file, type, package, or module on
 - **Shared vocabulary of a feature** (entities and value objects used across its layers) → visible within that feature. `public record OrderId(String value) {}` used by the HTTP handler, service, and mapper is correct, not a violation.
 - **A true implementation detail** — a DTO only one mapper touches, an internal parser AST node, a helper struct grouping three values inside one function — scope it as tight as the language allows: a local/nested type, `private[thatpackage]` in Scala, or simply no `public` modifier in Java (package-private by default). It shouldn't outlive the file or class that needs it.
 
-The restriction pays off at the **module boundary from §2**. Keep a build module's public surface intentional, but do not create a build module merely to enforce boundaries inside one small feature. If the question is whether a boundary should become a module, or needs dependency/compile-time evidence, use the Scalpel skill.
+The restriction pays off at the **module boundary from §2**. Keep a build module's public surface intentional, but do not create a build module merely to enforce boundaries inside one small feature. If the question is whether a boundary should become a module, or needs dependency/compile-time evidence, use the Codeps skill.
 
 **Encapsulation: expose behavior, not state.** A type keeps its fields private and enforces its invariants in its constructor/creator — no public mutable fields, no `getX()/setX()` pairs handing out internal state for callers to corrupt. If the outside can reach in and violate the invariant, the type has no invariant. For a domain entity that means `cancel(): Either[Error, Unit]`, not a public `var status` with a `setStatus`. Getters returning immutable snapshots are fine; getters exposing mutable internals (a live collection, a mutable child object) are a leak.
 
@@ -171,7 +171,7 @@ Before calling a change done, check:
 - [ ] Any public *method* without an actual external caller? → make it private.
 - [ ] Any implementation-detail *type* (single-mapper DTO, internal parser node) leaking wider than the file/class that needs it? → scope it down. (Shared feature vocabulary types are fine within that feature; see §1.)
 - [ ] Any import cycle between modules or packages? → merge, move code to its feature, or extract a third module only when the evidence supports it.
-- [ ] Is this a broader refactor (module extraction, dependency-cycle work, compile-time improvement, or dependency/encapsulation measurement)? → use Scalpel before proposing structural moves.
+- [ ] Is this a broader refactor (module extraction, dependency-cycle work, compile-time improvement, or dependency/encapsulation measurement)? → use Codeps before proposing structural moves.
 - [ ] Does a feature have a one-way dependency flow (`http` → `domain` → `db`), with no lower layer importing a higher one or another feature’s internals? → move the dependency downward or make the cross-feature contract explicit (§3).
 - [ ] Any new abstraction/interface introduced before a 3rd real occurrence, or whose interface is nearly as complex as its implementation? → inline it instead (§6).
 - [ ] Are HTTP, domain, and DB models reused across boundaries merely to save a mapping? → give each layer the model it owns when their responsibilities differ (§3).
