@@ -20,7 +20,7 @@ If no trustworthy producer exists, report that limitation. Do not infer a depend
 
 ## Analysis loop
 
-1. For commit history, start from a clean, committed worktree; then build successfully and generate a fresh report. Codeps otherwise labels the snapshot with `HEAD`, even when the analyzed inputs came from uncommitted changes. A successful analyzer run after a failed build can also describe stale or partial compiler output and is not evidence.
+1. For commit history, start from a clean, committed worktree; build successfully and generate a fresh report. Incremental builds can retain dependency artifacts for deleted or moved sources, so before using a source-based finding, check that its reported source path exists in the current checkout (except configured generated-source roots). A missing source makes that finding stale evidence: do not make a recommendation from it or reinterpret it as an orphan. Codeps otherwise labels the snapshot with `HEAD`, even when the analyzed inputs came from uncommitted changes. A successful analyzer run after a failed or partial build can also describe stale inputs and is not evidence.
 2. Start with package-level structure for architectural decisions. Use file-level detail to locate the responsible implementation or assess incremental-build impact.
 3. Triage in order: cycles; high propagators; public surface and mutability; low structural use; then orphans. Read the named code and its consumers before choosing a design move.
 4. Make the smallest refactoring supported by the evidence. Prefer extraction, dependency inversion, API narrowing, or state encapsulation over broad moves.
@@ -32,7 +32,7 @@ If no trustworthy producer exists, report that limitation. Do not infer a depend
 - A cycle, its size, internal edges, and external fan-in are the highest-priority structural evidence. Break all relevant edges in a knot, then re-run until the cycle is gone.
 - High fan-in/out or propagator score indicates a potential change amplifier. Confirm the consumer groups before splitting a hub.
 - Broad public surface, exposed mutability, and low `dependentsPerPublicPort` are investigation prompts, not automatic proof of a bad API. Prefer immutable snapshots and narrow operations to exposed collections or mutable state.
-- An orphan is a deletion candidate only. Check executable entry points, runtime loading/reflection, generated code, configuration, and external integration before proposing removal; ask the user before deleting it.
+- An orphan is a deletion candidate only after its report input is known current. Check that its reported source still exists at that path (or is a configured generated source), then check executable entry points, runtime loading/reflection, generated code, configuration, and external integration before proposing removal; ask the user before deleting it.
 - Keep history comparisons meaningful: use a stable configuration, clean committed inputs, and like-for-like settings. When configuration or filtering changes materially, begin a new baseline instead of comparing unlike snapshots.
 
 ## Deliverable

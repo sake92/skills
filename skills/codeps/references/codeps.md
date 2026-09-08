@@ -28,7 +28,7 @@ For a commit-tracked snapshot, first confirm that the relevant worktree changes 
 bash "/abs/path/to/skills/codeps/scripts/codeps-cli" status --project app
 ```
 
-Do not trust a report after compilation fails: the source data may be stale or partial even if `status` succeeds.
+Do not trust a report after compilation fails or is partial: the source data may be stale even if `status` succeeds. Dependency artifacts for deleted or moved files can also persist under an input directory after a successful incremental compile. Before using a source-based finding, check that its reported path exists in the current checkout, except under configured generated-source roots. A missing source makes that finding stale evidence: do not make a recommendation from it or reinterpret it as an orphan.
 
 ### Commit identity is not working-tree identity
 
@@ -66,7 +66,7 @@ Triage in this order:
 2. **Propagators:** high `fanIn`, `fanOut`, or normalized propagator `score` indicates change amplification. A file split alone will not improve package health if package coupling is unchanged.
 3. **Surface and mutability:** inspect `ports`, `mutPorts`, `exposure`, `publicMutableSurface`, and `publicMutableRatio`. Public mutable declarations are a strong hidden coupling channel; encapsulate state behind operations or immutable snapshots.
 4. **Structural use:** low `dependentsPerPublicPort` suggests a public API may be broader than necessary. It is a graph proxy, not declaration-level usage proof, so inspect consumers before narrowing it.
-5. **Orphans:** verify runtime entry points, reflection, configuration, generated code, and integrations; then ask the user before deleting anything.
+5. **Orphans:** first verify that the reported source exists at that path, unless it is under a configured generated-source root. If it does not, it is stale evidence, not an orphan. Only then verify runtime entry points, reflection, configuration, generated code, and integrations; then ask the user before deleting anything.
 
 The health score and combined dashboard score are directional summaries. Compare decimals and the affected scope, but explain movement through the findings and raw metrics—not the score alone. Removing an orphan or splitting a file can shift ratios without improving the package graph.
 
