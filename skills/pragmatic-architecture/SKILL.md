@@ -1,25 +1,29 @@
 ---
 name: pragmatic-architecture
-description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language, inspired by grugbrain.dev and John Ousterhout's "A Philosophy of Software Design". Covers minimal API surface and encapsulation, cycle-free module boundaries, hexagonal/ports-and-adapters architecture, judicious newtypes, principle of least power, locality (things that change together live together), validating at the edges, eliminating implicit dependencies (spec-driven codegen over runtime reflection), compiler-enforced encapsulation (Java modules), and integration-first testing. Use this whenever writing new code, designing a module/package/directory structure, starting a new feature or service, doing a code review, refactoring code where one change touches many files, or when the user asks "how should I structure this" — even if they don't explicitly mention architecture or design. Applies to backend and frontend code alike.
+description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language. Covers minimal API surface, encapsulation, cycle-free module boundaries, hexagonal/ports-and-adapters architecture, judicious newtypes, principle of least power, locality (things that change together live together), validating at the edges, eliminating implicit dependencies (spec-driven codegen over runtime reflection), compiler-enforced encapsulation, and integration-first testing. Use this whenever writing new code, designing a module/package/directory structure, starting a new feature or service, doing a code review, refactoring code where one change touches many files, or when the user asks "how should I structure this" — even if they don't explicitly mention architecture or design.
 ---
 
 # Pragmatic Architecture
 
 ## Philosophy
 
-Complexity is the enemy, not "bad code". Every principle below exists to keep complexity local and visible instead of letting it leak across boundaries. Three ideas underpin everything:
+Complexity is the enemy.
+Every principle below exists to keep complexity local, visible and contained, instead of letting it leak across boundaries.
+Three ideas underpin everything:
 
-- **Deep modules, narrow interfaces** (Ousterhout): a module's value is (functionality it provides) / (interface it exposes). A module with a small interface hiding a lot of useful logic is good. A module with a big interface hiding almost nothing is not worth its own existence — it's just extra indirection.
-- **Duplication is better than the wrong abstraction** (grug): two similar-looking pieces of code are cheap to keep separate. A shared abstraction that turns out wrong is expensive to unwind once three callers depend on it.
-- **Locality** (grug): things that change together live together — see §6.
+- **Deep modules, narrow interfaces**: a module with a small interface hiding a lot of useful logic is good. A module with a big interface hiding almost nothing is not worth its own existence — it's just extra indirection.
+- **Duplication is better than the wrong abstraction**: two similar-looking pieces of code are cheap to keep separate. A shared abstraction that turns out wrong is expensive to unwind once three callers depend on it. Some code might be considered "duplicate" by humans/agents, but actually it separates concerns, which is a good thing. E.g. api vs database models etc.
+- **Locality**: things that change together live together — see §6.
 
-Everything below is meant to be *checkable*, not just aspirational. When reviewing code (your own or someone else's), run the checklist at the bottom.
+Everything below is meant to be *checkable*, not just aspirational. 
+When reviewing code, run the checklist at the bottom.
 
 ---
 
 ## 1. Minimal API surface
 
-Expose nothing the caller doesn't need. Default to the least visibility your language allows (`private` in Java/Kotlin/C#, no `export` in TS, module-private in Rust, nested `def` inside `def` in Scala when only used locally).
+Expose nothing the caller doesn't need. Default to the least visibility your language allows (`private` in Java/Kotlin/Scala/C#, no `export` in TS, module-private in Rust.
+Otherwise each reachable member is a potential source of coupling, increasing the risk of dependency cycles, and slower compilation.
 
 A member becomes public only when there is an actual caller outside the module *today* — not "might need it later." Speculative public API is speculative complexity someone else now has to think about.
 
@@ -44,43 +48,55 @@ If you find yourself needing a cycle between two modules, that's not a tooling p
 
 On the JVM, the strongest version of this boundary is the Java module system (`module-info.java`), which upgrades it from build-tool-enforced to compiler- and runtime-enforced — see §9.
 
-## 3. Hexagonal architecture — prefer duplication over premature coupling
+## 3. Feature-First Layered Architecture — prefer duplication over premature coupling
 
 Structure code so the core logic doesn't know how it's invoked or what it talks to:
 
 ```
-domain/       -- entities, value objects, ports (interfaces), pure business logic
-adapters/
-  db/          -- implements domain ports against a specific database
-  http-in/     -- entry point: REST/GraphQL/CLI — calls domain through ports
-  http-out/    -- outbound calls to third-party services (payment gateway, etc.)
-composition/  -- wiring / dependency injection / main — the only place that knows about everything
+common/         -- shared utilities, types, and helpers used across multiple modules
+feature1/
+  http/         -- HTTP entry points for this feature
+  http/models/    -- HTTP request/response models for this feature
+  domain/       -- business logic specific to this feature
+  domain/models/  -- domain-specific models for this feature
+  db/           -- database access specific to this feature
+  db/models/      -- database-specific models for this feature
+feature2/       -- same as feature1..
+main/           -- wiring / dependency injection / main — the only place that knows about everything
 ```
 
-The dependency arrow only ever points *toward* `domain/`, never away from it.
+This architecture is also called "Vertical Slicing", by feature. 
+Idea is that code that changes together should live together, minimizing the impact of changes and making it easier to reason about the system.
+System is as modular as it is easy to delete a feature.
 
-**What `domain/` may depend on:** the standard library, and pure utility/newtype libraries that do no I/O (e.g. a `NonEmptyList`, a validated-`Email` type, `Instant`). **What it must not depend on:** anything that does I/O (DB driver, HTTP client, message queue client), a serialization framework (no Circe/Jackson annotations on domain classes), or a concrete infra type in a signature (`java.sql.Connection`, a specific effect type). If the domain needs something from the outside world, it defines a trait/interface (a port) — an adapter implements it, and `composition/` wires the two together.
+Having http/domain/db models separate does introduce some "duplication", and mapping between them is necessary.
+This duplication is intentional and makes code easier to understand.
+Also it makes it obvious what gets **exposed to outside world** (e.g. via HTTP), and what gets persisted internally (e.g. in the database).
+Also, it is NOT necessary to annotate entity classes with serialization-specific annotations (e.g., JSON or database mapping annotations).
 
-This costs you some duplication and boilerplate up front (a port trait plus its implementation, instead of calling the DB driver directly). That's the trade you're making on purpose: it stays trivial to swap the database, fake the port (a hand-written in-memory implementation) in a domain-level test (§10), or later pull `domain/` out into its own library or module. See `references/examples.md` for concrete code across Scala/Java/Rust/TypeScript, and how this maps onto frontend code (React or HTMX).
 
 ## 4. Newtypes, judiciously
 
-Wrap identifiers in newtypes so `OrderId` and `CustomerId` can't be swapped by accident — the compiler should catch that, not a runtime bug report. This one is close to free (opaque types / `case class` wrapper / tuple struct) and worth doing by default for any ID.
+Wrap identifiers in newtypes so `OrderId` and `CustomerId` can't be swapped by accident — the compiler should catch that, not a runtime bug report. This one is close to free (opaque types / `case class` wrapper / tuple struct) and worth doing by default for any ID. 
+In languages where this is hard or verbose, weigh the benefits against the added complexity.
 
-Don't reinvent `Email`, `Money`, `NonEmptyString`, etc. from scratch for the tenth time. Check if the ecosystem already has a well-tested validated type for it (e.g. via `refined`, a vetted utility library) before writing your own — but reach for that library only if it's already earning its keep elsewhere in the project; don't pull in a whole validation library just to wrap one field. See §5.
+Don't reinvent `Email`, `Money`, `NonEmptyString`, etc. from scratch for the tenth time. Check if the ecosystem already has a well-tested validated type for it before writing your own — but reach for that library only if it's already earning its keep elsewhere in the project; don't pull in a whole validation library just to wrap one field. See §5.
 
 ## 5. Principle of least power
 
 For every library or abstraction you're about to introduce, be able to state in one sentence why the weaker, more standard tool isn't enough. If you can't, use the weaker tool.
 
-- **Concurrency on the JVM:** reach for virtual threads (Project Loom) first. If you need structured concurrency, scoped resource cleanup, or retry/timeout combinators, *research the [ox](https://github.com/softwaremill/ox) library first* — it gives you that on top of virtual threads without pulling in a full effect system. Only reach for cats-effect/ZIO when you have a concrete need ox doesn't cover (e.g. deep monadic composition across a large codebase that's already committed to that style).
-- **Frontend:** don't default to a React SPA + API layer. If the feature is mostly server-rendered CRUD/forms/dashboards without heavy client-side interactivity, HTMX (or plain server-rendered templates) is less overall complexity. Reach for React/a SPA framework when there's real client-side state or interactivity that justifies it (drag-and-drop, live canvas, complex cross-field validation, offline support).
+- **Concurrency on the JVM:** reach for virtual threads (Project Loom) first. If you need structured concurrency, scoped resource cleanup, or retry/timeout combinators, *research texisting libraries first* (use context7 skill if available). Only reach for effect-system libraries when you have a concrete need virtual threads doesn't cover (e.g. deep monadic composition across a large codebase that's already committed to that style).
+- **Frontend:** don't default to a Single-Page Application (SPA) + API layer. If the feature is mostly server-rendered CRUD/forms/dashboards without heavy client-side interactivity, HTMX (or plain server-rendered templates) is less overall complexity. Reach for a SPA framework when there's real client-side state or interactivity that justifies it (drag-and-drop, live canvas, complex cross-field validation, offline support).
 - **Parsing:** regex before a parser-combinator library, unless the grammar is genuinely context-sensitive or recursive.
 - **Errors:** exceptions or a plain `Either`/`Result` before a bespoke error-ADT hierarchy with a dozen cases.
 
-**Prefer immutability by default** — `val` over `var`, immutable collections, `case class`/record types. Mutable state is fine only when:
+**Prefer immutability by default** — `val` over `var`, immutable collections, `case class`/record types. Mutable state is fine when:
 1. it's local to a function and never escapes (e.g. accumulating in a loop before returning an immutable result), or
 2. an algorithm or hot path genuinely needs it for performance — and then say so with a comment, so a future reader knows it's a deliberate trade-off and not an oversight.
+3. it genuinely requires a thread-safe mutable state, and then document why immutability isn't sufficient.
+
+If you do need to return mutable state, try returning an immutable copy instead, or at least try use a defensive wrapper that prevents external mutation.
 
 Mutable state that leaks outside a function or module is exactly the kind of premature complexity this whole skill exists to avoid (see §6) — it creates hidden coupling between whoever reads and whoever writes it.
 
@@ -102,31 +118,35 @@ Untrusted data flowing into the core is how nil-checks and defensive branches mu
 
 - **Validate as early as possible.** The HTTP handler, CLI parser, message-queue consumer, config loader, DB read — validate there, and hand the core a *known-good* value in a validated type (§4): `ValidatedEmail`, `NonEmptyName`. Code after the edge then contains zero "is this null / well-formed?" branches. That simplification is what you're buying.
 - **There is an edge in both directions.** Validate input at the entry edge; serialize and shape output at the exit edge. Everything crossing a boundary gets checked; everything inside can be trusted.
-- **Null-object pattern when it makes sense.** When "nothing" has a natural identity — a no-op notifier, a null logger, an empty collection instead of `null` — return the object that does nothing instead of `Option`/`null` and spreading `if (maybe)` branches through every caller. Don't force it: use `Option`/`Result` when "absent" and "present but inert" genuinely differ.
+- **Null-object pattern when it makes sense.** When "nothing" has a natural identity — a no-op notifier, a null logger, an empty collection instead of `null` — return the object that does nothing instead of `Option`/`null` and spreading `if (maybe)` branches through every caller. Don't force it: use `Option`/`Result` when "absent" and "present but inert" genuinely differ. If language has ADTs consider adding a special `Nothing` or `Empty` variant to represent the null object explicitly (i.e. "Unknown" message in queue notification, means system should ignore it).
 - **Report errors in the consumer's format, not yours.** A machine consumer (API client, log parser, monitoring) needs structured, machine-readable errors: JSON problem details, an error code, an XML fault. A human consumer needs a plain-language message and a suggestion of what to do. One error type forced into one format is usually wrong for one of them. The core raises domain errors; translating them into the consumer's shape is an adapter concern (§3).
 
-## 8. No implicit dependencies
+## 8. Minimize implicit dependencies
 
-A dependency is *implicit* when two things must change together but nothing in the toolchain knows it. The compiler checks types and imports; it does not check that your SQL string matches your DTO, your JSON schema matches your parser, or your message producer matches its consumer. Those break at runtime, usually in production.
+A dependency is *implicit* when two things must change together but nothing in the toolchain knows it. The compiler checks types and imports; it (usually) does not check that your SQL string matches your DTO, your JSON schema matches your parser, or your message producer matches its consumer. Those break at runtime, usually in production.
 
 - **Make the pair compiler-checked — prefer codegen over hand-maintained parallelism.** Two artifacts that must stay in sync (OpenAPI spec ↔ client and server, protobuf/Avro schema ↔ producer and consumer, JSON schema ↔ parser, DB schema ↔ mapping layer) should be generated from one source of truth: a spec checked into one place, with build-time codegen producing both sides. Codegen fails loudly at build time; reflection fails at startup, or silently at 3 a.m.
 - **Async boundaries are the classic case.** Producer and consumer codebases meet only at a queue (RabbitMQ, Kafka). Version the schema, generate types on both sides from it, and fail the build when they diverge — the queue no longer hides the coupling.
 - **Avoid runtime reflection where the compiler could do the job.** Annotation scanning, auto-DI containers that "discover" beans, dynamic `Class.forName` wiring — all break `grep`, break "find usages", and move every error to startup. The same convenience via codegen keeps the code traceable and the failure early. Reflection that can't be avoided is a red flag, not a feature.
-- **Prefer plain DI construction.** Constructor injection wired in one `composition/` file (§3) is grep-able, debuggable, and shows the object graph explicitly. Reach for a DI framework only when the wiring itself becomes unmanageable, and prefer compile-time resolution (e.g. Scala 3 givens) over runtime containers when you do.
+- **Prefer plain DI construction.** Constructor injection wired in one `composition/` file (§3) is grep-able, debuggable, and shows the object graph explicitly. Reach for a DI framework only when the wiring itself becomes unmanageable, and prefer compile-time resolution (e.g. Scala 3 givens and context-functions, Kotlin context parameters) over runtime containers when you do.
 
 Two definitions that must change together (a constant copied into two files, a flag and its string name) — merge them, or generate one from the other.
 
 ## 9. Compiler-enforced encapsulation: Java modules (JPMS)
 
-On the JVM, the Java module system (`module-info.java`) upgrades the §2 boundary from build-tool-enforced to **compiler- and runtime-enforced**: a `public` class in a non-exported package is simply unreachable from outside its module. `public` stops meaning "everyone" — `exports` decides. This is the strongest encapsulation a mainstream language offers, because the module graph is checked by `javac`/`java`/`jdeps` and cannot rot the way lint rules or conventions can.
+This section is optional, ask user explicitly if they want to use Java modules for compiler-enforced encapsulation.
 
-Map it onto §3: one `module-info` per build module. `domain` exports only its entities and ports; adapters export nothing and `requires` only `domain` + their drivers; `composition` wires ports to implementations declaratively with `uses`/`provides` (ServiceLoader — ports become first-class services); `exports ... to` restricts a package to exactly one consumer module when needed.
+In Java/Kotlin, the Java module system (`module-info.java`) upgrades the §2 boundary from build-tool-enforced to **compiler- and runtime-enforced**: a `public` class in a non-exported package is simply unreachable from outside its module. `public` stops meaning "everyone" — `exports` decides. This is the strongest encapsulation a mainstream language offers, because the module graph is checked by `javac`/`java`/`jdeps` and cannot rot the way lint rules or conventions can.
+
+Map it onto §3: one `module-info` per feature, if needed.
+Each module should have a clear boundary and explicit exports, reflecting the feature it encapsulates.
 
 Adopt it incrementally — plain JARs become automatic modules on the module path, so you can modularize one module at a time, leaf-first. Expect to add `opens` for reflection-heavy frameworks (Jackson, Hibernate, Mockito): a named module breaking them is the system doing its job. Note `module-info.java` is Java-only source; Scala/Kotlin JVM projects get the same guarantee from build-tool modules + ArchUnit. Full details, directive table, and gotchas: `references/java-modules.md`.
 
 ## 10. Write tests. Not too many. Mostly integration.
 
-The default test is an **integration test**: bring the real thing up (Testcontainers, docker-compose) and exercise behavior through the public API — a real HTTP call into the fully wired app, a real SQL roundtrip against the real database. One test through the real wiring gives more confidence than five unit tests with mocks, because mocking removes exactly the integration confidence you need (Kent C. Dodds: "Write tests. Not too many. Mostly integration.").
+The default test is an **integration test**: bring the real thing up (Testcontainers, docker-compose) and exercise behavior through the public API — a real HTTP call into the fully wired app, a real SQL roundtrip against the real database.  
+One test through the real wiring gives more confidence than five unit tests with mocks, because mocking removes exactly the integration confidence you need.
 
 - **Unit tests are for real logic only** — pure domain rules, algorithms, parsers, validation. Framework plumbing (controllers that delegate, DAOs that wrap a library call) is not worth a unit test; the composed integration test covers it transitively. A "slice test" with a mocked service is the worst of both worlds: slow-ish, and it tests mocks.
 - **Mock only what can't be used cheaply/safely:** sending email, charging cards, third-party APIs with real cost or side effects. Never mock code you own — write a hand-written in-memory fake of the port, or use the real adapter against a real database. An in-memory DB substitute (H2 instead of Postgres) is a dialect lie — use the real thing in a container.
