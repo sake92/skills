@@ -1,54 +1,16 @@
-# Testing: integration-first, mocks last
+# Testing: integration-first by feature
 
-The base rules live in SKILL.md §10. This file has the per-layer recipes and per-language tooling. Source of the model: https://kentcdodds.com/blog/write-tests
+The default confidence test exercises one feature through its public edge with real wiring and, where practical, its production database in a container. Use unit tests for pure business rules, parsers, and algorithms. Test behavior, not implementation details.
 
-## The model: trophy over pyramid
+| Feature area | Preferred test |
+|---|---|
+| `domain` pure logic | Unit or property test with real values; no mocks. |
+| `db` | Integration test against the production database engine and real migrations. |
+| `http` | Composed integration test: real HTTP request, feature wiring, edge validation, serialization, and database. |
+| External HTTP, payment, email, SMS | A hand-written fake or provider test server when real calls are costly or unsafe. Assert the observable request or outcome. |
 
-The testing pyramid assumed slow, expensive tooling at the top — Testcontainers and modern CI broke that premise (a Postgres container spins up in ~1s on a warm cache). Optimize for **confidence per test**, not count or coverage %. The question for every test: *would this fail if the behavior broke?*
+An in-memory substitute for a production database is not an integration test: SQL dialects, transactions, collations, and locking differ. Prefer Testcontainers or the project's equivalent.
 
-```
-        /\
-       /E2E\        a few — the critical user journeys
-      /------\
-     /  IT   \      most tests — real infra, real wiring, public API
-    /---------\
-   /   UNIT   \     real logic only: domain rules, algorithms, parsers
-  /------------\
- / STATIC/LINTS\    compiler, linter, formatter — free confidence
-```
+Avoid mock-heavy controller/service slices. A mock-call sequence is an implementation detail and creates tests that resist refactoring. A fake is appropriate when it represents an external boundary; it is not a reason to make every internal dependency an interface.
 
-## Per-layer recipes (the hexagonal map)
-
-| Layer | Test | Tooling |
-|---|---|---|
-| `domain` (pure logic) | unit, **no mocks ever** — real values in, assert behavior out; property-based for rules | ScalaCheck (Scala), jqwik (Java/Kotlin), QuickCheck (Haskell), proptest (Rust), fast-check (TS) |
-| `db` adapter | integration: **Testcontainers with the real database** + real migrations (Flyway/Liquibase), assert through the port | testcontainers-java, testcontainers-rs, testcontainers-node; docker-compose fallback |
-| `http-in` | **one composed integration test**: boot the real app from `composition`, call it with a real HTTP client, real DB behind it — covers routing, edge validation (§7), serialization, SQL in one test | your HTTP client + Testcontainers; no `@MockBean`, no mocked-web-environment slice tests |
-| `http-out` | fake the third party: WireMock or the SDK's embedded server; assert the request you *send*, not their internals | WireMock (JVM), MSW (TS), mountebank |
-| email / SMS / payments | in-memory fake port capturing the outbound messages; assert content, not the SMTP roundtrip | hand-written fake; MailHog / Papercut for local manual checks |
-
-**In-memory DB substitutes (H2 instead of Postgres, sqlite instead of MySQL) are a dialect lie** — features, error messages, collations and locking differ, so the test doesn't test production behavior. Testcontainers removes the excuse; use the real thing.
-
-**Contract tests (Pact) only when the third party's API stability is the actual risk** — an external service with its own deploy cadence that you don't control. For your own services, the composed integration test is stronger and cheaper.
-
-## Fakes, not mock libraries
-
-- **Fake** = hand-written in-memory implementation of a port (`InMemoryOrderRepository`). Fast, deterministic, reusable across tests, survives refactoring.
-- **Mock library** = asserts *interaction sequences* ("was `save` called exactly once with this argument?") — that's an implementation detail, the test breaks on refactoring, and it gives zero confidence about real behavior. Reserve mocks for the few things you can't use safely (SKILL.md §10), never for code you own.
-
-## Mutation testing — prove the tests bite
-
-Run on the domain module (fast, pure): **PITest** (Maven/Gradle plugin; Scala: pitest-scala) or **Stryker** (JS/TS, C#). A mutant that survives is a behavior no test distinguishes — either the test is dead (delete it) or the assertion is missing (fix it). Run in CI on the domain module only; whole-codebase mutation runs are slow and noisy.
-
-## Not worth a test
-
-- One-line delegations, getters/setters, DTO copy code — covered transitively by the composed integration test.
-- Private methods — test the public behavior they produce (§1).
-- Framework wiring — `composition` is verified by the composed integration test booting.
-- Anything the compiler/linter already catches (null-safety, unused vars) — that's the static layer of the trophy.
-
-## Keeping the suite fast
-
-- Reuse containers (Testcontainers singleton containers, `@Testcontainers`), snapshot/restore instead of rebuild for DB state.
-- Split the suite: pure unit + property tests in the fast phase (seconds), composed integration tests in the slow phase (CI-only if needed).
-- Parallelize by module — the hexagonal build modules are already natural test targets.
+Use mutation testing (PITest, Stryker, or the language equivalent) on pure business logic, and property-based testing where invariants are clearer than examples. Run the fast pure tests separately from container-backed integration tests when suite time warrants it.
