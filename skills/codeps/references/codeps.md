@@ -8,6 +8,28 @@ Use the bundled runner at `scripts/codeps-cli` with an absolute path. It downloa
 
 Run `codeps status` from the Git repository root. On its first run it creates `.codeps/config.yaml`; edit that stable, committed configuration rather than creating ad-hoc exports. Each project has a `root`, `source` (`semanticdb`, `jdeps`, or `export`), and `inputs`. See the source-specific reference selected by [the main skill](../SKILL.md).
 
+Shape the configuration to the codebase's structure before trusting any number:
+
+- Set `include` to the project's root package so third-party and JDK packages do not appear as nodes.
+- Set `skip-tests: true` unless test structure is the question.
+- When packages are organized by feature (each feature holding its own `http`, `domain`, `db` sub-packages), add `collapse` for the feature root so every feature is one node. Without it the report shows dozens of small layer packages and feature-level cycles disappear into noise.
+
+```yaml
+projects:
+  app:
+    root: .
+    source: semanticdb
+    skip-tests: true
+    inputs:
+      - target/out/jvm
+    include:
+      - com.example.app
+    collapse:
+      - com.example.app.features.*
+```
+
+When layer-level coupling inside one feature is the question, add a second project entry without `collapse` and compare the two reports; do not switch the setting on a single project between runs, because that breaks history comparison.
+
 ```yaml
 projects:
   app:
