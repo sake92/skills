@@ -1,6 +1,6 @@
 ---
 name: process-hygiene
-description: Rules for how a process behaves at its boundary: configuration and secrets (flags vs env vars vs files, precedence, fail-fast validation), startup and graceful shutdown, signal handling, owning every thread and subprocess it spawns so nothing is orphaned, stdout/stderr and structured logging, stateless restarts, and CLI conventions. Use when writing or reviewing a main/entrypoint, config loading, anything that spawns threads or subprocesses, shutdown or cancellation code, a CLI, a Dockerfile or shell script, or scripts that launch long-running processes. Not for domain logic or module structure; use pragmatic-architecture for those and codeps for dependency analysis.
+description: 'Rules for how a process behaves at its boundary: configuration and secrets (flags vs env vars vs files, precedence, fail-fast validation), startup and graceful shutdown, signal handling, owning every thread and subprocess it spawns so nothing is orphaned, stdout/stderr and structured logging, stateless restarts, and CLI conventions. Use when writing or reviewing a main/entrypoint, config loading, anything that spawns threads or subprocesses, shutdown or cancellation code, a CLI, a Dockerfile or shell script, or scripts that launch long-running processes. Not for domain logic or module structure; use pragmatic-architecture for those and codeps for dependency analysis.'
 ---
 
 # Process Hygiene
