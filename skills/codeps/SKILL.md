@@ -1,11 +1,11 @@
 ---
 name: codeps
-description: "Analyze a codebase's package or file dependency structure before refactoring: find cycles, change propagators, over-broad or mutable public APIs, dead-code candidates, and structural boundaries; use when planning module/package splits, reducing coupling or incremental-build churn, or comparing architecture health across commits. Do not use for a mechanical local move, symbol lookup, or rename."
+description: "Analyze a codebase's package or file dependency structure before refactoring or after adding new packages, modules, or cross-package dependencies: find cycles, change propagators, over-broad or mutable public APIs, dead-code candidates, and structural boundaries; use when planning module/package splits, reducing coupling or incremental-build churn, or comparing architecture health across commits; also use to verify that a feature branch introduced no cycle or coupling regression. Do not use for a mechanical local move, symbol lookup, or rename."
 ---
 
 # Codeps
 
-**Measure the dependency graph before cutting.** Use a dependency report to name the boundary and evidence for a refactoring; inspect the affected code only after the report identifies it. For a boundary that affects team coordination or file placement, add evolutionary evidence from Code Maat. Explain recommendations in terms of specific cycles, findings, graph metrics, and (when available) comparable history.
+**Measure the dependency graph before cutting and after adding.** Use a dependency report to name the boundary and evidence for a refactoring; inspect the affected code only after the report identifies it. The baseline-then-compare loop below applies to a feature branch that adds packages or cross-package imports exactly as it does to a refactoring. For a boundary that affects team coordination or file placement, add evolutionary evidence from Code Maat. Explain recommendations in terms of specific cycles, findings, graph metrics, and (when available) comparable history.
 
 ## Choose the input path
 

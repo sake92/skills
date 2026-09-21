@@ -1,6 +1,6 @@
 ---
 name: pragmatic-architecture
-description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language. Covers minimal API surface, feature-first layering, cycle-free module boundaries, encapsulation, judicious newtypes, locality, edge validation, explicit dependencies, and integration-first testing. Use this for new code, code review, feature or module design, and broad refactors; use Codeps when the request specifically needs dependency metrics, cycle analysis, module extraction, or compile-time diagnosis.
+description: Opinionated software design and architecture principles for writing, reviewing, and refactoring code in any language. Covers minimal API surface, feature-first layering, cycle-free module boundaries, encapsulation, judicious newtypes, locality, edge validation, explicit dependencies, and integration-first testing. Use this for new code, code review, feature or module design, and broad refactors; use Codeps when the request needs dependency metrics, cycle analysis, module extraction, or compile-time diagnosis, or to verify that newly added packages or cross-package dependencies introduced no cycle.
 ---
 
 # Pragmatic Architecture
@@ -18,7 +18,7 @@ Three ideas underpin everything:
 Everything below is meant to be *checkable*, not just aspirational. 
 When reviewing code, run the checklist at the bottom.
 
-For language-specific choices, read only the relevant file in `references/` (`scala.md`, `java.md`, `kotlin.md`, `typescript.md`, or `python.md`). For a real build-module boundary, also read `build-tools.md`; for broader dependency, extraction, or compilation analysis, use the Codeps skill.
+For language-specific choices, read only the relevant file in `references/` (`scala.md`, `java.md`, `kotlin.md`, `typescript.md`, or `python.md`). For a real build-module boundary, also read `build-tools.md`; for dependency, extraction, or compilation analysis, and to verify that a change which adds a package, module, or cross-package dependency kept the graph acyclic and one-way, use the Codeps skill.
 
 ---
 
@@ -48,6 +48,8 @@ A "module" here means something enforced by the build tool: an sbt/Maven module,
 
 If you find yourself needing a cycle between two modules, that's not a tooling problem — it's a sign the boundary is drawn in the wrong place. Either merge the two modules, or extract a third one that both depend on.
 
+Do not verify acyclicity by reading imports. When a change introduces a new package, a new build module, or a new import across package boundaries, build it, regenerate the Codeps report, and compare against the pre-change snapshot. This applies to new feature code as much as to refactors: the cheapest time to find a cycle is before the first commit that contains it.
+
 On the JVM, the strongest version of this boundary is the Java module system (`module-info.java`), which upgrades it from build-tool-enforced to compiler- and runtime-enforced — see §9.
 
 ## 3. Feature-First Layered Architecture — prefer duplication over premature coupling
@@ -75,6 +77,8 @@ Also it makes it obvious what gets **exposed to outside world** (e.g. via HTTP),
 Keep HTTP, domain, and DB models separate when their responsibilities or change cadence differ. Mapping is intentional at those boundaries; it makes the public contract and persistence schema explicit. Do not add serialization or persistence annotations to domain models just to reuse them at an edge.
 
 Use `common/` only for stable, genuinely cross-feature code. Do not promote code there because two features look similar; wait for a demonstrated third use and a simpler shared interface (§6).
+
+When measuring a package-by-feature codebase with Codeps, configure it to collapse each feature's sub-packages (`http`, `domain`, `db`) into one node, so the report shows the feature graph rather than dozens of small layer packages. The codeps skill describes the `collapse` setting.
 
 
 ## 4. Newtypes, judiciously
@@ -171,6 +175,7 @@ Before calling a change done, check:
 - [ ] Any public *method* without an actual external caller? → make it private.
 - [ ] Any implementation-detail *type* (single-mapper DTO, internal parser node) leaking wider than the file/class that needs it? → scope it down. (Shared feature vocabulary types are fine within that feature; see §1.)
 - [ ] Any import cycle between modules or packages? → merge, move code to its feature, or extract a third module only when the evidence supports it.
+- [ ] New package, build module, or cross-package edge introduced? → regenerate the Codeps report and compare with the pre-change snapshot before calling it acyclic (§2).
 - [ ] Is this a broader refactor (module extraction, dependency-cycle work, compile-time improvement, or dependency/encapsulation measurement)? → use Codeps before proposing structural moves.
 - [ ] Does a feature have a one-way dependency flow (`http` → `domain` → `db`), with no lower layer importing a higher one or another feature’s internals? → move the dependency downward or make the cross-feature contract explicit (§3).
 - [ ] Any new abstraction/interface introduced before a 3rd real occurrence, or whose interface is nearly as complex as its implementation? → inline it instead (§6).
