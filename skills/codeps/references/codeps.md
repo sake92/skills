@@ -2,7 +2,11 @@
 
 Codeps is a repository-configured dependency-health tracker. One `status` run parses the configured input, analyzes package and (when supplied) file graphs, updates compact history, saves the detailed JSON report, and renders a static HTML dashboard.
 
-Use the bundled runner at `scripts/codeps-cli` with an absolute path. It downloads the pinned v0.4.0 JAR on first use; `CODEPS_JAR` can select a local JAR instead.
+On macOS or Linux, install the CLI with Homebrew before running the workflow:
+
+```bash
+brew install sake92/tap/codeps
+```
 
 ## Configure once
 
@@ -47,7 +51,7 @@ Inputs and analysis settings define the baseline. Preserve them while tracking a
 For a commit-tracked snapshot, first confirm that the relevant worktree changes are committed, compile successfully, then run:
 
 ```bash
-bash "/abs/path/to/skills/codeps/scripts/codeps-cli" status --project app
+codeps status --project app
 ```
 
 Do not trust a report after compilation fails or is partial: the source data may be stale even if `status` succeeds. Dependency artifacts for deleted or moved files can also persist under an input directory after a successful incremental compile. Before using a source-based finding, check that its reported path exists in the current checkout, except under configured generated-source roots. A missing source makes that finding stale evidence: do not make a recommendation from it or reinterpret it as an orphan.
@@ -77,9 +81,9 @@ Start from `packages` in `.codeps/out/app/report.json`; use `files` to identify 
 Use cached detail views after `status`:
 
 ```bash
-bash "/abs/path/to/skills/codeps/scripts/codeps-cli" inspect-cycle --project app --id scc:com.example.orders
-bash "/abs/path/to/skills/codeps/scripts/codeps-cli" inspect-node --project app --id com.example.orders
-bash "/abs/path/to/skills/codeps/scripts/codeps-cli" inspect-node --project app --scope files --id src/com/example/orders/Orders.scala
+codeps inspect-cycle --project app --id scc:com.example.orders
+codeps inspect-node --project app --id com.example.orders
+codeps inspect-node --project app --scope files --id src/com/example/orders/Orders.scala
 ```
 
 Triage in this order:
