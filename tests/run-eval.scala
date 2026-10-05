@@ -10,8 +10,8 @@ import scala.jdk.CollectionConverters.*
 
 case class Config(
     casePath: String = "pragmatic-architecture/customer-repository",
-    provider: String = "ollama",
-    model: String = "qwen2.5-coder:3b",
+    provider: String = "openai",
+    model: String = "gpt-6-luna",
     reasoning: Option[String] = None,
     judgeProvider: Option[String] = None,
     judgeModel: Option[String] = None,
@@ -29,8 +29,8 @@ def usage(): Unit =
       |
       |Options:
       |  --case PATH          Case below tests/ (default: pragmatic-architecture/customer-repository)
-      |  --provider NAME      ollama, lmstudio, or openai (default: ollama)
-      |  --model NAME         Model passed to Codex (default: qwen2.5-coder:3b)
+      |  --provider NAME      ollama, lmstudio, or openai (default: openai)
+      |  --model NAME         Model passed to Codex (default: gpt-6-luna)
       |  --reasoning LEVEL    Optional Codex reasoning effort
       |  --judge-provider P   Optional separate provider for the qualitative judge
       |  --judge-model NAME   Optional separate model for the qualitative judge

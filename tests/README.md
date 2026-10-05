@@ -1,6 +1,6 @@
 # Skill evaluations
 
-Run the default customer-repository comparison with the local Ollama model:
+Run the default customer-repository comparison with GPT-6 Luna:
 
 ```bash
 scala tests/run-eval.scala
@@ -11,8 +11,8 @@ Change the model, provider, or case with flags:
 ```bash
 scala tests/run-eval.scala -- \
   --case pragmatic-architecture/customer-repository \
-  --provider ollama \
-  --model qwen2.5-coder:3b
+  --provider openai \
+  --model gpt-6-luna
 ```
 
 Supported providers are `ollama`, `lmstudio`, and `openai`. Add
