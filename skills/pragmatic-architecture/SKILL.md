@@ -23,6 +23,8 @@ Expose what callers need and keep implementation details local. Shared feature t
 
 Prefer behavior that preserves invariants over exposing mutable internals. Immutable values are a useful default; contained mutation is fine when it makes the implementation clearer or faster.
 
+When changing an existing type, inspect its public members as part of the change. Keep mutable backing state private, and remove or narrow broad helpers that have no demonstrated caller; internal convenience does not justify a public API. Preserve members required by known callers or compatibility constraints.
+
 ## 2. Clear dependency boundaries
 
 Prefer acyclic dependencies with an understandable direction. A cycle may suggest merging responsibilities or moving shared logic, but choose the least disruptive useful fix.
