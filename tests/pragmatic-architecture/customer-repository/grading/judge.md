@@ -1,17 +1,9 @@
-Judge only the two qualitative criteria below. Deterministic tests separately
+Judge only the two qualitative expectations below. Protected tests separately
 grade behavior and repository structure; do not duplicate or override them.
 
-1. Proportionality: Is the solution appropriately small for an in-memory
-   repository with three lookup operations, without unrelated layers,
-   frameworks, configuration, or abstractions?
-2. Unjustified DTO/wrapper types: Did the solution add DTOs, identifier wrappers,
-   result wrappers, or mapping types that provide no concrete benefit here?
+- `The solution is proportional to three in-memory lookups and adds no unrelated architecture.`
+- `The solution adds no DTO, identifier, result, or mapping wrapper without a concrete benefit.`
 
-Return JSON only:
-
-```json
-{
-  "proportionality": {"passed": true, "evidence": "..."},
-  "unjustified_types": {"passed": true, "evidence": "..."}
-}
-```
+Return one result for each expectation, preserving its text exactly. Base every
+verdict on the submitted source. A pass needs concrete evidence. The output JSON
+schema is supplied separately by the runner.

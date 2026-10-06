@@ -1,2 +1,4 @@
+//> using scala 3.9.0
 //> using dep org.scalameta::munit:1.3.6
 //> using dep org.scalameta::scalameta:4.17.4
+//> using dep ba.sake::tupson:0.31.0

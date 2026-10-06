@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "expectations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "evidence": { "type": "string" }
+        },
+        "required": ["text", "passed", "evidence"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["expectations"],
+  "additionalProperties": false
+}

@@ -1,0 +1,46 @@
+{
+  "skill_name": "pragmatic-architecture",
+  "evals": [
+    {
+      "id": 1,
+      "name": "customer-repository",
+      "prompt": "Finish the in-memory customer repository in the starter project.\n\nThe application needs to:\n\n- look up a customer by ID;\n- look up a customer by email;\n- list active customers in a region, preserving their input order.\n\nReturn `None` when a lookup has no match and an empty list when a region has no active customers. Add MUnit coverage for the required behavior and run `scala-cli test . --server=false`.",
+      "expected_output": "A small working repository implementation with focused MUnit tests. The required lookups work without exposing mutable backing state or unrelated public access paths.",
+      "files": [
+        "tests/pragmatic-architecture/customer-repository/starter"
+      ],
+      "expectations": [
+        "Lookup by ID returns the matching customer and None for a missing ID.",
+        "Lookup by email is exact and returns None for missing or differently-cased email addresses.",
+        "Active customers are filtered by region and status, preserve input order, and a missing region returns an empty list.",
+        "CustomerRepository exposes exactly findById, findByEmail, and activeByRegion.",
+        "InMemoryCustomerRepository exposes no public mutable state, including constructor fields.",
+        "Helpers are private or protected, with no public all, records, or generic query escape hatch.",
+        "No public method or value exposes a mutable collection type.",
+        "The submission includes focused MUnit coverage for all three required operations.",
+        "The solution is proportional to three in-memory lookups and adds no unrelated architecture.",
+        "The solution adds no DTO, identifier, result, or mapping wrapper without a concrete benefit."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "inventory-reservation",
+      "prompt": "Fix the overselling bug in the supplied warehouse application. Reserving more items than remain currently succeeds and can make stock negative. Reservations arrive through both the HTTP adapter and the warehouse import job, which share one in-memory inventory.\n\nA positive quantity may be reserved only when the product exists and sufficient stock remains. Return `InvalidQuantity` for nonpositive quantities, `UnknownProduct` for missing products, and `InsufficientStock` when stock is too low. Rejected requests must not change stock, and nonpositive quantities take precedence over product lookup. Preserve the existing public signatures and HTTP/job response contracts. Add focused MUnit regression coverage and run `scala-cli test . --server=false`. Keep the fix limited to this sequential, in-process application.",
+      "expected_output": "A focused fix that protects reservation invariants for both callers, preserves their contracts, and includes regression tests for successful and rejected reservations.",
+      "files": [
+        "tests/pragmatic-architecture/inventory-reservation/starter"
+      ],
+      "expectations": [
+        "Valid and exact-stock reservations decrement inventory exactly once.",
+        "Nonpositive quantities are rejected before product lookup and leave all stock unchanged.",
+        "Unknown products and insufficient stock are rejected without changing inventory.",
+        "The HTTP adapter preserves its success and error response contracts.",
+        "The warehouse job preserves its Reserved and Rejected result contracts.",
+        "Sequential reservations through different callers cannot oversell.",
+        "The submission includes focused MUnit regression coverage for rejected reservations.",
+        "Reservation invariants are protected by the shared operation rather than only one adapter.",
+        "The fix is proportional and preserves existing contracts without unrelated layers or dependencies."
+      ]
+    }
+  ]
+}

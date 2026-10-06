@@ -1,29 +1,55 @@
 # Skill evaluations
 
-Run the default customer-repository comparison with GPT-6 Luna:
+The pragmatic-architecture eval set follows the Agent Skills benchmark layout:
+`evals.json`, fresh `with_skill` and `without_skill` workspaces, per-run
+`outputs/`, `grading.json`, `timing.json`, and a workspace-level
+`benchmark.json`.
+
+Run both cases with the default GPT-6 Luna executor and judge:
 
 ```bash
-scala tests/run-eval.scala
+scala tests/run-eval.scala --server=false
 ```
 
-Change the model, provider, or case with flags:
+Run one case or repeat every configuration for variance:
 
 ```bash
-scala tests/run-eval.scala -- \
-  --case pragmatic-architecture/customer-repository \
-  --provider openai \
-  --model gpt-6-luna
+scala tests/run-eval.scala --server=false -- \
+  --case customer-repository \
+  --runs 3
 ```
 
-Supported providers are `ollama`, `lmstudio`, and `openai`. Add
-`--reasoning high` for models that support reasoning effort. The judge uses the
-candidate model by default; select a stronger independent judge with
-`--judge-provider openai --judge-model MODEL`, or use `--skip-judge` to run only
-the candidate comparison and deterministic grader.
+Use a local Ollama model through Codex CLI by changing only the provider and
+model:
 
-Each run gets fresh with-skill and without-skill Git workspaces under
-`tests/tmp/`; protected grading files are never copied into candidate
-workspaces. Logs, judge output, and the machine-readable `run.json` summary are
-stored beside those workspaces. The runner exits nonzero for infrastructure or
-agent execution failures; a protected grading failure is recorded as an eval
-result rather than treated as a runner failure.
+```bash
+ollama pull MODEL
+scala tests/run-eval.scala --server=false -- \
+  --provider ollama \
+  --model MODEL
+```
+
+Supported providers are `openai`, `ollama`, and `lmstudio`. The qualitative
+judge uses the executor provider and model by default. To keep a local executor
+but use a separate judge, pass `--judge-provider openai --judge-model MODEL`.
+Use `--skip-judge` when only candidate execution and protected deterministic
+grading are needed. `--reasoning LEVEL` forwards a supported Codex reasoning
+effort.
+
+Each invocation creates a timestamped workspace under
+`tests/tmp/pragmatic-architecture-workspace/`. Candidate workspaces receive
+only the starter and, for `with_skill`, the installed skill. Protected MUnit
+and Scalameta graders stay outside both candidate workspaces.
+
+Inspect a completed iteration with the standard skill-creator viewer:
+
+```bash
+python "${CODEX_HOME:-$HOME/.codex}/skills/skill-creator/eval-viewer/generate_review.py" \
+  tests/tmp/pragmatic-architecture-workspace/iteration-TIMESTAMP \
+  --benchmark tests/tmp/pragmatic-architecture-workspace/iteration-TIMESTAMP/benchmark.json \
+  --static /tmp/pragmatic-architecture-review.html
+```
+
+The viewer creates `feedback.json` when reviews are submitted. Generated
+workspaces and feedback are intentionally not committed; checked-in summaries
+belong in the skill's maintainer README.

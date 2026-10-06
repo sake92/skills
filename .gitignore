@@ -1,3 +1,6 @@
 /tests/tmp/
 /tests/.bsp/
 /tests/.scala-build/
+**/.bsp/
+**/.scala-build/
+*.semanticdb

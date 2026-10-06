@@ -1,6 +1,6 @@
 ---
 name: pragmatic-architecture
-description: Practical software design guidance for writing, reviewing, and refactoring code. Balance encapsulation, locality, clear dependencies, and behavioral testing against implementation effort, migration risk, and existing project conventions.
+description: Use when implementing, reviewing, or refactoring application or library code where public APIs, mutable state, shared business invariants, or dependency boundaries affect the design. Keep interfaces, dependencies, and changes proportional to real callers and risk.
 ---
 
 # Pragmatic Architecture
@@ -24,6 +24,15 @@ Expose what callers need and keep implementation details local. Shared feature t
 Prefer behavior that preserves invariants over exposing mutable internals. Immutable values are a useful default; contained mutation is fine when it makes the implementation clearer or faster.
 
 When changing an existing type, inspect its public members as part of the change. Keep mutable backing state private, and remove or narrow broad helpers that have no demonstrated caller; internal convenience does not justify a public API. Preserve members required by known callers or compatibility constraints.
+
+Do not inspect only the requested TODOs or methods. For every type you edit,
+review the complete public surface and search the available repository for its
+callers. In an application repository where all callers are available, no
+caller is concrete evidence against keeping a public member. Narrow or remove
+unused mutable backing fields and generic collection accessors on the touched
+type when the requested operations replace them. This is a local part of the
+change, not a reason for a broader refactor. Do not preserve an unsafe escape
+hatch solely because it was present in the starter code.
 
 ## 2. Clear dependency boundaries
 
@@ -64,11 +73,5 @@ Prefer explicit construction and traceable contracts. When artifacts must stay i
 ## 9. Stronger enforcement when it pays off
 
 Compiler-enforced boundaries, import rules, and Java modules can protect important architectural constraints. Adopt them when the protection justifies setup and maintenance, especially around stable library APIs or recurring dependency problems. They are optional tools, not prerequisites for a well-designed feature.
-
-## 10. Tests that earn their cost
-
-Test observable behavior with the cheapest checks that provide sufficient confidence. Prefer integration tests for wiring, persistence, and boundary behavior, and focused unit tests for rules, parsers, and algorithms. Use the production database engine when dialect or transaction behavior matters; use fakes or mocks where real dependencies are costly, unsafe, or impractical.
-
-Prefer tests through stable interfaces without forcing a production API redesign solely for testing. In legacy code, characterization tests and existing test seams can support safe incremental changes. Add property or mutation testing when the logic and risk justify it, not as a routine requirement.
 
 In reviews, prioritize concrete defects and costly coupling. Distinguish necessary fixes from optional improvements; a departure from these preferences is not itself a defect.
