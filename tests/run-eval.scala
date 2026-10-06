@@ -274,13 +274,21 @@ def runEval(config: Config)(using ExecutionContext): Unit =
       withSkill = benchmarkRuns.filter(run => run.configuration == "with_skill" && run.expectations.exists(_.text == expectation))
       withoutSkill = benchmarkRuns.filter(run => run.configuration == "without_skill" && run.expectations.exists(_.text == expectation))
       if withSkill.nonEmpty && withoutSkill.nonEmpty
-      withPasses = withSkill.flatMap(_.expectations).filter(_.text == expectation).forall(_.passed)
-      withoutPasses = withoutSkill.flatMap(_.expectations).filter(_.text == expectation).forall(_.passed)
-      note <-
-        if withPasses && withoutPasses then Some(s"Expectation passes in every with-skill and without-skill run and may not discriminate: $expectation")
-        else if !withPasses && !withoutPasses then Some(s"Expectation fails in both configurations and needs investigation: $expectation")
-        else if withPasses then Some(s"Expectation consistently passes with the skill but not without it: $expectation")
-        else None
+      withResults = withSkill.flatMap(_.expectations).filter(_.text == expectation)
+      withoutResults = withoutSkill.flatMap(_.expectations).filter(_.text == expectation)
+      withRate = withResults.count(_.passed).toDouble / withResults.size
+      withoutRate = withoutResults.count(_.passed).toDouble / withoutResults.size
+      rates = f"with skill ${withRate * 100}%.0f%%, without skill ${withoutRate * 100}%.0f%%"
+      note =
+        if withRate == 1.0 && withoutRate == 1.0 then
+          s"Expectation passes in every run and may not discriminate ($rates): $expectation"
+        else if withRate == 0.0 && withoutRate == 0.0 then
+          s"Expectation fails in every run and needs investigation ($rates): $expectation"
+        else if withRate > withoutRate then
+          s"Expectation favors the skill but is not necessarily stable ($rates): $expectation"
+        else if withRate < withoutRate then
+          s"Expectation favors the baseline and needs investigation ($rates): $expectation"
+        else s"Expectation has equal mixed results and may be flaky ($rates): $expectation"
     yield note
     paired.distinct
       ++ Option.when(benchmarkRuns.exists(_.notes.nonEmpty))(

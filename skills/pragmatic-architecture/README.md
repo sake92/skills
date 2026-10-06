@@ -6,7 +6,7 @@ the skill instructions presented to an evaluated agent.
 
 ## Evaluation
 
-The checked-in eval set has two Scala 3 cases:
+The checked-in eval set has one Scala 3 case:
 
 - `customer-repository` asks for three ordinary in-memory lookups without
   naming privacy, encapsulation, or interface minimality. Protected MUnit and
@@ -14,10 +14,6 @@ The checked-in eval set has two Scala 3 cases:
   state and helpers, immutable return types, forbidden escape hatches, and
   candidate regression coverage. An LLM judge grades only proportionality and
   unjustified wrapper types.
-- `inventory-reservation` starts green but permits overselling. Protected MUnit
-  checks cover both callers, rejected requests, state preservation, shared
-  invariant ownership, and candidate regression coverage. An LLM judge grades
-  only invariant placement and proportionality.
 
 The legacy order case was removed because with-skill and without-skill agents
 produced the same fully passing patch, so it did not measure skill value.
@@ -33,7 +29,16 @@ models, independent judges, output paths, and the standard human-review viewer.
 
 ## Latest benchmark
 
-No result is claimed until the checked-in runner has completed both cases. Add
-the executor/judge models, run count, per-configuration pass rates, and the
-generated workspace path here after reviewing `benchmark.json` and the static
-viewer.
+On 2026-10-06, GPT-6 Luna ran the customer case twice per configuration at
+commit `6afcd7d` with Luna also acting as the qualitative judge:
+
+| Configuration | Runs | Mean pass rate | Individual scores |
+| --- | ---: | ---: | --- |
+| With skill | 2 | 80% | 6/10, 10/10 |
+| Without skill | 2 | 60% | 6/10, 6/10 |
+
+The successful with-skill run invoked the skill and passed every expectation.
+The 6/10 with-skill run did not invoke it, so this is evidence of useful
+instructions when triggered, but also of trigger variance—not a stable 20-point
+uplift claim. The inventory-reservation case was removed after both with-skill
+and without-skill runs scored 9/9 twice, making it non-discriminating for Luna.

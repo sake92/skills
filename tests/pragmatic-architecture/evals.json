@@ -21,26 +21,6 @@
         "The solution is proportional to three in-memory lookups and adds no unrelated architecture.",
         "The solution adds no DTO, identifier, result, or mapping wrapper without a concrete benefit."
       ]
-    },
-    {
-      "id": 2,
-      "name": "inventory-reservation",
-      "prompt": "Fix the overselling bug in the supplied warehouse application. Reserving more items than remain currently succeeds and can make stock negative. Reservations arrive through both the HTTP adapter and the warehouse import job, which share one in-memory inventory.\n\nA positive quantity may be reserved only when the product exists and sufficient stock remains. Return `InvalidQuantity` for nonpositive quantities, `UnknownProduct` for missing products, and `InsufficientStock` when stock is too low. Rejected requests must not change stock, and nonpositive quantities take precedence over product lookup. Preserve the existing public signatures and HTTP/job response contracts. Add focused MUnit regression coverage and run `scala-cli test . --server=false`. Keep the fix limited to this sequential, in-process application.",
-      "expected_output": "A focused fix that protects reservation invariants for both callers, preserves their contracts, and includes regression tests for successful and rejected reservations.",
-      "files": [
-        "tests/pragmatic-architecture/inventory-reservation/starter"
-      ],
-      "expectations": [
-        "Valid and exact-stock reservations decrement inventory exactly once.",
-        "Nonpositive quantities are rejected before product lookup and leave all stock unchanged.",
-        "Unknown products and insufficient stock are rejected without changing inventory.",
-        "The HTTP adapter preserves its success and error response contracts.",
-        "The warehouse job preserves its Reserved and Rejected result contracts.",
-        "Sequential reservations through different callers cannot oversell.",
-        "The submission includes focused MUnit regression coverage for rejected reservations.",
-        "Reservation invariants are protected by the shared operation rather than only one adapter.",
-        "The fix is proportional and preserves existing contracts without unrelated layers or dependencies."
-      ]
     }
   ]
 }

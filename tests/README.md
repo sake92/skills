@@ -5,7 +5,7 @@ The pragmatic-architecture eval set follows the Agent Skills benchmark layout:
 `outputs/`, `grading.json`, `timing.json`, and a workspace-level
 `benchmark.json`.
 
-Run both cases with the default GPT-6 Luna executor and judge:
+Run the eval set with the default GPT-6 Luna executor and judge:
 
 ```bash
 scala tests/run-eval.scala --server=false
