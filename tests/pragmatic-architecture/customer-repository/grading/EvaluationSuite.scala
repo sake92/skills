@@ -5,7 +5,7 @@ import evaluation.RecordedSuite
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-class EvaluationSuite extends RecordedSuite:
+class EvaluationSuite extends RecordedSuite {
   private val ada = Customer("c-1", "ada@example.com", "north", active = true)
   private val grace = Customer("c-2", "grace@example.com", "north", active = false)
   private val linus = Customer("c-3", "linus@example.com", "south", active = true)
@@ -28,7 +28,9 @@ class EvaluationSuite extends RecordedSuite:
     assertEquals(repository.findByEmail("ADA@example.com"), None)
     assertEquals(repository.findByEmail("missing@example.com"), None)
 
-  expectation("Active customers are filtered by region and status, preserve input order, and a missing region returns an empty list."):
+  expectation(
+    "Active customers are filtered by region and status, preserve input order, and a missing region returns an empty list."
+  ):
     assertEquals(repository.activeByRegion("north"), List(ada, barbara))
     assertEquals(repository.activeByRegion("south"), List(linus))
     assertEquals(repository.activeByRegion("missing"), Nil)
@@ -68,7 +70,7 @@ class EvaluationSuite extends RecordedSuite:
         |""".stripMargin
     assertEquals(RepositoryStructure.analyze(List(code)), Nil)
 
-  test("grader rejects each forbidden public surface"):
+  test("grader rejects each forbidden public surface") {
     val code =
       """
         |import scala.collection.mutable.{Map as MutableMap}
@@ -105,6 +107,7 @@ class EvaluationSuite extends RecordedSuite:
     assert(found.exists(v => v.criterion == "returns" && v.message.contains("snapshot")))
     assert(found.exists(v => v.criterion == "returns" && v.message.contains("exposedSlots")))
     assert(found.exists(v => v.criterion == "returns" && v.message.contains("packageAliasReturn")))
+  }
 
   test("grader accepts unqualified immutable collections"):
     val code =
@@ -124,9 +127,31 @@ class EvaluationSuite extends RecordedSuite:
         |""".stripMargin
     assertEquals(RepositoryStructure.analyze(List(code)), Nil)
 
+  test("grader rejects mutable types imported from nested mutable packages") {
+    val code =
+      """
+        |import scala.collection.mutable.concurrent.TrieMap
+        |trait CustomerRepository:
+        |  def findById(id: String): Option[Customer]
+        |  def findByEmail(email: String): Option[Customer]
+        |  def activeByRegion(region: String): List[Customer]
+        |
+        |final class InMemoryCustomerRepository(
+        |    val records: TrieMap[String, Customer]
+        |) extends CustomerRepository:
+        |  def findById(id: String): Option[Customer] = records.get(id)
+        |  def findByEmail(email: String): Option[Customer] = records.values.find(_.email == email)
+        |  def activeByRegion(region: String): List[Customer] = Nil
+        |""".stripMargin
+
+    val found = RepositoryStructure.analyze(List(code))
+    assert(found.exists(v => v.criterion == "state" && v.message.contains("records")))
+  }
+
   private def readScala(root: Path): List[String] =
     if !Files.isDirectory(root) then Nil
     else
       val stream = Files.walk(root)
       try stream.iterator.asScala.filter(path => path.toString.endsWith(".scala")).map(Files.readString).toList
       finally stream.close()
+}

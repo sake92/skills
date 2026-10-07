@@ -21,24 +21,32 @@ produced the same fully passing patch, so it did not measure skill value.
 Run the complete comparison from the repository root:
 
 ```bash
-scala tests/run-eval.scala --server=false
+scala tests/run-eval.scala --server=false -- output
 ```
 
-See [`tests/README.md`](../../tests/README.md) for repeat runs, local Ollama
-models, independent judges, output paths, and the standard human-review viewer.
+See [`tests/README.md`](../../tests/README.md) for repeat runs, independent
+judges, and output paths.
 
 ## Latest benchmark
 
-On 2026-10-06, GPT-6 Luna ran the customer case twice per configuration at
-commit `6afcd7d` with Luna also acting as the qualitative judge:
+On 2026-10-07, Pi 1.0.4 ran GPT-6 Luna with low reasoning on the customer case
+once per configuration, with Luna also acting as the narrowly scoped
+qualitative judge:
 
-| Configuration | Runs | Mean pass rate | Individual scores |
-| --- | ---: | ---: | --- |
-| With skill | 2 | 80% | 6/10, 10/10 |
-| Without skill | 2 | 60% | 6/10, 6/10 |
+| Configuration | Score | Candidate time | Tokens |
+| --- | ---: | ---: | ---: |
+| With skill | 10/10 | 50.3 s | 15,568 |
+| Without skill | 7/10 | 36.6 s | 9,735 |
 
-The successful with-skill run invoked the skill and passed every expectation.
-The 6/10 with-skill run did not invoke it, so this is evidence of useful
-instructions when triggered, but also of trigger variance—not a stable 20-point
-uplift claim. The inventory-reservation case was removed after both with-skill
-and without-skill runs scored 9/9 twice, making it non-discriminating for Luna.
+Both runs implemented the requested behavior, added focused MUnit coverage, and
+passed the proportionality and wrapper-type checks. The baseline left the
+prototype's public mutable `records`, `all`, and `query` escape hatches in
+place; the with-skill run removed or hid them and passed all protected Scalameta
+checks. One paired run demonstrates discrimination but is not a stable uplift
+estimate.
+
+The separate natural-trigger sanity check passed 5 of 8 held-out queries in a
+single Luna/low run. It rejected all four negative near-misses but loaded the
+skill for only one of four applicable requests. That is useful evidence that
+the description still triggers inconsistently, not a stable trigger-rate
+estimate; the checked-in runner defaults to three runs for a real measurement.

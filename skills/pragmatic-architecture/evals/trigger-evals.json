@@ -1,0 +1,145 @@
+{
+  "skill_name": "pragmatic-architecture",
+  "queries": [
+    {
+      "id": 1,
+      "name": "narrow-public-cache-api",
+      "query": "Implement the missing lookup methods in src/main/scala/catalog/InMemoryCatalog.scala. The class currently exposes its mutable backing buffer and a generic filter method; check the repository for callers and leave the public API in a sensible state.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "id": 2,
+      "name": "shared-booking-invariant",
+      "query": "Both the HTTP endpoint and nightly import can create room bookings. Add the overlap check so neither path can create a conflicting booking, while keeping the change proportional to this small service.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "id": 3,
+      "name": "library-surface-change",
+      "query": "Add batch lookup support to the public Scala client in modules/client. Before changing the trait, inspect its callers and decide whether this belongs on the existing interface or behind a smaller capability.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "id": 4,
+      "name": "feature-boundary",
+      "query": "The new subscription cancellation flow currently touches billing, email, and account packages directly from the controller. Implement it without spreading the business rule across all three adapters.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "id": 5,
+      "name": "dependency-choice",
+      "query": "We need retry behavior around one outbound call. Review the existing application code and implement the smallest suitable solution; avoid adding a framework or abstraction unless it pays for itself here.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "id": 6,
+      "name": "model-boundary",
+      "query": "The REST response currently returns the persistence record directly. Add the requested field and decide whether the API and database models should still be shared given their different change cadence.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "id": 7,
+      "name": "test-only-regression",
+      "query": "Add MUnit regression coverage for the existing customer email lookup. Do not change production code; the behavior is already correct.",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "id": 8,
+      "name": "scala-cli-version-bump",
+      "query": "Update the Scala CLI directive from Scala 3.8.2 to 3.9.0 across the example projects, run formatting, and verify they still compile.",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "id": 9,
+      "name": "cli-shutdown",
+      "query": "The import CLI leaves its child process running after Ctrl-C. Fix signal handling, add a bounded shutdown, and make sure stdout stays machine-readable.",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "id": 10,
+      "name": "documentation-restructure",
+      "query": "Reorganize the user guide into tutorial, how-to, reference, and explanation sections without changing any application code.",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "id": 11,
+      "name": "mechanical-local-rename",
+      "query": "Rename the local variable `custs` to `customers` in CustomerCsv.scala and update the nearby comment. Keep this as a mechanical edit.",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "id": 12,
+      "name": "dependency-report",
+      "query": "Generate a package dependency report for modules/core and identify cycles and the highest fan-out packages. Do not modify the code yet.",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "id": 13,
+      "name": "mutable-session-store",
+      "query": "Finish the in-memory session store in src/main/scala/auth. It has the required methods plus public mutable collections and convenience accessors left by the prototype; inspect usages before finalizing it.",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "id": 14,
+      "name": "cross-entrypoint-invariant",
+      "query": "Orders can be approved through both the admin API and a scheduled job. Implement the credit-limit rule once so both entry points enforce it consistently.",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "id": 15,
+      "name": "package-cycle-refactor",
+      "query": "The pricing and promotions packages now depend on each other after the last feature. Refactor the boundary with the least disruptive change and explain why the new dependency direction is clearer.",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "id": 16,
+      "name": "wrapper-proportionality",
+      "query": "Add support for warehouse IDs to this small internal library. Decide whether a dedicated ID type prevents a real mistake here or whether the existing String contract is adequate.",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "id": 17,
+      "name": "test-fixture-cleanup",
+      "query": "Consolidate duplicated customer builders in the MUnit test sources. Production APIs and behavior must remain unchanged.",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "id": 18,
+      "name": "format-generated-code",
+      "query": "Run scalafmt on the generated client sources and update the formatting check so CI reports the offending generated file.",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "id": 19,
+      "name": "docker-entrypoint",
+      "query": "Fix the Docker entrypoint so the JVM receives SIGTERM, exits with the child status, and does not leak background processes.",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "id": 20,
+      "name": "api-copy-edit",
+      "query": "Improve the wording of validation error messages returned by the signup endpoint. Keep response fields, status codes, and behavior exactly the same.",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}

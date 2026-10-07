@@ -1,6 +1,6 @@
 ---
 name: pragmatic-architecture
-description: Use when implementing, reviewing, or refactoring application or library code where public APIs, mutable state, shared business invariants, or dependency boundaries affect the design. Keep interfaces, dependencies, and changes proportional to real callers and risk.
+description: Always load and use this skill when implementing or reviewing production application or library code to inspect callers and narrow a public API, hide mutable state or broad collection and query escape hatches, centralize a business invariant shared across entry points, untangle package or module dependencies, or decide whether model boundaries, wrapper types, and new abstractions pay for themselves. Use it even for small requests that do not mention architecture, and keep changes proportional. Do not use for test-only, documentation-only or copy-only, formatting or renaming, dependency update or report, or process-lifecycle tasks.
 ---
 
 # Pragmatic Architecture

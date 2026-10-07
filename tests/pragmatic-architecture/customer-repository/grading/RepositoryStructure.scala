@@ -4,9 +4,10 @@ import scala.meta.*
 
 case class Violation(criterion: String, message: String)
 
-object RepositoryStructure:
+object RepositoryStructure {
   private val required = Set("findById", "findByEmail", "activeByRegion")
   private val escapeHatches = Set("all", "records", "query")
+  private val mutablePrefix = "scala.collection.mutable"
   private case class MutableReferences(typeNames: Set[String], prefixes: Set[String])
 
   private given Dialect = dialects.Scala3
@@ -35,7 +36,7 @@ object RepositoryStructure:
   private def mutableReferences(trees: List[Source]): MutableReferences =
     val imports = trees.flatMap(tree => descendants(tree).collect { case importer: Importer => importer })
     val importedTypes = imports.flatMap:
-      case Importer(ref, importees) if ref.syntax == "scala.collection.mutable" =>
+      case Importer(ref, importees) if ref.syntax.startsWith(mutablePrefix) =>
         importees.flatMap:
           case Importee.Name(name)         => List(name.value)
           case Importee.Rename(_, renamed) => List(renamed.value)
@@ -44,19 +45,19 @@ object RepositoryStructure:
     val prefixes = imports.flatMap:
       case Importer(ref, importees) if ref.syntax == "scala.collection" =>
         importees.collect:
-          case Importee.Name(name) if name.value == "mutable" => name.value
+          case Importee.Name(name) if name.value == "mutable"            => name.value
           case Importee.Rename(name, renamed) if name.value == "mutable" => renamed.value
       case _ => Nil
     MutableReferences(importedTypes.toSet + "Array", prefixes.toSet)
 
   private def mentionsMutable(tree: Tree, references: MutableReferences): Boolean =
-    tree.syntax.contains("scala.collection.mutable.") ||
+    tree.syntax.contains(s"$mutablePrefix.") ||
       descendants(tree).exists:
-        case Type.Name(name)         => references.typeNames(name)
-        case Term.Name(name)         => references.typeNames(name)
-        case Type.Select(qual, _)    => references.prefixes(qual.syntax)
-        case Term.Select(qual, _)    => references.prefixes(qual.syntax)
-        case _                       => false
+        case Type.Name(name)      => references.typeNames(name)
+        case Term.Name(name)      => references.typeNames(name)
+        case Type.Select(qual, _) => references.prefixes(qual.syntax)
+        case Term.Select(qual, _) => references.prefixes(qual.syntax)
+        case _                    => false
 
   private def declaredReturn(member: Tree): Option[Type] = member match
     case value: Decl.Val  => Some(value.decltpe)
@@ -69,23 +70,24 @@ object RepositoryStructure:
 
   private def returnsMutable(member: Tree, references: MutableReferences, mutableStorage: Set[String]): Boolean =
     declaredReturn(member).exists(mentionsMutable(_, references)) || (member match
-      case value: Defn.Val => mentionsMutable(value.rhs, references)
-      case value: Defn.Var => value.rhs.exists(mentionsMutable(_, references))
+      case value: Defn.Val  => mentionsMutable(value.rhs, references)
+      case value: Defn.Var  => value.rhs.exists(mentionsMutable(_, references))
       case method: Defn.Def =>
         method.body match
           case Term.Name(name) => mutableStorage(name)
           case body            => mentionsMutable(body, references)
-      case _ => false
-    )
+      case _ => false)
 
-  def analyze(codes: List[String]): List[Violation] =
+  def analyze(codes: List[String]): List[Violation] = {
     val trees = codes.map(_.parse[Source].get)
     val mutableRefs = mutableReferences(trees)
-    val repository = trees.flatMap(tree => descendants(tree).collect:
-      case definition: Defn.Trait if definition.name.value == "CustomerRepository" => definition
+    val repository = trees.flatMap(tree =>
+      descendants(tree).collect:
+        case definition: Defn.Trait if definition.name.value == "CustomerRepository" => definition
     )
-    val inMemory = trees.flatMap(tree => descendants(tree).collect:
-      case definition: Defn.Class if definition.name.value == "InMemoryCustomerRepository" => definition
+    val inMemory = trees.flatMap(tree =>
+      descendants(tree).collect:
+        case definition: Defn.Class if definition.name.value == "InMemoryCustomerRepository" => definition
     )
     val violations = List.newBuilder[Violation]
 
@@ -96,22 +98,26 @@ object RepositoryStructure:
           violations += Violation("interface", s"CustomerRepository public members were ${names.sorted.mkString(", ")}")
       case _ => violations += Violation("interface", "expected exactly one CustomerRepository trait")
 
-    inMemory match
+    inMemory match {
       case definition :: Nil =>
         val terms = publicTerms(definition.templ.stats)
         val publicNames = terms.map(_._1)
         val mutableFields = definition.templ.stats.flatMap:
           case value: Defn.Val if mentionsMutable(value, mutableRefs) => names(value.pats)
-          case value: Defn.Var                                   => names(value.pats)
-          case _                                                 => Nil
+          case value: Defn.Var                                        => names(value.pats)
+          case _                                                      => Nil
         val mutableConstructorFields = definition.ctor.paramss.flatten.collect:
           case parameter if parameter.decltpe.exists(mentionsMutable(_, mutableRefs)) => parameter.name.value
         val mutableStorage = (mutableFields ++ mutableConstructorFields).toSet
 
-        publicNames.filterNot(required).foreach: name =>
-          violations += Violation("helpers", s"helper '$name' is public")
-        publicNames.filter(escapeHatches).foreach: name =>
-          violations += Violation("helpers", s"public '$name' escape hatch")
+        publicNames
+          .filterNot(required)
+          .foreach: name =>
+            violations += Violation("helpers", s"helper '$name' is public")
+        publicNames
+          .filter(escapeHatches)
+          .foreach: name =>
+            violations += Violation("helpers", s"public '$name' escape hatch")
 
         definition.ctor.paramss.flatten.foreach: parameter =>
           val isField = parameter.mods.exists:
@@ -136,5 +142,8 @@ object RepositoryStructure:
           if returnsMutable(member, mutableRefs, mutableStorage) then
             violations += Violation("returns", s"public '$name' returns a mutable collection")
       case _ => violations += Violation("state", "expected exactly one InMemoryCustomerRepository class")
+    }
 
     violations.result().distinct.sortBy(v => v.criterion -> v.message)
+  }
+}
