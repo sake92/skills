@@ -58,7 +58,8 @@ def metrics(
     tool_calls = toolTypes.groupMapReduce(identity)(_ => 1)(_ + _),
     total_tool_calls = toolTypes.size,
     total_steps = events.count(event => event.`type` == "message_end" || event.`type` == "tool_execution_end"),
-    files_created = status.collect { case line if line.startsWith("?? ") => line.drop(3) },
+    files_created = status.collect:
+      case line if line.startsWith("?? ") || line.startsWith(" A ") => line.drop(3),
     errors_encountered = completedTools.count(_.isError.contains(true)) + events.count(event =>
       event.`type` == "message_end" && event.message.flatMap(_.stopReason).contains("error")
     ),

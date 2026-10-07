@@ -35,8 +35,8 @@ qualitative judge:
 
 | Configuration | Score | Candidate time | Tokens |
 | --- | ---: | ---: | ---: |
-| With skill | 10/10 | 50.3 s | 15,568 |
-| Without skill | 7/10 | 36.6 s | 9,735 |
+| With skill | 10/10 | 58.8 s | 12,892 |
+| Without skill | 7/10 | 49.7 s | 11,138 |
 
 Both runs implemented the requested behavior, added focused MUnit coverage, and
 passed the proportionality and wrapper-type checks. The baseline left the
@@ -45,8 +45,8 @@ place; the with-skill run removed or hid them and passed all protected Scalameta
 checks. One paired run demonstrates discrimination but is not a stable uplift
 estimate.
 
-The separate natural-trigger sanity check passed 5 of 8 held-out queries in a
+The separate natural-trigger sanity check passed 6 of 8 held-out queries in a
 single Luna/low run. It rejected all four negative near-misses but loaded the
-skill for only one of four applicable requests. That is useful evidence that
+skill for only two of four applicable requests. That is useful evidence that
 the description still triggers inconsistently, not a stable trigger-rate
 estimate; the checked-in runner defaults to three runs for a real measurement.

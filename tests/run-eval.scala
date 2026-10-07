@@ -4,9 +4,15 @@
 //> using dep ba.sake::tupson:0.31.0
 //> using dep com.softwaremill.ox::core:1.0.9
 //> using file eval-runner/Models.scala
+//> using file eval-runner/PiProtocol.scala
+//> using file eval-runner/OutputModels.scala
+//> using file eval-runner/TriggerModels.scala
 //> using file eval-runner/Infrastructure.scala
 //> using file eval-runner/Metrics.scala
 //> using file eval-runner/OutputEval.scala
+//> using file eval-runner/OutputExecution.scala
+//> using file eval-runner/OutputGrading.scala
+//> using file eval-runner/OutputBenchmark.scala
 //> using file eval-runner/TriggerEval.scala
 
 import mainargs.{Flag, ParserForMethods, arg}

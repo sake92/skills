@@ -160,19 +160,18 @@ def runTriggerEval(config: TriggerConfig): Unit = {
     summarize(results)
   )
   writeJson(iterationRoot / "trigger-benchmark.json", benchmark)
+  val header =
+    "# Trigger benchmark\n\n" +
+      "| Query | Split | Should trigger | Triggers | Rate | Result |\n" +
+      "| --- | --- | ---: | ---: | ---: | --- |\n"
+  val rows = results.map: result =>
+    val outcome = if result.passed then "pass" else "fail"
+    val rate = f"${result.trigger_rate * 100}%.0f%%"
+    s"| ${result.query_name} | ${result.split} | ${result.should_trigger} | " +
+      s"${result.triggers}/${result.runs} | $rate | $outcome |"
   os.write.over(
     iterationRoot / "trigger-benchmark.md",
-    results
-      .map(result =>
-        f"| ${result.query_name} | ${result.split} | ${result.should_trigger} | ${result.triggers}/${result.runs} | ${result.trigger_rate * 100}%.0f%% | ${
-            if result.passed then "pass" else "fail"
-          } |"
-      )
-      .mkString(
-        "# Trigger benchmark\n\n| Query | Split | Should trigger | Triggers | Rate | Result |\n| --- | --- | ---: | ---: | ---: | --- |\n",
-        "\n",
-        "\n"
-      )
+    rows.mkString(header, "\n", "\n")
   )
   System.err.println(s"Results: $iterationRoot")
   splits.toList
@@ -182,15 +181,3 @@ def runTriggerEval(config: TriggerConfig): Unit = {
         f"$split: ${result.passed}/${result.total} (${result.accuracy * 100}%.0f%%)"
       )
 }
-
-case class TriggerConfig(
-    skillPath: String = "skills/pragmatic-architecture",
-    query: Option[String] = None,
-    split: Option[String] = None,
-    model: String = "gpt-6-luna",
-    reasoning: String = "low",
-    runs: Int = 3,
-    threshold: Double = 0.5,
-    timeoutMinutes: Int = 10,
-    parallelism: Int = 2
-)
