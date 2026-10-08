@@ -1,0 +1,90 @@
+--- without-skill/src/main/scala/http/TeacherController.scala
++++ with-skill/src/main/scala/http/TeacherController.scala
+@@ -14,7 +14,7 @@
+     parsed match
+       case None                 => TeacherResponse(400, "invalid identifier")
+       case Some((user, course)) =>
+-        service.findByUserIdAndCourseId(user, course) match
++        service.findByUserIdAndCourseId(teachers.UserId(user), teachers.CourseId(course)) match
+           case Some(teacher) => TeacherResponse(200, teacher.displayName)
+           case None          => TeacherResponse(404, "teacher not found")
+ 
+--- without-skill/src/main/scala/reports/CourseRoster.scala
++++ with-skill/src/main/scala/reports/CourseRoster.scala
+@@ -5,4 +5,4 @@
+ 
+ final class CourseRoster(service: TeacherService):
+   def namesFor(userId: UUID, courseIds: List[UUID]): List[Option[String]] =
+-    courseIds.map(courseId => service.findByUserIdAndCourseId(userId, courseId).map(_.displayName))
++    courseIds.map(courseId => service.findByUserIdAndCourseId(teachers.UserId(userId), teachers.CourseId(courseId)).map(_.displayName))
+--- without-skill/src/main/scala/teachers/TeacherRepository.scala
++++ with-skill/src/main/scala/teachers/TeacherRepository.scala
+@@ -5,9 +5,17 @@
+ // Persistence records keep their UUID representation.
+ case class TeacherRecord(userId: UUID, courseId: UUID, displayName: String)
+ 
++opaque type UserId = UUID
++object UserId:
++  def apply(value: UUID): UserId = value
++
++opaque type CourseId = UUID
++object CourseId:
++  def apply(value: UUID): CourseId = value
++
+ trait TeacherRepository:
+-  def findByUserIdAndCourseId(userId: UUID, courseId: UUID): Option[TeacherRecord]
++  def findByUserIdAndCourseId(userId: UserId, courseId: CourseId): Option[TeacherRecord]
+ 
+ final class InMemoryTeacherRepository(seed: List[TeacherRecord]) extends TeacherRepository:
+-  def findByUserIdAndCourseId(userId: UUID, courseId: UUID): Option[TeacherRecord] =
++  def findByUserIdAndCourseId(userId: UserId, courseId: CourseId): Option[TeacherRecord] =
+     seed.find(row => row.userId == userId && row.courseId == courseId)
+--- without-skill/src/main/scala/teachers/TeacherService.scala
++++ with-skill/src/main/scala/teachers/TeacherService.scala
+@@ -4,9 +4,9 @@
+ import scala.collection.mutable
+ 
+ final class TeacherService(repository: TeacherRepository) {
+-  private val cache = mutable.Map.empty[(UUID, UUID), TeacherRecord]
++  private val cache = mutable.Map.empty[(UserId, CourseId), TeacherRecord]
+ 
+-  def findByUserIdAndCourseId(userId: UUID, courseId: UUID): Option[TeacherRecord] =
++  def findByUserIdAndCourseId(userId: UserId, courseId: CourseId): Option[TeacherRecord] =
+     val key = (userId, courseId)
+     cache.get(key).orElse {
+       val found = repository.findByUserIdAndCourseId(userId, courseId)
+--- without-skill/src/test/scala/TeacherSuite.scala
++++ with-skill/src/test/scala/TeacherSuite.scala
+@@ -13,19 +13,22 @@
+     assertEquals(new CourseRoster(service).namesFor(id, List(id)), List(Some("Ada")))
+   }
+ 
+-  test("lookup uses user and course in the correct order and isolates cached results") {
++  test("lookup uses user and course in the correct order and isolates repeated queries") {
+     val user = id
++    val course = UUID.fromString("00000000-0000-0000-0000-000000000002")
+     val otherUser = UUID.fromString("00000000-0000-0000-0000-000000000003")
+-    val course = UUID.fromString("00000000-0000-0000-0000-000000000002")
+-    val reversedOnly = TeacherRecord(course, user, "Wrong reversed match")
+-    val expected = TeacherRecord(user, course, "Correct teacher")
+-    val otherCourse = TeacherRecord(user, otherUser, "Different course")
+-    val svc = new TeacherService(new InMemoryTeacherRepository(List(reversedOnly, expected, otherCourse)))
++    val rows = List(
++      TeacherRecord(user, course, "Expected"),
++      TeacherRecord(course, user, "Reversed"),
++      TeacherRecord(otherUser, course, "Other user")
++    )
++    val lookup = new TeacherService(new InMemoryTeacherRepository(rows))
+ 
+-    assertEquals(svc.findByUserIdAndCourseId(user, course), Some(expected))
+-    assertEquals(svc.findByUserIdAndCourseId(user, otherUser), Some(otherCourse))
+-    assertEquals(svc.findByUserIdAndCourseId(user, course), Some(expected))
+-    assertEquals(svc.findByUserIdAndCourseId(course, user), Some(reversedOnly))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(user), CourseId(course)).map(_.displayName), Some("Expected"))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(user), CourseId(course)).map(_.displayName), Some("Expected"))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(otherUser), CourseId(course)).map(_.displayName), Some("Other user"))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(course), CourseId(user)).map(_.displayName), Some("Reversed"))
++    assertEquals(new TeacherController(lookup).get(user.toString, course.toString), TeacherResponse(200, "Expected"))
+   }
+ 
+   test("absence and malformed URL identifiers") {

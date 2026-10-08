@@ -13,8 +13,6 @@ These are design preferences, not acceptance criteria. Apply them where they mak
 
 Understand the affected code and its conventions before proposing a different design. Weigh the concrete benefit against implementation effort, compatibility, migration risk, and ongoing maintenance.
 
-Before editing a bug fix, distinguish the observed failure from what allowed it. If semantically different arguments share a primitive type and have already been swapped, treat a local type distinction as part of the repair: changing the order and adding a runtime test leaves the same erroneous call legal. Read section 4 and implement the inexpensive protection on the touched operation, unless a concrete compatibility or migration constraint prevents it. A small fix can include this small design improvement; preserving existing conventions does not require preserving the demonstrated hazard.
-
 In legacy projects, work within the existing architecture unless it prevents a sound solution. A small fix should not become a 10,000-line refactor to satisfy a preference. Improve nearby design when it helps the task; leave unrelated debt alone. Broader changes make sense when they resolve demonstrated problems or the user requests them.
 
 When a tradeoff matters, briefly explain the benefit and cost. Keeping the current design is a valid outcome. Flexibility about architecture does not excuse correctness, security, or data-integrity problems.

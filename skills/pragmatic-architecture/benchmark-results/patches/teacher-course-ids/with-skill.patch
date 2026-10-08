@@ -1,0 +1,96 @@
+diff --git a/src/main/scala/http/TeacherController.scala b/src/main/scala/http/TeacherController.scala
+index 39bee0e..8c88579 100644
+--- a/src/main/scala/http/TeacherController.scala
++++ b/src/main/scala/http/TeacherController.scala
+@@ -14,7 +14,7 @@ final class TeacherController(service: TeacherService) {
+     parsed match
+       case None                 => TeacherResponse(400, "invalid identifier")
+       case Some((user, course)) =>
+-        service.findByUserIdAndCourseId(user, course) match
++        service.findByUserIdAndCourseId(teachers.UserId(user), teachers.CourseId(course)) match
+           case Some(teacher) => TeacherResponse(200, teacher.displayName)
+           case None          => TeacherResponse(404, "teacher not found")
+ 
+diff --git a/src/main/scala/reports/CourseRoster.scala b/src/main/scala/reports/CourseRoster.scala
+index ac14de9..78e81c7 100644
+--- a/src/main/scala/reports/CourseRoster.scala
++++ b/src/main/scala/reports/CourseRoster.scala
+@@ -5,4 +5,4 @@ import teachers.TeacherService
+ 
+ final class CourseRoster(service: TeacherService):
+   def namesFor(userId: UUID, courseIds: List[UUID]): List[Option[String]] =
+-    courseIds.map(courseId => service.findByUserIdAndCourseId(userId, courseId).map(_.displayName))
++    courseIds.map(courseId => service.findByUserIdAndCourseId(teachers.UserId(userId), teachers.CourseId(courseId)).map(_.displayName))
+diff --git a/src/main/scala/teachers/TeacherRepository.scala b/src/main/scala/teachers/TeacherRepository.scala
+index ecf55a8..9988bec 100644
+--- a/src/main/scala/teachers/TeacherRepository.scala
++++ b/src/main/scala/teachers/TeacherRepository.scala
+@@ -5,9 +5,17 @@ import java.util.UUID
+ // Persistence records keep their UUID representation.
+ case class TeacherRecord(userId: UUID, courseId: UUID, displayName: String)
+ 
++opaque type UserId = UUID
++object UserId:
++  def apply(value: UUID): UserId = value
++
++opaque type CourseId = UUID
++object CourseId:
++  def apply(value: UUID): CourseId = value
++
+ trait TeacherRepository:
+-  def findByUserIdAndCourseId(userId: UUID, courseId: UUID): Option[TeacherRecord]
++  def findByUserIdAndCourseId(userId: UserId, courseId: CourseId): Option[TeacherRecord]
+ 
+ final class InMemoryTeacherRepository(seed: List[TeacherRecord]) extends TeacherRepository:
+-  def findByUserIdAndCourseId(userId: UUID, courseId: UUID): Option[TeacherRecord] =
++  def findByUserIdAndCourseId(userId: UserId, courseId: CourseId): Option[TeacherRecord] =
+     seed.find(row => row.userId == userId && row.courseId == courseId)
+diff --git a/src/main/scala/teachers/TeacherService.scala b/src/main/scala/teachers/TeacherService.scala
+index 0c315b3..2e553fd 100644
+--- a/src/main/scala/teachers/TeacherService.scala
++++ b/src/main/scala/teachers/TeacherService.scala
+@@ -4,12 +4,12 @@ import java.util.UUID
+ import scala.collection.mutable
+ 
+ final class TeacherService(repository: TeacherRepository) {
+-  private val cache = mutable.Map.empty[(UUID, UUID), TeacherRecord]
++  private val cache = mutable.Map.empty[(UserId, CourseId), TeacherRecord]
+ 
+-  def findByUserIdAndCourseId(userId: UUID, courseId: UUID): Option[TeacherRecord] =
++  def findByUserIdAndCourseId(userId: UserId, courseId: CourseId): Option[TeacherRecord] =
+     val key = (userId, courseId)
+     cache.get(key).orElse {
+-      val found = repository.findByUserIdAndCourseId(courseId, userId)
++      val found = repository.findByUserIdAndCourseId(userId, courseId)
+       found.foreach(record => cache.put(key, record))
+       found
+     }
+diff --git a/src/test/scala/TeacherSuite.scala b/src/test/scala/TeacherSuite.scala
+index f438bdf..aa9c3c5 100644
+--- a/src/test/scala/TeacherSuite.scala
++++ b/src/test/scala/TeacherSuite.scala
+@@ -13,6 +13,24 @@ class TeacherSuite extends munit.FunSuite {
+     assertEquals(new CourseRoster(service).namesFor(id, List(id)), List(Some("Ada")))
+   }
+ 
++  test("lookup uses user and course in the correct order and isolates repeated queries") {
++    val user = id
++    val course = UUID.fromString("00000000-0000-0000-0000-000000000002")
++    val otherUser = UUID.fromString("00000000-0000-0000-0000-000000000003")
++    val rows = List(
++      TeacherRecord(user, course, "Expected"),
++      TeacherRecord(course, user, "Reversed"),
++      TeacherRecord(otherUser, course, "Other user")
++    )
++    val lookup = new TeacherService(new InMemoryTeacherRepository(rows))
++
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(user), CourseId(course)).map(_.displayName), Some("Expected"))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(user), CourseId(course)).map(_.displayName), Some("Expected"))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(otherUser), CourseId(course)).map(_.displayName), Some("Other user"))
++    assertEquals(lookup.findByUserIdAndCourseId(UserId(course), CourseId(user)).map(_.displayName), Some("Reversed"))
++    assertEquals(new TeacherController(lookup).get(user.toString, course.toString), TeacherResponse(200, "Expected"))
++  }
++
+   test("absence and malformed URL identifiers") {
+     val empty = new TeacherController(new TeacherService(new InMemoryTeacherRepository(Nil)))
+     assertEquals(empty.get(id.toString, id.toString), TeacherResponse(404, "teacher not found"))

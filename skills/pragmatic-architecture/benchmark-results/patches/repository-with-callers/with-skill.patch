@@ -1,0 +1,44 @@
+diff --git a/src/main/scala/customers/CustomerRepository.scala b/src/main/scala/customers/CustomerRepository.scala
+index f118251..9b84cd8 100644
+--- a/src/main/scala/customers/CustomerRepository.scala
++++ b/src/main/scala/customers/CustomerRepository.scala
+@@ -8,16 +8,11 @@ trait CustomerRepository:
+   def snapshot: List[Customer]
+ 
+ final class InMemoryCustomerRepository(seed: Seq[Customer]) extends CustomerRepository {
+-  val records: mutable.ArrayBuffer[Customer] = mutable.ArrayBuffer.from(seed)
+-
+-  def all: mutable.Buffer[Customer] = records
+-
+-  def query(predicate: Customer => Boolean): mutable.Buffer[Customer] =
+-    records.filter(predicate)
++  private val records: mutable.ArrayBuffer[Customer] = mutable.ArrayBuffer.from(seed)
+ 
+   def findById(id: String): Option[Customer] = records.find(_.id == id)
+ 
+-  def findByEmail(email: String): Option[Customer] = ???
++  def findByEmail(email: String): Option[Customer] = records.find(_.email == email)
+ 
+   def snapshot: List[Customer] = records.toList
+ }
+diff --git a/src/test/scala/customers/CustomerRepositorySuite.scala b/src/test/scala/customers/CustomerRepositorySuite.scala
+index 29b0345..f4f7e78 100644
+--- a/src/test/scala/customers/CustomerRepositorySuite.scala
++++ b/src/test/scala/customers/CustomerRepositorySuite.scala
+@@ -12,6 +12,16 @@ class CustomerRepositorySuite extends munit.FunSuite {
+     assertEquals(repository.findById("missing"), None)
+   }
+ 
++  test("lookup by email matches exactly and returns the first matching customer") {
++    val first = Customer("c-3", "shared@example.com", active = true)
++    val second = Customer("c-4", "shared@example.com", active = false)
++    val repository = new InMemoryCustomerRepository(List(ada, first, second))
++
++    assertEquals(repository.findByEmail("shared@example.com"), Some(first))
++    assertEquals(repository.findByEmail("Shared@example.com"), None)
++    assertEquals(repository.findByEmail("missing@example.com"), None)
++  }
++
+   test("export includes every customer in input order") {
+     val repository = new InMemoryCustomerRepository(List(grace, ada))
+     assertEquals(repository.snapshot, List(grace, ada))

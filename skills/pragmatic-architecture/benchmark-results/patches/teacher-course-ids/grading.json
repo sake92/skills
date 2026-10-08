@@ -1,0 +1,102 @@
+{
+  "with_skill": {
+    "summary": {
+      "pass_rate": 1.0,
+      "total": 8,
+      "failed": 0,
+      "passed": 8
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: HTTP lookup distinguishes user and course IDs even when the reversed membership exists.",
+        "passed": true,
+        "text": "HTTP lookup distinguishes user and course IDs even when the reversed membership exists."
+      },
+      {
+        "evidence": "MUnit passed: Cached lookups remain isolated by both user and course, including reversed pairs.",
+        "passed": true,
+        "text": "Cached lookups remain isolated by both user and course, including reversed pairs."
+      },
+      {
+        "evidence": "MUnit passed: The roster consumer preserves course order, missing memberships, and UUID inputs.",
+        "passed": true,
+        "text": "The roster consumer preserves course order, missing memberships, and UUID inputs."
+      },
+      {
+        "evidence": "MUnit passed: HTTP UUID strings, invalid-identifier errors, and missing-teacher responses remain compatible.",
+        "passed": true,
+        "text": "HTTP UUID strings, invalid-identifier errors, and missing-teacher responses remain compatible."
+      },
+      {
+        "evidence": "MUnit passed: Service and repository lookup APIs reject swapped and raw identifiers at compile time.",
+        "passed": true,
+        "text": "Service and repository lookup APIs reject swapped and raw identifiers at compile time."
+      },
+      {
+        "evidence": "MUnit passed: Existing directory consumers and UUID persistence records retain their behavior.",
+        "passed": true,
+        "text": "Existing directory consumers and UUID persistence records retain their behavior."
+      },
+      {
+        "evidence": "`TeacherRepository.scala` defines distinct opaque `UserId` and `CourseId` types. `TeacherRepository.findByUserIdAndCourseId` and `TeacherService.findByUserIdAndCourseId` take those types in the corresponding positions, and `TeacherService` keys its cache by `(UserId, CourseId)`. `TeacherRecord` and the directory types remain UUID-based; the HTTP controller and roster convert their UUID inputs at the lookup boundary with `UserId(...)` and `CourseId(...)`.",
+        "passed": true,
+        "text": "Distinct user and course types protect the lookup and cache without an unrelated identifier migration."
+      },
+      {
+        "evidence": "The MUnit test `lookup uses user and course in the correct order and isolates repeated queries` uses different UUIDs for `user` and `course` and seeds both `(user, course)` and `(course, user)` rows. Its first assertion expects the user/course lookup to return `Some(\"Expected\")`, which fails under the original reversed-argument behavior. Further assertions check repeated lookup, another user, the reverse-pair result, and HTTP lookup.",
+        "passed": true,
+        "text": "The submission adds focused MUnit regression coverage with distinct user and course UUIDs."
+      }
+    ]
+  },
+  "without_skill": {
+    "summary": {
+      "pass_rate": 0.75,
+      "total": 8,
+      "failed": 2,
+      "passed": 6
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: HTTP lookup distinguishes user and course IDs even when the reversed membership exists.",
+        "passed": true,
+        "text": "HTTP lookup distinguishes user and course IDs even when the reversed membership exists."
+      },
+      {
+        "evidence": "MUnit passed: Cached lookups remain isolated by both user and course, including reversed pairs.",
+        "passed": true,
+        "text": "Cached lookups remain isolated by both user and course, including reversed pairs."
+      },
+      {
+        "evidence": "MUnit passed: The roster consumer preserves course order, missing memberships, and UUID inputs.",
+        "passed": true,
+        "text": "The roster consumer preserves course order, missing memberships, and UUID inputs."
+      },
+      {
+        "evidence": "MUnit passed: HTTP UUID strings, invalid-identifier errors, and missing-teacher responses remain compatible.",
+        "passed": true,
+        "text": "HTTP UUID strings, invalid-identifier errors, and missing-teacher responses remain compatible."
+      },
+      {
+        "evidence": "/home/sake/projects/sake92/skills/tests/pragmatic-architecture/teacher-course-ids/grading/EvaluationSuite.scala:82\n81:    val result = IdentifierSafety.verify(submission, output)\n82:    assert(result.passed, result.evidence)\n83:  }\nWarning: more than one project.scala file has been found. Setting /home/sake/projects/sake92/skills/tests/tmp/pragmatic-architecture-workspace/iteration-20261008-200252/eval-5/without_skill/deterministic-grading-identifier-probes as the project root directory for this run.\n[\u001b[33mwarn\u001b[0m]  Using directives detected in multiple files:\n- tests/tmp/pragmatic-architecture-workspace/iteration-20261008-200252/eval-5/without_skill/work/project.scala:1:1-2:46\nIt is recommended to keep them centralized in the /home/sake/projects/sake92/skills/tests/tmp/pragmatic-architecture-workspace/iteration-20261008-200252/eval-5/without_skill/deterministic-grading-identifier-probes/project.scala file.\n\nTest run protectedprobes.IdentifierProbeSuite started\n==> X protectedprobes.IdentifierProbeSuite.TeacherService 0.03s munit.FailException: assertion failed\n    at munit.FunSuite.assert(FunSuite.scala:12)\n    at protectedprobes.IdentifierProbeSuite.$init$$$anonfun$1(IdentifierProbeSuite.scala:18)\n==> X protectedprobes.IdentifierProbeSuite.TeacherRepository 0.001s munit.FailException: assertion failed\n    at munit.FunSuite.assert(FunSuite.scala:12)\n    at protectedprobes.IdentifierProbeSuite.$init$$$anonfun$2(IdentifierProbeSuite.scala:54)\n==> X protectedprobes.IdentifierProbeSuite.InMemoryTeacherRepository 0.001s munit.FailException: assertion failed\n    at munit.FunSuite.assert(FunSuite.scala:12)\n    at protectedprobes.IdentifierProbeSuite.$init$$$anonfun$3(IdentifierProbeSuite.scala:87)\nprotectedprobes.IdentifierProbeSuite: finished 0.066s\nTest run protectedprobes.IdentifierProbeSuite finished: 3 failed, 0 ignored, 3 total 0.078s\nError: munit tests failed.\n",
+        "passed": false,
+        "text": "Service and repository lookup APIs reject swapped and raw identifiers at compile time."
+      },
+      {
+        "evidence": "MUnit passed: Existing directory consumers and UUID persistence records retain their behavior.",
+        "passed": true,
+        "text": "Existing directory consumers and UUID persistence records retain their behavior."
+      },
+      {
+        "evidence": "TeacherService still accepts UUID for both parameters and keys its cache by (UUID, UUID); TeacherRepository likewise accepts two UUIDs. No distinct user/course types or UUID-boundary conversions are introduced.",
+        "passed": false,
+        "text": "Distinct user and course types protect the lookup and cache without an unrelated identifier migration."
+      },
+      {
+        "evidence": "The MUnit test uses distinct `user` and `course` UUIDs, seeds both the reversed-only record and the correct record, and asserts `findByUserIdAndCourseId(user, course)` returns `Some(expected)`. This assertion would fail under the original reversed repository call. It also checks a different course and the reverse-pair lookup.",
+        "passed": true,
+        "text": "The submission adds focused MUnit regression coverage with distinct user and course UUIDs."
+      }
+    ]
+  }
+}

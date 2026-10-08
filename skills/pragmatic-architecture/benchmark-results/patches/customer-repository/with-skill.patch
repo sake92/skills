@@ -1,0 +1,58 @@
+diff --git a/src/main/scala/customers/CustomerRepository.scala b/src/main/scala/customers/CustomerRepository.scala
+index 681e222..d8a20fe 100644
+--- a/src/main/scala/customers/CustomerRepository.scala
++++ b/src/main/scala/customers/CustomerRepository.scala
+@@ -8,15 +8,13 @@ trait CustomerRepository:
+   def activeByRegion(region: String): List[Customer]
+ 
+ final class InMemoryCustomerRepository(seed: Seq[Customer]) extends CustomerRepository:
+-  val records: mutable.ArrayBuffer[Customer] = mutable.ArrayBuffer.from(seed)
++  private val records: Vector[Customer] = seed.toVector
+ 
+-  def all: mutable.Buffer[Customer] = records
++  def findById(id: String): Option[Customer] =
++    records.find(_.id == id)
+ 
+-  def query(predicate: Customer => Boolean): mutable.Buffer[Customer] =
+-    records.filter(predicate)
++  def findByEmail(email: String): Option[Customer] =
++    records.find(_.email == email)
+ 
+-  def findById(id: String): Option[Customer] = ???
+-
+-  def findByEmail(email: String): Option[Customer] = ???
+-
+-  def activeByRegion(region: String): List[Customer] = ???
++  def activeByRegion(region: String): List[Customer] =
++    records.filter(customer => customer.region == region && customer.active).toList
+diff --git a/src/test/scala/customers/InMemoryCustomerRepositorySuite.scala b/src/test/scala/customers/InMemoryCustomerRepositorySuite.scala
+new file mode 100644
+index 0000000..6eaac1a
+--- /dev/null
++++ b/src/test/scala/customers/InMemoryCustomerRepositorySuite.scala
+@@ -0,0 +1,25 @@
++package customers
++
++import munit.FunSuite
++
++final class InMemoryCustomerRepositorySuite extends FunSuite:
++  private val first = Customer("1", "one@example.com", "north", active = true)
++  private val second = Customer("2", "two@example.com", "south", active = false)
++  private val inactive = Customer("3", "three@example.com", "north", active = false)
++  private val third = Customer("4", "four@example.com", "north", active = true)
++  private val repository = InMemoryCustomerRepository(Seq(first, second, inactive, third))
++
++  test("finds customers by ID and returns None when absent"):
++    assertEquals(repository.findById("1"), Some(first))
++    assertEquals(repository.findById("missing"), None)
++
++  test("finds customers by email and returns None when absent"):
++    assertEquals(repository.findByEmail("two@example.com"), Some(second))
++    assertEquals(repository.findByEmail("missing@example.com"), None)
++
++  test("lists active customers in a region in input order"):
++    assertEquals(repository.activeByRegion("north"), List(first, third))
++
++  test("returns an empty list when a region has no active customers"):
++    assertEquals(repository.activeByRegion("west"), Nil)
++    assertEquals(repository.activeByRegion("south").filterNot(_.active), Nil)

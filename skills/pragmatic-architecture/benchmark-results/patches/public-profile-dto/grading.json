@@ -1,0 +1,112 @@
+{
+  "with_skill": {
+    "summary": {
+      "pass_rate": 1.0,
+      "total": 9,
+      "failed": 0,
+      "passed": 9
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: Successful public profiles preserve displayed fields and include the correct integer memberSinceYear.",
+        "passed": true,
+        "text": "Successful public profiles preserve displayed fields and include the correct integer memberSinceYear."
+      },
+      {
+        "evidence": "MUnit passed: Profiles with no avatar retain the avatarUrl key with a JSON null value.",
+        "passed": true,
+        "text": "Profiles with no avatar retain the avatarUrl key with a JSON null value."
+      },
+      {
+        "evidence": "MUnit passed: Public responses expose no email, password hash, refresh token, admin flag, or account timestamp.",
+        "passed": true,
+        "text": "Public responses expose no email, password hash, refresh token, admin flag, or account timestamp."
+      },
+      {
+        "evidence": "MUnit passed: Profile text is serialized as JSON safely, including quotes, newlines, Unicode, and empty values.",
+        "passed": true,
+        "text": "Profile text is serialized as JSON safely, including quotes, newlines, Unicode, and empty values."
+      },
+      {
+        "evidence": "MUnit passed: Invalid and missing profile identifiers retain JSON errors, status codes, and content type.",
+        "passed": true,
+        "text": "Invalid and missing profile identifiers retain JSON errors, status codes, and content type."
+      },
+      {
+        "evidence": "MUnit passed: Persistence and the internal backup round trip retain every account field after a public profile read.",
+        "passed": true,
+        "text": "Persistence and the internal backup round trip retain every account field after a public profile read."
+      },
+      {
+        "evidence": "`ProfileController.scala` defines a separate `PublicProfile` case class containing only the public fields and derives Tupson `JsonRW`. The controller maps from `UserRow` to this type and serializes it with `publicProfile.toJson`, while `UserRow` retains its own codec.",
+        "passed": true,
+        "text": "The public response has an explicit transport representation independent of the internal account record, using the existing JSON codec."
+      },
+      {
+        "evidence": "The profile-specific DTO and mapping are in `ProfileController.scala`; `ProfileService` and `UserRepository` continue to return/store `UserRow`. `AccountBackup.scala` still exports with `UserRow.toJson` and restores with `parseJson[UserRow]`. The backup round-trip test checks the full stored record.",
+        "passed": true,
+        "text": "The change stays focused on the profile boundary and preserves the existing repository and backup responsibilities."
+      },
+      {
+        "evidence": "`ProfileSuite.scala` exercises the controller response and asserts that it does not contain `email` or `passwordHash`; together with the explicit `PublicProfile` projection, these executable assertions would catch those fields leaking into the JSON response.",
+        "passed": true,
+        "text": "The submission adds executable MUnit coverage that would catch internal account fields leaking into a public response."
+      }
+    ]
+  },
+  "without_skill": {
+    "summary": {
+      "pass_rate": 0.8888888888888888,
+      "total": 9,
+      "failed": 1,
+      "passed": 8
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: Successful public profiles preserve displayed fields and include the correct integer memberSinceYear.",
+        "passed": true,
+        "text": "Successful public profiles preserve displayed fields and include the correct integer memberSinceYear."
+      },
+      {
+        "evidence": "MUnit passed: Profiles with no avatar retain the avatarUrl key with a JSON null value.",
+        "passed": true,
+        "text": "Profiles with no avatar retain the avatarUrl key with a JSON null value."
+      },
+      {
+        "evidence": "MUnit passed: Public responses expose no email, password hash, refresh token, admin flag, or account timestamp.",
+        "passed": true,
+        "text": "Public responses expose no email, password hash, refresh token, admin flag, or account timestamp."
+      },
+      {
+        "evidence": "MUnit passed: Profile text is serialized as JSON safely, including quotes, newlines, Unicode, and empty values.",
+        "passed": true,
+        "text": "Profile text is serialized as JSON safely, including quotes, newlines, Unicode, and empty values."
+      },
+      {
+        "evidence": "MUnit passed: Invalid and missing profile identifiers retain JSON errors, status codes, and content type.",
+        "passed": true,
+        "text": "Invalid and missing profile identifiers retain JSON errors, status codes, and content type."
+      },
+      {
+        "evidence": "MUnit passed: Persistence and the internal backup round trip retain every account field after a public profile read.",
+        "passed": true,
+        "text": "Persistence and the internal backup round trip retain every account field after a public profile read."
+      },
+      {
+        "evidence": "`ProfileController.scala` defines a separate `PublicProfile` case class with only `id`, `displayName`, `bio`, `avatarUrl`, and `memberSinceYear`, derives Tupson `JsonRW`, and serializes that projection with `profile.toJson` rather than serializing `UserRow`.",
+        "passed": true,
+        "text": "The public response has an explicit transport representation independent of the internal account record, using the existing JSON codec."
+      },
+      {
+        "evidence": "The profile controller maps the existing service result to `PublicProfile`; `ProfileService` and `UserRepository` retain their existing `UserRow` responsibilities. `AccountBackup` still exports via `UserRow.toJson` and restores via `parseJson[UserRow]`, and the test exercises a full backup round trip.",
+        "passed": true,
+        "text": "The change stays focused on the profile boundary and preserves the existing repository and backup responsibilities."
+      },
+      {
+        "evidence": "`ProfileSuite` uses MUnit and checks status, content type, display name, member-since year, and null avatar, but it never asserts the response field set or absence of `email`, `passwordHash`, `refreshToken`, `isAdmin`, or `createdAt`. The backup round-trip test does not detect public-response leakage.",
+        "passed": false,
+        "text": "The submission adds executable MUnit coverage that would catch internal account fields leaking into a public response."
+      }
+    ]
+  }
+}

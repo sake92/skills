@@ -52,6 +52,30 @@ Both starters begin with passing MUnit suites. The protected suites expose the
 reported bugs only during grading. Qualitative judges assess architectural
 tradeoffs and focused candidate regression coverage separately from behavior.
 
+Two FlowRun-inspired cases add positive type-safety and response-model coverage:
+
+- `--case teacher-course-ids`: fix a user/course UUID reversal from a raw-UUID
+  starter without a prompt suggesting stronger types, and preserve
+  UUID HTTP, roster, and persistence boundaries. Protected compile-time probes
+  discover candidate type names and verify correctly typed calls compile while
+  swapped/raw arguments do not, including
+  calls through the concrete repository. The judge assesses cache typing, scope,
+  and candidate regression tests.
+- `--case public-profile-dto`: add the member-since year to the JSON endpoint
+  and supplied Vue page. The task does not request a DTO or enumerate private
+  fields. Protected safety checks measure whether the response avoids leaking
+  account data while preserving private backup restoration.
+  Protected tests check derived years, displayed fields/types, null avatars, JSON escaping, errors,
+  and retained internal data. The judge assesses transport separation, use of the
+  existing codec, scope, and leak-detecting candidate coverage.
+
+Each starter has three passing tests. These are focused adaptations of real
+application concerns rather than full FlowRun checkouts; they need no database,
+browser, or external service. The ID task requests only the bug fix and compatibility. Its two architectural
+criteria measure whether the agent independently introduces useful ID separation;
+behavioral correctness is reported separately. Protected compilation probes require the correct
+call to compile before treating a rejected call as evidence of safety.
+
 The qualitative judge uses the executor model by default. Pass
 `--judge-model MODEL` to use a different judge, or `--skip-judge` when only
 candidate execution and protected deterministic grading are needed.

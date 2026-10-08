@@ -1,0 +1,102 @@
+{
+  "with_skill": {
+    "summary": {
+      "pass_rate": 1.0,
+      "total": 8,
+      "failed": 0,
+      "passed": 8
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: Email lookup is exact, returns the first match, and represents absence with None.",
+        "passed": true,
+        "text": "Email lookup is exact, returns the first match, and represents absence with None."
+      },
+      {
+        "evidence": "MUnit passed: Existing ID lookup behavior remains compatible.",
+        "passed": true,
+        "text": "Existing ID lookup behavior remains compatible."
+      },
+      {
+        "evidence": "MUnit passed: The immutable snapshot API and export consumer preserve all customers in input order.",
+        "passed": true,
+        "text": "The immutable snapshot API and export consumer preserve all customers in input order."
+      },
+      {
+        "evidence": "MUnit passed: The repository preserves findById, findByEmail, and the caller-required snapshot without extra public helpers.",
+        "passed": true,
+        "text": "The repository preserves findById, findByEmail, and the caller-required snapshot without extra public helpers."
+      },
+      {
+        "evidence": "MUnit passed: The implementation exposes no public mutable backing state, including constructor fields.",
+        "passed": true,
+        "text": "The implementation exposes no public mutable backing state, including constructor fields."
+      },
+      {
+        "evidence": "MUnit passed: Public repository members expose no mutable collections.",
+        "passed": true,
+        "text": "Public repository members expose no mutable collections."
+      },
+      {
+        "evidence": "MUnit passed: The submission adds executable MUnit email lookup assertions.",
+        "passed": true,
+        "text": "The submission adds executable MUnit email lookup assertions."
+      },
+      {
+        "evidence": "The change is contained in the existing in-memory repository: it adds `findByEmail` alongside `findById`, using the same `records.find` pattern. The existing `CustomerExport` continues to consume `snapshot` directly, and no extra layers or unrelated consumer rewrites are introduced.",
+        "passed": true,
+        "text": "The lookup enhancement stays proportional and adds no unrelated architecture or unjustified wrappers."
+      }
+    ]
+  },
+  "without_skill": {
+    "summary": {
+      "pass_rate": 0.625,
+      "total": 8,
+      "failed": 3,
+      "passed": 5
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: Email lookup is exact, returns the first match, and represents absence with None.",
+        "passed": true,
+        "text": "Email lookup is exact, returns the first match, and represents absence with None."
+      },
+      {
+        "evidence": "MUnit passed: Existing ID lookup behavior remains compatible.",
+        "passed": true,
+        "text": "Existing ID lookup behavior remains compatible."
+      },
+      {
+        "evidence": "MUnit passed: The immutable snapshot API and export consumer preserve all customers in input order.",
+        "passed": true,
+        "text": "The immutable snapshot API and export consumer preserve all customers in input order."
+      },
+      {
+        "evidence": "/home/sake/projects/sake92/skills/tests/pragmatic-architecture/repository-with-callers/grading/EvaluationSuite.scala:49\n48:  ) {\n49:    assertEquals(violations.filter(v => Set(\"interface\", \"helpers\")(v.criterion)), Nil)\n50:  }\nvalues are not the same\n=> Obtained\nList(\n  Violation(\n    criterion = \"helpers\",\n    message = \"helper 'all' is public\"\n  ),\n  Violation(\n    criterion = \"helpers\",\n    message = \"helper 'query' is public\"\n  ),\n  Violation(\n    criterion = \"helpers\",\n    message = \"helper 'records' is public\"\n  ),\n  Violation(\n    criterion = \"helpers\",\n    message = \"public 'all' escape hatch\"\n  ),\n  Violation(\n    criterion = \"helpers\",\n    message = \"public 'query' escape hatch\"\n  ),\n  Violation(\n    criterion = \"helpers\",\n    message = \"public 'records' escape hatch\"\n  )\n)\n=> Diff (- expected, + obtained)\n-Nil\n+List(\n+  Violation(\n+    criterion = \"helpers\",\n+    message = \"helper 'all' is public\"\n+  ),\n+  Violation(\n+    criterion = \"helpers\",\n+    message = \"helper 'query' is public\"\n+  ),\n+  Violation(\n+    criterion = \"helpers\",\n+    message = \"helper 'records' is public\"\n+  ),\n+  Violation(\n+    criterion = \"helpers\",\n+    message = \"public 'all' escape hatch\"\n+  ),\n+  Violation(\n+    criterion = \"helpers\",\n+    message = \"public 'query' escape hatch\"\n+  ),\n+  Violation(\n+    criterion = \"helpers\",\n+    message = \"public 'records' escape hatch\"\n+  )\n+)",
+        "passed": false,
+        "text": "The repository preserves findById, findByEmail, and the caller-required snapshot without extra public helpers."
+      },
+      {
+        "evidence": "/home/sake/projects/sake92/skills/tests/pragmatic-architecture/repository-with-callers/grading/EvaluationSuite.scala:53\n52:  expectation(\"The implementation exposes no public mutable backing state, including constructor fields.\") {\n53:    assertEquals(violations.filter(_.criterion == \"state\"), Nil)\n54:  }\nvalues are not the same\n=> Obtained\nList(\n  Violation(\n    criterion = \"state\",\n    message = \"public mutable collection records\"\n  )\n)\n=> Diff (- expected, + obtained)\n-Nil\n+List(\n+  Violation(\n+    criterion = \"state\",\n+    message = \"public mutable collection records\"\n+  )\n+)",
+        "passed": false,
+        "text": "The implementation exposes no public mutable backing state, including constructor fields."
+      },
+      {
+        "evidence": "/home/sake/projects/sake92/skills/tests/pragmatic-architecture/repository-with-callers/grading/EvaluationSuite.scala:57\n56:  expectation(\"Public repository members expose no mutable collections.\") {\n57:    assertEquals(violations.filter(_.criterion == \"returns\"), Nil)\n58:  }\nvalues are not the same\n=> Obtained\nList(\n  Violation(\n    criterion = \"returns\",\n    message = \"public 'all' returns a mutable collection\"\n  ),\n  Violation(\n    criterion = \"returns\",\n    message = \"public 'query' returns a mutable collection\"\n  ),\n  Violation(\n    criterion = \"returns\",\n    message = \"public 'records' returns a mutable collection\"\n  )\n)\n=> Diff (- expected, + obtained)\n-Nil\n+List(\n+  Violation(\n+    criterion = \"returns\",\n+    message = \"public 'all' returns a mutable collection\"\n+  ),\n+  Violation(\n+    criterion = \"returns\",\n+    message = \"public 'query' returns a mutable collection\"\n+  ),\n+  Violation(\n+    criterion = \"returns\",\n+    message = \"public 'records' returns a mutable collection\"\n+  )\n+)",
+        "passed": false,
+        "text": "Public repository members expose no mutable collections."
+      },
+      {
+        "evidence": "MUnit passed: The submission adds executable MUnit email lookup assertions.",
+        "passed": true,
+        "text": "The submission adds executable MUnit email lookup assertions."
+      },
+      {
+        "evidence": "The change is contained in the existing in-memory repository: it adds `findByEmail` alongside the existing `findById`, both using a direct `records.find` lookup. The existing export consumer remains unchanged and consumes the repository\u2019s `snapshot`; no new layers, wrappers, or unrelated consumer rewrites are introduced.",
+        "passed": true,
+        "text": "The lookup enhancement stays proportional and adds no unrelated architecture or unjustified wrappers."
+      }
+    ]
+  }
+}

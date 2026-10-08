@@ -1,0 +1,48 @@
+diff --git a/frontend/PublicProfile.vue b/frontend/PublicProfile.vue
+index bf45c6a..d3ace98 100644
+--- a/frontend/PublicProfile.vue
++++ b/frontend/PublicProfile.vue
+@@ -7,6 +7,7 @@ defineProps({ profile: { type: Object, required: true } })
+     <img v-if="profile.avatarUrl" :src="profile.avatarUrl" :alt="profile.displayName" />
+     <h1>{{ profile.displayName }}</h1>
+     <p>{{ profile.bio }}</p>
++    <p>Member since {{ profile.memberSinceYear }}</p>
+     <a :href="`/profiles/${profile.id}`">Profile link</a>
+   </article>
+ </template>
+diff --git a/src/main/scala/http/ProfileController.scala b/src/main/scala/http/ProfileController.scala
+index 14d5fb2..166583a 100644
+--- a/src/main/scala/http/ProfileController.scala
++++ b/src/main/scala/http/ProfileController.scala
+@@ -6,6 +6,8 @@ import profiles.ProfileService
+ 
+ case class ProfileResponse(status: Int, body: String, contentType: String = "application/json")
+ 
++private case class PublicProfile(id: UUID, displayName: String, bio: String, avatarUrl: Option[String], memberSinceYear: Int) derives JsonRW
++
+ final class ProfileController(service: ProfileService):
+   def get(id: String): ProfileResponse =
+     val parsed = try Some(UUID.fromString(id))
+@@ -14,5 +16,8 @@ final class ProfileController(service: ProfileService):
+       case None       => ProfileResponse(400, """{"error":"invalid identifier"}""")
+       case Some(uuid) =>
+         service.find(uuid) match
+-          case Some(user) => ProfileResponse(200, user.toJson)
++          case Some(user) =>
++            val memberSinceYear = java.time.LocalDate.parse(user.createdAt).getYear
++            val profile = PublicProfile(user.id, user.displayName, user.bio, user.avatarUrl, memberSinceYear)
++            ProfileResponse(200, profile.toJson)
+           case None       => ProfileResponse(404, """{"error":"profile not found"}""")
+diff --git a/src/test/scala/ProfileSuite.scala b/src/test/scala/ProfileSuite.scala
+index 8fe2f31..ddcc270 100644
+--- a/src/test/scala/ProfileSuite.scala
++++ b/src/test/scala/ProfileSuite.scala
+@@ -17,6 +17,8 @@ class ProfileSuite extends munit.FunSuite {
+     assertEquals(response.status, 200)
+     assertEquals(response.contentType, "application/json")
+     assertEquals(response.body.parseJson[Map[String, JValue]]("displayName"), JString("Ada"))
++    assertEquals(response.body.parseJson[Map[String, JValue]]("memberSinceYear").toString, "2026")
++    assertEquals(response.body.parseJson[Map[String, JValue]]("avatarUrl").toString, "null")
+   }
+ 
+   test("missing profile and invalid URL identifier") {

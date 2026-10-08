@@ -1,0 +1,48 @@
+diff --git a/src/main/scala/customers/CustomerRepository.scala b/src/main/scala/customers/CustomerRepository.scala
+index 681e222..8bb8751 100644
+--- a/src/main/scala/customers/CustomerRepository.scala
++++ b/src/main/scala/customers/CustomerRepository.scala
+@@ -15,8 +15,11 @@ final class InMemoryCustomerRepository(seed: Seq[Customer]) extends CustomerRepo
+   def query(predicate: Customer => Boolean): mutable.Buffer[Customer] =
+     records.filter(predicate)
+ 
+-  def findById(id: String): Option[Customer] = ???
++  def findById(id: String): Option[Customer] =
++    records.find(_.id == id)
+ 
+-  def findByEmail(email: String): Option[Customer] = ???
++  def findByEmail(email: String): Option[Customer] =
++    records.find(_.email == email)
+ 
+-  def activeByRegion(region: String): List[Customer] = ???
++  def activeByRegion(region: String): List[Customer] =
++    records.iterator.filter(customer => customer.region == region && customer.active).toList
+diff --git a/src/test/scala/customers/CustomerRepositorySuite.scala b/src/test/scala/customers/CustomerRepositorySuite.scala
+new file mode 100644
+index 0000000..59017b1
+--- /dev/null
++++ b/src/test/scala/customers/CustomerRepositorySuite.scala
+@@ -0,0 +1,23 @@
++package customers
++
++class CustomerRepositorySuite extends munit.FunSuite:
++  private val first = Customer("c1", "first@example.com", "north", active = true)
++  private val inactive = Customer("c2", "inactive@example.com", "north", active = false)
++  private val otherRegion = Customer("c3", "other@example.com", "south", active = true)
++  private val last = Customer("c4", "last@example.com", "north", active = true)
++  private val repository = new InMemoryCustomerRepository(Seq(first, inactive, otherRegion, last))
++
++  test("findById returns the matching customer or None"):
++    assertEquals(repository.findById("c3"), Some(otherRegion))
++    assertEquals(repository.findById("missing"), None)
++
++  test("findByEmail returns the matching customer or None"):
++    assertEquals(repository.findByEmail("last@example.com"), Some(last))
++    assertEquals(repository.findByEmail("missing@example.com"), None)
++
++  test("activeByRegion returns active matches in input order"):
++    assertEquals(repository.activeByRegion("north"), List(first, last))
++
++  test("activeByRegion returns an empty list when there are no active matches"):
++    assertEquals(repository.activeByRegion("west"), List.empty)
++    assertEquals(repository.activeByRegion("south"), List(otherRegion))

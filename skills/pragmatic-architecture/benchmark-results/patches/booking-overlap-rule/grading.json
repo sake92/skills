@@ -1,0 +1,142 @@
+{
+  "with_skill": {
+    "summary": {
+      "pass_rate": 1.0,
+      "total": 12,
+      "failed": 0,
+      "passed": 12
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: The business operation rejects every same-room overlap orientation without changing stored bookings.",
+        "passed": true,
+        "text": "The business operation rejects every same-room overlap orientation without changing stored bookings."
+      },
+      {
+        "evidence": "MUnit passed: HTTP returns a usable conflict response for every overlap and never persists the rejected booking.",
+        "passed": true,
+        "text": "HTTP returns a usable conflict response for every overlap and never persists the rejected booking."
+      },
+      {
+        "evidence": "MUnit passed: Import rejects every overlap with an explicit error and never persists the rejected booking.",
+        "passed": true,
+        "text": "Import rejects every overlap with an explicit error and never persists the rejected booking."
+      },
+      {
+        "evidence": "MUnit passed: Adjacent intervals remain valid through the operation, HTTP, and import.",
+        "passed": true,
+        "text": "Adjacent intervals remain valid through the operation, HTTP, and import."
+      },
+      {
+        "evidence": "MUnit passed: Other rooms and cancelled bookings do not block creation, and cancelled history is retained.",
+        "passed": true,
+        "text": "Other rooms and cancelled bookings do not block creation, and cancelled history is retained."
+      },
+      {
+        "evidence": "MUnit passed: Creation checks current state after another entry point creates or a booking is cancelled.",
+        "passed": true,
+        "text": "Creation checks current state after another entry point creates or a booking is cancelled."
+      },
+      {
+        "evidence": "MUnit passed: Batch import observes earlier accepted rows and continues after rejecting an overlapping row.",
+        "passed": true,
+        "text": "Batch import observes earlier accepted rows and continues after rejecting an overlapping row."
+      },
+      {
+        "evidence": "MUnit passed: Invalid intervals and duplicate IDs retain explicit errors and leave storage unchanged.",
+        "passed": true,
+        "text": "Invalid intervals and duplicate IDs retain explicit errors and leave storage unchanged."
+      },
+      {
+        "evidence": "MUnit passed: HTTP and import receive their business collaborators as dependencies instead of constructing them internally.",
+        "passed": true,
+        "text": "HTTP and import receive their business collaborators as dependencies instead of constructing them internally."
+      },
+      {
+        "evidence": "BookingService.create performs interval validation, duplicate-ID checking, and the active same-room interval-overlap check before adding the booking. BookingController.create and NightlyImport.importOne both delegate to that same service operation; the controller only maps errors to HTTP responses.",
+        "passed": true,
+        "text": "One coherent booking creation operation owns the shared overlap rule, and HTTP and import use it without duplicating the business policy."
+      },
+      {
+        "evidence": "The change uses the existing BookingService and repository, with no new layers or dependencies. BookingApplication supplies the service to both adapters. Repository mutation remains private to InMemoryBookingRepository, and history still reports cancelled records.",
+        "passed": true,
+        "text": "The booking fix remains proportional and does not introduce unrelated layers, wrappers, or dependencies."
+      },
+      {
+        "evidence": "BookingSuite includes an HTTP test asserting an overlapping request returns 409 with BookingError.Overlap and that the conflict is not persisted. It also includes an import test asserting an overlapping request returns Left(BookingError.Overlap), then verifies that cancelling the existing booking permits a replacement.",
+        "passed": true,
+        "text": "The submission adds focused MUnit regression coverage for overlap rejection through both HTTP and import."
+      }
+    ]
+  },
+  "without_skill": {
+    "summary": {
+      "pass_rate": 1.0,
+      "total": 12,
+      "failed": 0,
+      "passed": 12
+    },
+    "expectations": [
+      {
+        "evidence": "MUnit passed: The business operation rejects every same-room overlap orientation without changing stored bookings.",
+        "passed": true,
+        "text": "The business operation rejects every same-room overlap orientation without changing stored bookings."
+      },
+      {
+        "evidence": "MUnit passed: HTTP returns a usable conflict response for every overlap and never persists the rejected booking.",
+        "passed": true,
+        "text": "HTTP returns a usable conflict response for every overlap and never persists the rejected booking."
+      },
+      {
+        "evidence": "MUnit passed: Import rejects every overlap with an explicit error and never persists the rejected booking.",
+        "passed": true,
+        "text": "Import rejects every overlap with an explicit error and never persists the rejected booking."
+      },
+      {
+        "evidence": "MUnit passed: Adjacent intervals remain valid through the operation, HTTP, and import.",
+        "passed": true,
+        "text": "Adjacent intervals remain valid through the operation, HTTP, and import."
+      },
+      {
+        "evidence": "MUnit passed: Other rooms and cancelled bookings do not block creation, and cancelled history is retained.",
+        "passed": true,
+        "text": "Other rooms and cancelled bookings do not block creation, and cancelled history is retained."
+      },
+      {
+        "evidence": "MUnit passed: Creation checks current state after another entry point creates or a booking is cancelled.",
+        "passed": true,
+        "text": "Creation checks current state after another entry point creates or a booking is cancelled."
+      },
+      {
+        "evidence": "MUnit passed: Batch import observes earlier accepted rows and continues after rejecting an overlapping row.",
+        "passed": true,
+        "text": "Batch import observes earlier accepted rows and continues after rejecting an overlapping row."
+      },
+      {
+        "evidence": "MUnit passed: Invalid intervals and duplicate IDs retain explicit errors and leave storage unchanged.",
+        "passed": true,
+        "text": "Invalid intervals and duplicate IDs retain explicit errors and leave storage unchanged."
+      },
+      {
+        "evidence": "MUnit passed: HTTP and import receive their business collaborators as dependencies instead of constructing them internally.",
+        "passed": true,
+        "text": "HTTP and import receive their business collaborators as dependencies instead of constructing them internally."
+      },
+      {
+        "evidence": "BookingService.create owns validation, duplicate-ID checking, active-booking overlap detection, and persistence. BookingController.create and NightlyImport.importOne both delegate creation to that service; the controller only maps errors to HTTP responses.",
+        "passed": true,
+        "text": "One coherent booking creation operation owns the shared overlap rule, and HTTP and import use it without duplicating the business policy."
+      },
+      {
+        "evidence": "The change uses the existing BookingService and collaborators, with no new layers, wrappers, or dependencies. BookingApplication wires the service into the controller and importer; the repository retains private in-memory mutation.",
+        "passed": true,
+        "text": "The booking fix remains proportional and does not introduce unrelated layers, wrappers, or dependencies."
+      },
+      {
+        "evidence": "BookingSuite includes an HTTP test asserting an overlapping request returns 409 with BookingError.Overlap and does not persist, and an import batch test asserting an overlapping request returns Left(BookingError.Overlap) while checking the resulting history.",
+        "passed": true,
+        "text": "The submission adds focused MUnit regression coverage for overlap rejection through both HTTP and import."
+      }
+    ]
+  }
+}

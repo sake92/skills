@@ -82,6 +82,45 @@
         "The booking fix remains proportional and does not introduce unrelated layers, wrappers, or dependencies.",
         "The submission adds focused MUnit regression coverage for overlap rejection through both HTTP and import."
       ]
+    },
+    {
+      "id": 5,
+      "name": "teacher-course-ids",
+      "prompt": "Fix the teacher lookup bug in this application. Looking up user 00000000-0000-0000-0000-000000000001 in course 00000000-0000-0000-0000-000000000002 currently misses their membership, or returns the wrong teacher when the reversed membership exists. Repeated lookups must stay isolated by both user and course.\n\nKeep the existing URL, roster, persistence, directory, and invalid/missing lookup behavior working. This is an internal application; update affected signatures and callers as needed. Add MUnit regression coverage and run `scala-cli test . --server=false`.",
+      "expected_output": "A focused lookup correction with regression coverage and compatible consumers. The architectural quality assessment separately checks whether the solution prevents the demonstrated identifier mix-up with distinct types across the lookup and cache.",
+      "files": [
+        "tests/pragmatic-architecture/teacher-course-ids/starter"
+      ],
+      "expectations": [
+        "HTTP lookup distinguishes user and course IDs even when the reversed membership exists.",
+        "Cached lookups remain isolated by both user and course, including reversed pairs.",
+        "The roster consumer preserves course order, missing memberships, and UUID inputs.",
+        "HTTP UUID strings, invalid-identifier errors, and missing-teacher responses remain compatible.",
+        "Service and repository lookup APIs reject swapped and raw identifiers at compile time.",
+        "Existing directory consumers and UUID persistence records retain their behavior.",
+        "Distinct user and course types protect the lookup and cache without an unrelated identifier migration.",
+        "The submission adds focused MUnit regression coverage with distinct user and course UUIDs."
+      ]
+    },
+    {
+      "id": 6,
+      "name": "public-profile-dto",
+      "prompt": "Add the member-since year to the public profile page. The existing UI is in frontend/PublicProfile.vue; have the profile endpoint return memberSinceYear as a JSON integer derived from the account creation date, and show it below the bio. Preserve the existing profile display, missing-avatar behavior, and invalid/missing-profile responses. The internal account backup must still round trip. Add MUnit regression coverage and run `scala-cli test . --server=false`.",
+      "expected_output": "The page displays the correct member-since year. Behavioral checks cover the new field and existing consumers; independent safety and architecture checks assess whether the agent recognizes the differing public/private contracts and introduces an explicit public projection without being prompted to do so.",
+      "files": [
+        "tests/pragmatic-architecture/public-profile-dto/starter"
+      ],
+      "expectations": [
+        "Successful public profiles preserve displayed fields and include the correct integer memberSinceYear.",
+        "Profiles with no avatar retain the avatarUrl key with a JSON null value.",
+        "Public responses expose no email, password hash, refresh token, admin flag, or account timestamp.",
+        "Profile text is serialized as JSON safely, including quotes, newlines, Unicode, and empty values.",
+        "Invalid and missing profile identifiers retain JSON errors, status codes, and content type.",
+        "Persistence and the internal backup round trip retain every account field after a public profile read.",
+        "The public response has an explicit transport representation independent of the internal account record, using the existing JSON codec.",
+        "The change stays focused on the profile boundary and preserves the existing repository and backup responsibilities.",
+        "The submission adds executable MUnit coverage that would catch internal account fields leaking into a public response."
+      ]
     }
   ]
 }

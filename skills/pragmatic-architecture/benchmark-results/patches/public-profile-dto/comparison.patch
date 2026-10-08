@@ -1,0 +1,56 @@
+--- without-skill/src/main/scala/http/ProfileController.scala
++++ with-skill/src/main/scala/http/ProfileController.scala
+@@ -3,10 +3,17 @@
+ import java.util.UUID
+ import ba.sake.tupson.*
+ import profiles.ProfileService
++import accounts.UserRow
+ 
+ case class ProfileResponse(status: Int, body: String, contentType: String = "application/json")
+ 
+-private case class PublicProfile(id: UUID, displayName: String, bio: String, avatarUrl: Option[String], memberSinceYear: Int) derives JsonRW
++private case class PublicProfile(
++    id: UUID,
++    displayName: String,
++    bio: String,
++    avatarUrl: Option[String],
++    memberSinceYear: Int
++) derives JsonRW
+ 
+ final class ProfileController(service: ProfileService):
+   def get(id: String): ProfileResponse =
+@@ -17,7 +24,12 @@
+       case Some(uuid) =>
+         service.find(uuid) match
+           case Some(user) =>
+-            val memberSinceYear = java.time.LocalDate.parse(user.createdAt).getYear
+-            val profile = PublicProfile(user.id, user.displayName, user.bio, user.avatarUrl, memberSinceYear)
+-            ProfileResponse(200, profile.toJson)
++            val publicProfile = PublicProfile(
++              user.id,
++              user.displayName,
++              user.bio,
++              user.avatarUrl,
++              java.time.LocalDate.parse(user.createdAt).getYear
++            )
++            ProfileResponse(200, publicProfile.toJson)
+           case None       => ProfileResponse(404, """{"error":"profile not found"}""")
+--- without-skill/src/test/scala/ProfileSuite.scala
++++ with-skill/src/test/scala/ProfileSuite.scala
+@@ -17,8 +17,14 @@
+     assertEquals(response.status, 200)
+     assertEquals(response.contentType, "application/json")
+     assertEquals(response.body.parseJson[Map[String, JValue]]("displayName"), JString("Ada"))
+-    assertEquals(response.body.parseJson[Map[String, JValue]]("memberSinceYear").toString, "2026")
+-    assertEquals(response.body.parseJson[Map[String, JValue]]("avatarUrl").toString, "null")
++    assertEquals(response.body.parseJson[Map[String, JValue]]("memberSinceYear"), org.typelevel.jawn.ast.JNum(2026))
++    assert(!response.body.contains("email"))
++    assert(!response.body.contains("passwordHash"))
++  }
++
++  test("public profile preserves missing avatar as null") {
++    val response = new ProfileController(new ProfileService(repository)).get(id.toString)
++    assertEquals(response.body.parseJson[Map[String, JValue]]("avatarUrl"), org.typelevel.jawn.ast.JNull)
+   }
+ 
+   test("missing profile and invalid URL identifier") {
