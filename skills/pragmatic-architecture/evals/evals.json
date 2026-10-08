@@ -21,6 +21,67 @@
         "The solution is proportional to three in-memory lookups and adds no unrelated architecture.",
         "The solution adds no DTO, identifier, result, or mapping wrapper without a concrete benefit."
       ]
+    },
+    {
+      "id": 2,
+      "name": "repository-with-callers",
+      "prompt": "Add email lookup support to the in-memory customer repository in the starter application. Match email addresses exactly, return the first customer in input order when multiple customers share an email, and return None when there is no match.\n\nKeep the application's existing lookup and export behavior working. Add MUnit regression coverage and run `scala-cli test . --server=false`.",
+      "expected_output": "A focused email lookup enhancement that preserves the immutable snapshot used by the application's export consumer, hides mutable backing state, and narrows unused prototype helpers.",
+      "files": [
+        "tests/pragmatic-architecture/repository-with-callers/starter"
+      ],
+      "expectations": [
+        "Email lookup is exact, returns the first match, and represents absence with None.",
+        "Existing ID lookup behavior remains compatible.",
+        "The immutable snapshot API and export consumer preserve all customers in input order.",
+        "The repository preserves findById, findByEmail, and the caller-required snapshot without extra public helpers.",
+        "The implementation exposes no public mutable backing state, including constructor fields.",
+        "Public repository members expose no mutable collections.",
+        "The submission adds executable MUnit email lookup assertions.",
+        "The lookup enhancement stays proportional and adds no unrelated architecture or unjustified wrappers."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "legacy-discount-fix",
+      "prompt": "Fix the invoice discount rounding bug in this existing application. An invoice with subtotal 10.05 and a 10 percent discount currently returns 9.04; the correct payable total is 9.05. Calculate using decimal precision and round only the final payable total to two decimal places with HALF_UP.\n\nThe invoice response and CSV export must agree. Keep existing missing-invoice and invalid-input behavior working. Add MUnit regression coverage and run `scala-cli test . --server=false`.",
+      "expected_output": "A focused correction to monetary rounding that preserves existing consumer contracts and established injection/layout conventions, with regression tests and no unrelated architecture migration.",
+      "files": [
+        "tests/pragmatic-architecture/legacy-discount-fix/starter"
+      ],
+      "expectations": [
+        "Fractional-cent discounts round the final total once with HALF_UP.",
+        "Zero, full, fractional, and large discounts retain decimal precision and two-place totals.",
+        "The existing controller and CSV export both return the corrected total in their established formats.",
+        "Missing invoice handling and invalid monetary input rejection remain compatible.",
+        "The independent legacy percentage preview remains compatible.",
+        "The rounding fix respects the application's established constructor injection and layered layout without unrelated migration.",
+        "Any new abstraction, wrapper, or dependency has a concrete benefit for the rounding fix.",
+        "The submission adds focused MUnit regression coverage that would catch premature discount rounding."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "booking-overlap-rule",
+      "prompt": "Customers are getting overlapping room bookings through the HTTP endpoint and nightly import. Fix creation so both paths reject an interval that overlaps any active booking for the same room. Intervals are half-open: a booking ending when another starts is allowed. Bookings in other rooms and cancelled bookings must not block creation, and cancellation history must remain available.\n\nReject conflicts without storing the rejected booking. Preserve existing invalid-interval and duplicate-ID errors and keep the existing booking history report available. Batch import should process rows in order, return a result for each row, and continue after a rejected row. This is an internal application; update application wiring and callers as needed. Add MUnit regression coverage for both entry points and run `scala-cli test . --server=false`.",
+      "expected_output": "Consistent booking creation with one coherent owner of the shared overlap rule, correct HTTP/import errors, current-state checks, unchanged state on rejection, and focused regression coverage.",
+      "files": [
+        "tests/pragmatic-architecture/booking-overlap-rule/starter"
+      ],
+      "expectations": [
+        "The business operation rejects every same-room overlap orientation without changing stored bookings.",
+        "HTTP returns a usable conflict response for every overlap and never persists the rejected booking.",
+        "Import rejects every overlap with an explicit error and never persists the rejected booking.",
+        "Adjacent intervals remain valid through the operation, HTTP, and import.",
+        "Other rooms and cancelled bookings do not block creation, and cancelled history is retained.",
+        "Creation checks current state after another entry point creates or a booking is cancelled.",
+        "Batch import observes earlier accepted rows and continues after rejecting an overlapping row.",
+        "Invalid intervals and duplicate IDs retain explicit errors and leave storage unchanged.",
+        "HTTP and import receive their business collaborators as dependencies instead of constructing them internally.",
+        "One coherent booking creation operation owns the shared overlap rule, and HTTP and import use it without duplicating the business policy.",
+        "The booking fix remains proportional and does not introduce unrelated layers, wrappers, or dependencies.",
+        "The submission adds focused MUnit regression coverage for overlap rejection through both HTTP and import."
+      ]
     }
   ]
 }

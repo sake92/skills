@@ -33,6 +33,25 @@ scala tests/run-eval.scala --server=false -- output \
 Single-configuration runs write `runs.json` and the normal per-run artifacts.
 Comparative runs additionally write `benchmark.json`.
 
+The caller-compatibility scenario can be selected with
+`--case repository-with-callers`. Its starter includes passing lookup/export
+tests and an existing consumer of the immutable snapshot API. The task requests
+email lookup support; protected grading checks the enhancement and preservation
+of the needed API alongside removal of unused mutable escape hatches.
+
+Two further cases use the same runner and directory layout:
+
+- `--case legacy-discount-fix`: fix premature monetary rounding while preserving
+  existing constructor injection and controller/export contracts.
+- `--case booking-overlap-rule`: preserve one shared booking creation invariant
+  across HTTP, direct business calls, and ordered batch import. Protected
+  Scalameta checks also reject business collaborator construction inside adapters;
+  the fixture's application wiring can supply changed constructor dependencies.
+
+Both starters begin with passing MUnit suites. The protected suites expose the
+reported bugs only during grading. Qualitative judges assess architectural
+tradeoffs and focused candidate regression coverage separately from behavior.
+
 The qualitative judge uses the executor model by default. Pass
 `--judge-model MODEL` to use a different judge, or `--skip-judge` when only
 candidate execution and protected deterministic grading are needed.
@@ -67,7 +86,18 @@ receive only the starter; Pi receives the evaluated skill through its explicit
 `--skill` option for `with_skill`. Protected MUnit and Scalameta graders stay
 outside both candidate workspaces.
 
+The shared `grading/RepositoryStructure.scala` checker accepts case-specific
+required members. The original customer case requires the three lookups; the
+caller-compatibility case requires ID/email lookup and the existing snapshot.
+
 Inspect `benchmark.md` for the summary, `benchmark.json` for structured results,
 and each run's `grading.json`, `outputs/submission.patch`, and
 `outputs/transcript.jsonl` for evidence. Generated workspaces are intentionally
 not committed; checked-in summaries belong in the skill's maintainer README.
+
+`review.html` is generated separately with the skill-creator's
+`eval-viewer/generate_review.py` script. It reads an iteration's existing prompts,
+outputs, and grades and produces a standalone HTML viewer with `--static`.
+The Scala runner writes grading and benchmark artifacts; it does not
+automatically generate the viewer. Supply `--benchmark` when reviewing a paired
+comparison. Single-configuration smoke runs have no comparison benchmark.

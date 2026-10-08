@@ -70,6 +70,8 @@ Shape output deliberately and report errors in a form the consumer can use. Repr
 
 Prefer explicit construction and traceable contracts. When artifacts must stay in sync, consider a shared source, code generation, or focused compatibility tests according to the cost and failure risk. Existing dependency injection, reflection, or framework conventions can be reasonable; replace them only for a concrete improvement.
 
+Receive business collaborators through constructor parameters or the project's established injection mechanism. This makes dependency ownership visible and lets tests supply or swap collaborators. Construct and wire them at application composition roots, such as startup code, assembly factories, or framework configuration. When centralizing a shared operation, inject it into its consumers rather than having controllers, jobs, or other adapters construct their own service from lower-level dependencies. Local construction of ordinary values and private implementation helpers is fine; this does not require a new interface or dependency injection framework.
+
 ## 9. Stronger enforcement when it pays off
 
 Compiler-enforced boundaries, import rules, and Java modules can protect important architectural constraints. Adopt them when the protection justifies setup and maintenance, especially around stable library APIs or recurring dependency problems. They are optional tools, not prerequisites for a well-designed feature.

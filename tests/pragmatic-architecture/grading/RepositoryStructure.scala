@@ -78,7 +78,11 @@ object RepositoryStructure {
           case body            => mentionsMutable(body, references)
       case _ => false)
 
-  def analyze(codes: List[String]): List[Violation] = {
+  def analyze(
+      codes: List[String],
+      requiredMembers: Set[String] = required,
+      forbiddenMembers: Set[String] = escapeHatches
+  ): List[Violation] = {
     val trees = codes.map(_.parse[Source].get)
     val mutableRefs = mutableReferences(trees)
     val repository = trees.flatMap(tree =>
@@ -94,7 +98,7 @@ object RepositoryStructure {
     repository match
       case definition :: Nil =>
         val names = publicTerms(definition.templ.stats).map(_._1)
-        if names.toSet != required || names.size != required.size then
+        if names.toSet != requiredMembers || names.size != requiredMembers.size then
           violations += Violation("interface", s"CustomerRepository public members were ${names.sorted.mkString(", ")}")
       case _ => violations += Violation("interface", "expected exactly one CustomerRepository trait")
 
@@ -111,11 +115,11 @@ object RepositoryStructure {
         val mutableStorage = (mutableFields ++ mutableConstructorFields).toSet
 
         publicNames
-          .filterNot(required)
+          .filterNot(requiredMembers)
           .foreach: name =>
             violations += Violation("helpers", s"helper '$name' is public")
         publicNames
-          .filter(escapeHatches)
+          .filter(forbiddenMembers)
           .foreach: name =>
             violations += Violation("helpers", s"public '$name' escape hatch")
 
