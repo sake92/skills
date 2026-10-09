@@ -1,20 +1,20 @@
-# CLI design reference (SKILL.md §8)
+# CLI design reference
 
 Read this when building or reviewing a command-line tool. Distilled from the Command Line Interface Guidelines (clig.dev).
 
-Shared rules live in SKILL.md and are not repeated here: configuration and precedence §1, secrets §2, signals and Ctrl-C §3, stdout/stderr and exit codes §5. This file covers what a CLI adds on top: the conversation with the person at the terminal, and the contract with the scripts that will call it.
+Core interface and configuration rules live in SKILL.md. This file expands the terminal conversation and scripting contract. For signal handling and resource cleanup use process-hygiene.
 
 ## Basics
 
 - Use an argument-parsing library. Hand-rolled `argv` walking gets help text, `--flag=value`, combined short flags, and typo suggestions wrong.
 - Exit 0 on success, non-zero on failure. Map distinct failure modes a script would branch on to distinct codes.
 - Primary output to stdout, everything else to stderr.
-- Print something within 100 ms. If the first real output takes longer, print a progress line to stderr.
+- If startup or work takes long enough to leave users uncertain, report progress on stderr without contaminating the data stream.
 
 ## Help
 
 - `-h` and `--help` print full help. `myapp help` and `myapp help <subcommand>` also work.
-- Running with no arguments prints **concise** help: a one-line description, one or two examples, the most-used flags, and "run `myapp --help` for more". Do not dump the full reference, and do not silently do something.
+- Choose no-argument behavior from the tool's purpose. A command requiring a subcommand prints concise help; a filter may read stdin. Do not silently perform an unexpected destructive action.
 - Lead with examples, especially of the common complex invocation. People copy examples; they do not read flag tables.
 - Most common flags and subcommands first, not alphabetical.
 - Link to web documentation, and give a support path (issue tracker, chat).
@@ -45,7 +45,7 @@ Shared rules live in SKILL.md and are not repeated here: configuration and prece
 | `--no-color` | disable color |
 
 - `-` as a filename means stdin or stdout.
-- Never a secret in a flag. `--password-file`, or read it from stdin. `ps` shows every argument to every user.
+- Never a secret in a flag. Use a file, stdin, or a platform secret mechanism; command-line arguments may be exposed by process listings and diagnostics.
 - Make flags order-independent where the parser allows it.
 - On a typo or unknown subcommand, suggest the nearest match. Never apply the guess silently.
 - Optional flag values may accept special words such as `none` or `auto`.
@@ -118,4 +118,4 @@ Shared rules live in SKILL.md and are not repeated here: configuration and prece
 - [ ] Prompts only on a TTY, every prompt answerable by flag, destructive actions confirmed unless `--force`?
 - [ ] No catch-all default subcommand, no abbreviation matching?
 - [ ] Typo suggestions offered, never applied silently?
-- [ ] Ctrl-C exits promptly, cleanup is bounded, a second Ctrl-C exits immediately (SKILL.md §3)?
+- [ ] Ctrl-C exits promptly, cleanup is bounded, a second Ctrl-C exits immediately?

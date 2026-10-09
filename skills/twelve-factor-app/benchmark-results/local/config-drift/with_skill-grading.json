@@ -1,0 +1,40 @@
+{
+  "summary": {
+    "pass_rate": 0.5,
+    "total": 6,
+    "failed": 3,
+    "passed": 3
+  },
+  "expectations": [
+    {
+      "evidence": "MUnit passed: Explicit settings behave identically across deployment names.",
+      "passed": true,
+      "text": "Explicit settings behave identically across deployment names."
+    },
+    {
+      "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:18 expected exception of type 'java.lang.Exception' but body evaluated successfully\n17:    valid.keys.foreach { key =>\n18:      val error = intercept[Exception](Config.load(valid - key))\n19:      assert(Option(error.getMessage).exists(_.contains(key)))",
+      "passed": false,
+      "text": "Missing required settings fail with the setting name."
+    },
+    {
+      "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:31 expected exception of type 'java.lang.Exception' but body evaluated successfully\n30:    ).foreach { (key, value) =>\n31:      val error = intercept[Exception](Config.load(valid.updated(key, value)))\n32:      assert(Option(error.getMessage).exists(_.contains(key)))",
+      "passed": false,
+      "text": "Malformed and out-of-range numeric settings fail with the setting name."
+    },
+    {
+      "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:37 expected exception of type 'java.lang.Exception' but body evaluated successfully\n36:    List(\"\", \"   \", \"not-a-url\", \"postgres://user:secret-canary@/sessions\").foreach { value =>\n37:      val error = intercept[Exception](Config.load(valid.updated(\"DATABASE_URL\", value)))\n38:      val message = Option(error.getMessage).getOrElse(\"\")",
+      "passed": false,
+      "text": "Blank or malformed backing-service bindings fail without disclosing credentials."
+    },
+    {
+      "evidence": "MUnit passed: Policy consumes validated configuration rather than re-reading raw settings.",
+      "passed": true,
+      "text": "Policy consumes validated configuration rather than re-reading raw settings."
+    },
+    {
+      "evidence": "MUnit passed: Required deployment settings are documented with safe examples.",
+      "passed": true,
+      "text": "Required deployment settings are documented with safe examples."
+    }
+  ]
+}

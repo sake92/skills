@@ -1,0 +1,265 @@
+{
+  "metadata": {
+    "evals_run": [
+      1,
+      2
+    ],
+    "agent_version": "1.0.4",
+    "git_commit": "a2649ce57a3ca98ce306bb3a2099c59d5e7b7e95",
+    "executor_model": "gpt-6-luna",
+    "analyzer_model": null,
+    "reasoning": "low",
+    "skill_name": "twelve-factor",
+    "skill_path": "/home/sake/projects/sake92/skills/tests/tmp/upstream/skills/twelve-factor",
+    "runs_per_configuration": 1,
+    "timestamp": "2026-10-08T22:12:42.176661854Z"
+  },
+  "notes": [
+    "Expectation passes in every run and may not discriminate (with skill 100%, without skill 100%): Explicit settings behave identically across deployment names.",
+    "Expectation passes in every run and may not discriminate (with skill 100%, without skill 100%): Missing required settings fail with the setting name.",
+    "Expectation passes in every run and may not discriminate (with skill 100%, without skill 100%): Malformed and out-of-range numeric settings fail with the setting name.",
+    "Expectation fails in every run and needs investigation (with skill 0%, without skill 0%): Blank or malformed backing-service bindings fail without disclosing credentials.",
+    "Expectation passes in every run and may not discriminate (with skill 100%, without skill 100%): Policy consumes validated configuration rather than re-reading raw settings.",
+    "Expectation fails in every run and needs investigation (with skill 0%, without skill 0%): Required deployment settings are documented with safe examples.",
+    "Expectation favors the baseline and needs investigation (with skill 0%, without skill 100%): Replacement and concurrent replicas observe stored sessions.",
+    "Expectation favors the baseline and needs investigation (with skill 0%, without skill 100%): Session revocation is visible to every replica without a stale local cache.",
+    "Expectation favors the baseline and needs investigation (with skill 0%, without skill 100%): The supplied backing-service contract is used without concrete-store assumptions.",
+    "Expectation favors the baseline and needs investigation (with skill 0%, without skill 100%): Store failures propagate and are never reported as successful sign-ins.",
+    "Expectation favors the baseline and needs investigation (with skill 0%, without skill 100%): Successful events are line-oriented structured JSON with request correlation and no session credentials."
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "min": 0.0,
+        "max": 0.6666666666666666,
+        "mean": 0.3333333333333333,
+        "stddev": 0.3333333333333333
+      },
+      "time_seconds": {
+        "min": 15.757,
+        "max": 64.324,
+        "mean": 40.0405,
+        "stddev": 24.2835
+      },
+      "tokens": {
+        "min": 8750.0,
+        "max": 20004.0,
+        "mean": 14377.0,
+        "stddev": 5627.0
+      }
+    },
+    "delta": {
+      "pass_rate": "-0.50",
+      "time_seconds": "-41.5",
+      "tokens": "-1742"
+    },
+    "without_skill": {
+      "pass_rate": {
+        "min": 0.6666666666666666,
+        "max": 1.0,
+        "mean": 0.8333333333333333,
+        "stddev": 0.16666666666666669
+      },
+      "time_seconds": {
+        "min": 56.636,
+        "max": 106.48,
+        "mean": 81.558,
+        "stddev": 24.922
+      },
+      "tokens": {
+        "min": 9867.0,
+        "max": 22370.0,
+        "mean": 16118.5,
+        "stddev": 6251.5
+      }
+    }
+  },
+  "runs": [
+    {
+      "result": {
+        "pass_rate": 0.6666666666666666,
+        "total": 6,
+        "time_seconds": 64.324,
+        "tokens": 20004,
+        "tool_calls": 11,
+        "failed": 2,
+        "passed": 4,
+        "errors": 0
+      },
+      "notes": [],
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "expectations": [
+        {
+          "evidence": "MUnit passed: Explicit settings behave identically across deployment names.",
+          "passed": true,
+          "text": "Explicit settings behave identically across deployment names."
+        },
+        {
+          "evidence": "MUnit passed: Missing required settings fail with the setting name.",
+          "passed": true,
+          "text": "Missing required settings fail with the setting name."
+        },
+        {
+          "evidence": "MUnit passed: Malformed and out-of-range numeric settings fail with the setting name.",
+          "passed": true,
+          "text": "Malformed and out-of-range numeric settings fail with the setting name."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:37 expected exception of type 'java.lang.Exception' but body evaluated successfully\n36:    List(\"\", \"   \", \"not-a-url\", \"postgres://user:secret-canary@/sessions\").foreach { value =>\n37:      val error = intercept[Exception](Config.load(valid.updated(\"DATABASE_URL\", value)))\n38:      val message = Option(error.getMessage).getOrElse(\"\")",
+          "passed": false,
+          "text": "Blank or malformed backing-service bindings fail without disclosing credentials."
+        },
+        {
+          "evidence": "MUnit passed: Policy consumes validated configuration rather than re-reading raw settings.",
+          "passed": true,
+          "text": "Policy consumes validated configuration rather than re-reading raw settings."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:60 no example binding\n59:    assert(\"(?i)PORT[^\\\\r\\\\n]{0,60}\\\\b[1-9][0-9]{1,4}\\\\b\".r.findFirstIn(documents).nonEmpty, \"no example port\")\n60:    assert(documents.contains(\"postgres://\") || documents.contains(\"postgresql://\"), \"no example binding\")\n61:  }",
+          "passed": false,
+          "text": "Required deployment settings are documented with safe examples."
+        }
+      ],
+      "eval_name": "config-drift"
+    },
+    {
+      "result": {
+        "pass_rate": 0.6666666666666666,
+        "total": 6,
+        "time_seconds": 56.636,
+        "tokens": 9867,
+        "tool_calls": 10,
+        "failed": 2,
+        "passed": 4,
+        "errors": 0
+      },
+      "notes": [],
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "expectations": [
+        {
+          "evidence": "MUnit passed: Explicit settings behave identically across deployment names.",
+          "passed": true,
+          "text": "Explicit settings behave identically across deployment names."
+        },
+        {
+          "evidence": "MUnit passed: Missing required settings fail with the setting name.",
+          "passed": true,
+          "text": "Missing required settings fail with the setting name."
+        },
+        {
+          "evidence": "MUnit passed: Malformed and out-of-range numeric settings fail with the setting name.",
+          "passed": true,
+          "text": "Malformed and out-of-range numeric settings fail with the setting name."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:37 expected exception of type 'java.lang.Exception' but body evaluated successfully\n36:    List(\"\", \"   \", \"not-a-url\", \"postgres://user:secret-canary@/sessions\").foreach { value =>\n37:      val error = intercept[Exception](Config.load(valid.updated(\"DATABASE_URL\", value)))\n38:      val message = Option(error.getMessage).getOrElse(\"\")",
+          "passed": false,
+          "text": "Blank or malformed backing-service bindings fail without disclosing credentials."
+        },
+        {
+          "evidence": "MUnit passed: Policy consumes validated configuration rather than re-reading raw settings.",
+          "passed": true,
+          "text": "Policy consumes validated configuration rather than re-reading raw settings."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/config-drift/grading/EvaluationSuite.scala:60 no example binding\n59:    assert(\"(?i)PORT[^\\\\r\\\\n]{0,60}\\\\b[1-9][0-9]{1,4}\\\\b\".r.findFirstIn(documents).nonEmpty, \"no example port\")\n60:    assert(documents.contains(\"postgres://\") || documents.contains(\"postgresql://\"), \"no example binding\")\n61:  }",
+          "passed": false,
+          "text": "Required deployment settings are documented with safe examples."
+        }
+      ],
+      "eval_name": "config-drift"
+    },
+    {
+      "result": {
+        "pass_rate": 0.0,
+        "total": 5,
+        "time_seconds": 15.757,
+        "tokens": 8750,
+        "tool_calls": 6,
+        "failed": 5,
+        "passed": 0,
+        "errors": 0
+      },
+      "notes": [],
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "expectations": [
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/replica-sessions/grading/EvaluationSuite.scala:14\n13:    first.signIn(\"t-1\", \"ada\", \"r-1\")\n14:    assertEquals(new Sessions(store, _ => ()).currentUser(\"t-1\"), Some(\"ada\"))\n15:  }\nvalues are not the same\n=> Obtained\nNone\n=> Diff (- expected, + obtained)\n-Some(\n-  value = \"ada\"\n-)\n+None",
+          "passed": false,
+          "text": "Replacement and concurrent replicas observe stored sessions."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/replica-sessions/grading/EvaluationSuite.scala:23\n22:    second.signOut(\"t-1\", \"r-2\")\n23:    assertEquals(first.currentUser(\"t-1\"), None)\n24:  }\nvalues are not the same\n=> Obtained\nSome(\n  value = \"ada\"\n)\n=> Diff (- expected, + obtained)\n-None\n+Some(\n+  value = \"ada\"\n+)",
+          "passed": false,
+          "text": "Session revocation is visible to every replica without a stale local cache."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/replica-sessions/grading/EvaluationSuite.scala:32\n31:    val sessions = new Sessions(custom, _ => ())\n32:    assertEquals(sessions.currentUser(\"existing\"), Some(\"grace\"))\n33:    sessions.signIn(\"new\", \"ada\", \"r\")\nvalues are not the same\n=> Obtained\nNone\n=> Diff (- expected, + obtained)\n-Some(\n-  value = \"grace\"\n-)\n+None",
+          "passed": false,
+          "text": "The supplied backing-service contract is used without concrete-store assumptions."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/replica-sessions/grading/EvaluationSuite.scala:45 expected exception of type 'java.lang.Exception' but body evaluated successfully\n44:    val sessions = new Sessions(failing, logs += _)\n45:    intercept[Exception](sessions.signIn(\"credential-canary\", \"ada\", \"r-1\"))\n46:    assert(!logs.mkString.contains(\"credential-canary\"))",
+          "passed": false,
+          "text": "Store failures propagate and are never reported as successful sign-ins."
+        },
+        {
+          "evidence": "/home/sake/projects/sake92/skills/tests/twelve-factor/replica-sessions/grading/EvaluationSuite.scala:57 assertion failed\n56:    logs.zip(List(\"r-1\", \"r-2\")).foreach { (line, request) =>\n57:      assert(!line.contains(\"credential-canary\"))\n58:      assert(!line.contains('\\n'))",
+          "passed": false,
+          "text": "Successful events are line-oriented structured JSON with request correlation and no session credentials."
+        }
+      ],
+      "eval_name": "replica-sessions"
+    },
+    {
+      "result": {
+        "pass_rate": 1.0,
+        "total": 5,
+        "time_seconds": 106.48,
+        "tokens": 22370,
+        "tool_calls": 17,
+        "failed": 0,
+        "passed": 5,
+        "errors": 2
+      },
+      "notes": [],
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "expectations": [
+        {
+          "evidence": "MUnit passed: Replacement and concurrent replicas observe stored sessions.",
+          "passed": true,
+          "text": "Replacement and concurrent replicas observe stored sessions."
+        },
+        {
+          "evidence": "MUnit passed: Session revocation is visible to every replica without a stale local cache.",
+          "passed": true,
+          "text": "Session revocation is visible to every replica without a stale local cache."
+        },
+        {
+          "evidence": "MUnit passed: The supplied backing-service contract is used without concrete-store assumptions.",
+          "passed": true,
+          "text": "The supplied backing-service contract is used without concrete-store assumptions."
+        },
+        {
+          "evidence": "MUnit passed: Store failures propagate and are never reported as successful sign-ins.",
+          "passed": true,
+          "text": "Store failures propagate and are never reported as successful sign-ins."
+        },
+        {
+          "evidence": "MUnit passed: Successful events are line-oriented structured JSON with request correlation and no session credentials.",
+          "passed": true,
+          "text": "Successful events are line-oriented structured JSON with request correlation and no session credentials."
+        }
+      ],
+      "eval_name": "replica-sessions"
+    }
+  ]
+}

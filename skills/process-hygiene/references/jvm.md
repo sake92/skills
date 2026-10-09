@@ -1,10 +1,10 @@
-# JVM reference (SKILL.md §3, §4)
+# JVM reference
 
 Read this when Java, Kotlin, or Scala code spawns a subprocess, creates threads or executors, handles shutdown, or catches `InterruptedException`. Snippets are Java; the APIs are the same from Kotlin and Scala.
 
 ## Subprocesses with ProcessBuilder
 
-Every `Process` has an owner, drained output, a timeout, and a controlled environment.
+Every `Process` has an owner, drained output, a cancellation path, and a controlled environment. Finite commands have deadlines; persistent children have supervision.
 
 ```java
 ProcessBuilder pb = new ProcessBuilder("git", "fetch", "--all")
@@ -17,7 +17,7 @@ pb.environment().put("HOME", System.getenv("HOME"));
 Process p = pb.start();
 // Drain on a separate thread; the child blocks once the pipe buffer (~64 KiB) fills.
 Thread drainer = Thread.ofVirtual().start(() -> {
-    try (var in = p.inputStream()) { in.transferTo(logSink); }
+    try (var in = p.getInputStream()) { in.transferTo(logSink); }
     catch (IOException ignored) { /* child closed the pipe */ }
 });
 
@@ -26,13 +26,22 @@ if (!p.waitFor(60, TimeUnit.SECONDS)) {
     if (!p.waitFor(5, TimeUnit.SECONDS)) {
         p.destroyForcibly();               // SIGKILL
     }
+    // Wait for the direct child to finish; also stop descendants (see below).
+    if (!p.waitFor(5, TimeUnit.SECONDS)) {
+        throw new IOException("child did not exit after forced termination");
+    }
+    drainer.join(1000);
+    if (drainer.isAlive()) p.getInputStream().close();
     throw new TimeoutException("git fetch exceeded 60s");
 }
-drainer.join();
+drainer.join(1000);
+if (drainer.isAlive()) p.getInputStream().close();
 if (p.exitValue() != 0) throw new IOException("git fetch failed: " + p.exitValue());
 ```
 
-Alternatives to the drainer thread: `redirectOutput(File)`, `redirectOutput(Redirect.DISCARD)`, or `inheritIO()` when the child's output belongs on the parent's stdout/stderr. Never `start()` and ignore the streams.
+This fragment illustrates pipe handling for a finite command. A production owner must also run descendant termination and join/close the drainer in a finally path on interruption or any exception. Prefer redirects when no output capture is required; they avoid creating another owned task.
+
+Alternatives: `redirectOutput(File)`, `redirectOutput(Redirect.DISCARD)`, or `inheritIO()` when output belongs on the parent's streams. Never start a child and ignore writable pipes.
 
 `ProcessBuilder.inheritIO()` also inherits the parent's stdin; a child that reads stdin can then steal input meant for the parent.
 
@@ -42,23 +51,26 @@ Alternatives to the drainer thread: `redirectOutput(File)`, `redirectOutput(Redi
 
 ```java
 static void killTree(ProcessHandle root) {
-    // descendants() is a snapshot; take it before signalling, and again after.
+    // Retain discovered handles before signalling: reparented children may
+    // disappear from root.descendants() when the root exits.
     List<ProcessHandle> kids = root.descendants().toList();
     kids.forEach(ProcessHandle::destroy);
     root.destroy();
 
     long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-    while (root.isAlive() && System.nanoTime() < deadline) {
+    while ((root.isAlive() || kids.stream().anyMatch(ProcessHandle::isAlive))
+            && System.nanoTime() < deadline) {
         Thread.onSpinWait();
         LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(50));
     }
 
+    kids.stream().filter(ProcessHandle::isAlive).forEach(ProcessHandle::destroyForcibly);
     root.descendants().forEach(ProcessHandle::destroyForcibly);
     root.destroyForcibly();
 }
 ```
 
-Register it for every long-lived child the program starts:
+Tree enumeration is best-effort: children can spawn or detach between snapshots. Prefer process groups or OS supervision when containment is required. After signalling, the owner waits for each direct `Process` and its output readers. Register cleanup for owned long-lived children:
 
 ```java
 Process dev = pb.start();
@@ -102,7 +114,7 @@ Default to `newVirtualThreadPerTaskExecutor()` for blocking work. Fixed platform
 
 ## StructuredTaskScope
 
-`java.util.concurrent.StructuredTaskScope` is the JVM's scope primitive and maps directly to SKILL.md §4. It is a **preview feature**: fifth preview in JDK 25 (JEP 505), with further previews following, so it needs `--enable-preview` and the API may still shift. Use it when the JDK version allows; otherwise the try-with-resources executor above gives the same lifetime guarantee.
+`java.util.concurrent.StructuredTaskScope` is the JVM's scope primitive and maps directly to SKILL.md ownership guidance. It is a **preview feature**: fifth preview in JDK 25 (JEP 505), with further previews following, so it needs `--enable-preview` and the API may still shift. Use it when the JDK version allows; otherwise the try-with-resources executor above gives the same lifetime guarantee.
 
 ```java
 try (var scope = StructuredTaskScope.open()) {            // default: fail if any subtask fails
@@ -164,7 +176,7 @@ Loops check `Thread.currentThread().isInterrupted()` each iteration when they do
 
 ## Timeouts
 
-Every blocking call takes a timeout. Without one, a dead peer holds the thread forever and the drain deadline cannot be met.
+Every blocking operation must be cancellable or bounded. Interruptible waits can be appropriate when the owner interrupts and joins the waiting task. Use timeouts for finite operations and waits that otherwise cannot be unblocked.
 
 | Call | Use |
 |---|---|
@@ -187,5 +199,5 @@ Every blocking call takes a timeout. Without one, a dead peer holds the thread f
 - [ ] No empty or log-only `catch (InterruptedException e)`? Interrupt is rethrown or restored?
 - [ ] Shutdown hook is bounded, idempotent, uses `System.err`, and does not call `System.exit`?
 - [ ] `setDaemon(true)` only with a comment explaining why abrupt death is harmless?
-- [ ] No blocking call (`get`, `take`, `lock`, `join`, `waitFor`, network, JDBC) without a timeout?
+- [ ] Every blocking operation is cancellable or bounded, including during shutdown?
 - [ ] Virtual threads for blocking work; `StructuredTaskScope` or try-with-resources executor for fan-out?

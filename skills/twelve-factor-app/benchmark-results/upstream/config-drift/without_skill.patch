@@ -1,0 +1,98 @@
+diff --git a/README.md b/README.md
+index 718d1c7..2faac3b 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,11 @@
+ # Sessions service configuration
+ 
+-This module is used by the deployed sessions service and its admin commands. The platform supplies PORT, DATABASE_URL, and SESSION_TTL_MINUTES. The same artifact is deployed to staging and production. APP_ENV is descriptive metadata.
++This module is used by the deployed sessions service and its admin commands. Configure the process with these required environment variables:
++
++- `PORT`: integer from 1 through 65535.
++- `DATABASE_URL`: non-blank connection URL for the intended database.
++- `SESSION_TTL_MINUTES`: positive integer session lifetime.
++
++Configuration is validated at load time; missing, malformed, or out-of-range values fail with an error naming the setting. The same artifact is deployed to staging and production, so set `DATABASE_URL` to the platform's database in every environment. `APP_ENV` is descriptive metadata and does not select or override the database endpoint.
+ 
+ Run `scala-cli test . --server=false`. Preserve Config.load(Map), Config's fields, and SessionPolicy's constructor/methods because callers use them.
+diff --git a/src/main/scala/service/Config.scala b/src/main/scala/service/Config.scala
+index 5c1368e..6cffb07 100644
+--- a/src/main/scala/service/Config.scala
++++ b/src/main/scala/service/Config.scala
+@@ -4,15 +4,23 @@ case class Config(port: Int, databaseUrl: String, sessionTtlMinutes: Int)
+ 
+ object Config:
+   def load(env: Map[String, String]): Config =
+-    val database = if env.getOrElse("APP_ENV", "development") == "production" then
+-      env.getOrElse("DATABASE_URL", "postgres://localhost/prod")
+-    else "postgres://localhost/dev"
+     Config(
+-      env.get("PORT").flatMap(_.toIntOption).getOrElse(8080),
+-      database,
+-      env.get("SESSION_TTL_MINUTES").flatMap(_.toIntOption).getOrElse(60)
++      requiredInt(env, "PORT", minimum = 1, maximum = 65535),
++      requiredNonBlank(env, "DATABASE_URL"),
++      requiredInt(env, "SESSION_TTL_MINUTES", minimum = 1, maximum = Int.MaxValue)
+     )
+ 
++  private def requiredNonBlank(env: Map[String, String], key: String): String =
++    env.get(key).filter(_.trim.nonEmpty).getOrElse {
++      throw new IllegalArgumentException(s"Missing or unusable required setting $key")
++    }
++
++  private def requiredInt(env: Map[String, String], key: String, minimum: Int, maximum: Int): Int =
++    val value = env.get(key).flatMap(_.toIntOption).filter(n => n >= minimum && n <= maximum)
++    value.getOrElse {
++      throw new IllegalArgumentException(s"Missing or unusable required setting $key (expected integer from $minimum to $maximum)")
++    }
++
+ final class SessionPolicy(config: Config, environment: Map[String, String]):
+-  def expiresAfterMinutes: Int = environment.get("SESSION_TTL_MINUTES").flatMap(_.toIntOption).getOrElse(60)
++  def expiresAfterMinutes: Int = config.sessionTtlMinutes
+   def endpoint: String = config.databaseUrl
+diff --git a/src/test/scala/service/ConfigSuite.scala b/src/test/scala/service/ConfigSuite.scala
+index f6c293c..938de91 100644
+--- a/src/test/scala/service/ConfigSuite.scala
++++ b/src/test/scala/service/ConfigSuite.scala
+@@ -10,7 +10,38 @@ class ConfigSuite extends munit.FunSuite:
+     )
+     assertEquals(Config.load(env), Config(9000, "postgres://db/service", 45))
+   }
+-  test("policy exposes endpoint") {
+-    val config = Config(9000, "postgres://db/service", 45)
+-    assertEquals(new SessionPolicy(config, Map.empty).endpoint, config.databaseUrl)
++  test("database URL is used regardless of descriptive environment") {
++    assertEquals(Config.load(Map(
++      "APP_ENV" -> "staging",
++      "DATABASE_URL" -> "postgres://production-db/service",
++      "PORT" -> "9000",
++      "SESSION_TTL_MINUTES" -> "45"
++    )).databaseUrl, "postgres://production-db/service")
++  }
++
++  test("missing and malformed settings fail with the setting name") {
++    val cases = Seq(
++      Map("DATABASE_URL" -> "db", "SESSION_TTL_MINUTES" -> "45") -> "PORT",
++      Map("PORT" -> "bad", "DATABASE_URL" -> "db", "SESSION_TTL_MINUTES" -> "45") -> "PORT",
++      Map("PORT" -> "9000", "SESSION_TTL_MINUTES" -> "45") -> "DATABASE_URL",
++      Map("PORT" -> "9000", "DATABASE_URL" -> "db", "SESSION_TTL_MINUTES" -> "bad") -> "SESSION_TTL_MINUTES",
++      Map("PORT" -> "9000", "DATABASE_URL" -> " ", "SESSION_TTL_MINUTES" -> "45") -> "DATABASE_URL"
++    )
++    cases.foreach { case (env, setting) =>
++      val error = intercept[IllegalArgumentException](Config.load(env))
++      assert(error.getMessage.contains(setting))
++    }
++  }
++
++  test("policy uses immutable configuration rather than later environment changes") {
++    val config = Config.load(Map(
++      "PORT" -> "9000",
++      "DATABASE_URL" -> "postgres://db/service",
++      "SESSION_TTL_MINUTES" -> "45"
++    ))
++    val mutableEnv = scala.collection.mutable.Map("SESSION_TTL_MINUTES" -> "45")
++    val policy = new SessionPolicy(config, mutableEnv.toMap)
++    mutableEnv.update("SESSION_TTL_MINUTES", "10")
++    assertEquals(policy.expiresAfterMinutes, 45)
++    assertEquals(policy.endpoint, "postgres://db/service")
+   }

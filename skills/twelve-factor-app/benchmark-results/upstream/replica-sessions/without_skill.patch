@@ -1,0 +1,72 @@
+diff --git a/src/main/scala/service/Sessions.scala b/src/main/scala/service/Sessions.scala
+index 43a07b8..3da3505 100644
+--- a/src/main/scala/service/Sessions.scala
++++ b/src/main/scala/service/Sessions.scala
+@@ -9,17 +9,28 @@ trait SessionStore:
+ 
+ final class SharedStore extends SessionStore:
+   private val entries = mutable.Map.empty[String, String]
+-  def put(token: String, user: String): Unit = entries.update(token, user)
+-  def get(token: String): Option[String] = entries.get(token)
+-  def remove(token: String): Unit =
+-    entries.remove(token); ()
++  def put(token: String, user: String): Unit = synchronized(entries.update(token, user))
++  def get(token: String): Option[String] = synchronized(entries.get(token))
++  def remove(token: String): Unit = synchronized { entries.remove(token); () }
+ 
+ final class Sessions(store: SessionStore, emit: String => Unit):
+-  private val local = mutable.Map.empty[String, String]
++  private def json(value: String): String =
++    value.flatMap {
++      case '"' => "\\\""
++      case '\\' => "\\\\"
++      case '\n' => "\\n"
++      case '\r' => "\\r"
++      case '\t' => "\\t"
++      case c if c < ' ' => f"\\u${c.toInt}%04x"
++      case c => c.toString
++    }
++  private def log(operation: String, requestId: String): Unit =
++    emit(s"{\"level\":\"INFO\",\"operation\":\"${json(operation)}\",\"requestId\":\"${json(requestId)}\"}")
++
+   def signIn(token: String, user: String, requestId: String): Unit =
+-    local.update(token, user)
+-    emit(s"Signed in $user with token $token")
+-  def currentUser(token: String): Option[String] = local.get(token)
++    store.put(token, user)
++    log("sign_in", requestId)
++  def currentUser(token: String): Option[String] = store.get(token)
+   def signOut(token: String, requestId: String): Unit =
+-    local.remove(token)
+-    emit(s"Signed out token $token")
++    store.remove(token)
++    log("sign_out", requestId)
+diff --git a/src/test/scala/service/SessionsSuite.scala b/src/test/scala/service/SessionsSuite.scala
+index 70835d4..429a11d 100644
+--- a/src/test/scala/service/SessionsSuite.scala
++++ b/src/test/scala/service/SessionsSuite.scala
+@@ -11,3 +11,24 @@ class SessionsSuite extends munit.FunSuite:
+   test("unknown session is absent") {
+     assertEquals(new Sessions(new SharedStore, _ => ()).currentUser("missing"), None)
+   }
++
++  test("sessions survive replica replacement and sign-out revokes across replicas") {
++    val store = new SharedStore
++    val first = new Sessions(store, _ => ())
++    first.signIn("secret-token", "ada", "request-1")
++    val replacement = new Sessions(store, _ => ())
++    assertEquals(replacement.currentUser("secret-token"), Some("ada"))
++    replacement.signOut("secret-token", "request-2")
++    assertEquals(first.currentUser("secret-token"), None)
++  }
++
++  test("logs are structured, request-correlated, and never contain session tokens") {
++    val records = scala.collection.mutable.ListBuffer.empty[String]
++    val sessions = new Sessions(new SharedStore, records += _)
++    sessions.signIn("secret-token", "ada", "request-1")
++    sessions.signOut("secret-token", "request-2")
++    assert(records.forall(_.startsWith("{")))
++    assert(records.exists(_.contains("\"requestId\":\"request-1\"")))
++    assert(records.exists(_.contains("\"operation\":\"sign_out\"")))
++    assert(!records.mkString.contains("secret-token"))
++  }

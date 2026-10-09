@@ -1,6 +1,9 @@
 import ba.sake.tupson.*
 
 case class OutputConfig(
+    skillPath: String = "skills/pragmatic-architecture",
+    evalPath: Option[String] = None,
+    fixturePath: String = "tests/pragmatic-architecture",
     caseName: Option[String] = None,
     model: String = "gpt-6-luna",
     reasoning: String = "low",

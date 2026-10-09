@@ -25,9 +25,10 @@ private def outputEnvironment(config: OutputConfig): OutputEnvironment = {
   require(config.parallelism > 0, "parallelism must be positive")
 
   val root = os.pwd
-  val evalRoot = root / "tests/pragmatic-architecture"
-  val skillRoot = root / "skills/pragmatic-architecture"
-  val evalSet = os.read(skillRoot / "evals/evals.json").parseJson[EvalSet]
+  val evalRoot = os.Path(config.fixturePath, root)
+  val skillRoot = os.Path(config.skillPath, root)
+  val evalSet =
+    os.read(config.evalPath.map(os.Path(_, root)).getOrElse(skillRoot / "evals/evals.json")).parseJson[EvalSet]
   val evals = config.caseName match
     case None       => evalSet.evals
     case Some(name) => evalSet.evals.filter(_.name == name)
@@ -51,6 +52,8 @@ private def outputEnvironment(config: OutputConfig): OutputEnvironment = {
     .ofPattern("yyyyMMdd-HHmmss")
     .withZone(java.time.ZoneOffset.UTC)
     .format(Instant.now)
+  val iterationRoot = root / "tests/tmp" / s"${evalSet.skill_name}-workspace" / s"iteration-$timestamp"
+  copyTree(skillRoot, iterationRoot / "evaluated-skill", Set(".git", ".scala-build", ".bsp"))
   OutputEnvironment(
     root = root,
     evalRoot = evalRoot,
@@ -58,7 +61,7 @@ private def outputEnvironment(config: OutputConfig): OutputEnvironment = {
     evalSet = evalSet,
     evals = evals,
     judgeModel = config.judgeModel.getOrElse(config.model),
-    iterationRoot = root / "tests/tmp/pragmatic-architecture-workspace" / s"iteration-$timestamp",
+    iterationRoot = iterationRoot,
     timeoutMs = config.timeoutMinutes.toLong * 60_000
   )
 }

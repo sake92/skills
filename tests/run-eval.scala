@@ -20,6 +20,9 @@ import mainargs.{Flag, ParserForMethods, arg}
 object EvalCli {
   @mainargs.main
   def output(
+      @arg(doc = "Evaluated skill directory") skillPath: String = "skills/pragmatic-architecture",
+      @arg(doc = "Optional evals JSON independent of the evaluated skill") evalPath: Option[String],
+      @arg(doc = "Protected fixtures and grading directory") fixturePath: String = "tests/pragmatic-architecture",
       @arg(
         name = "case",
         doc = "Optional eval name; all evals run by default"
@@ -35,6 +38,9 @@ object EvalCli {
   ): Unit =
     runOutputEval(
       OutputConfig(
+        skillPath = skillPath,
+        evalPath = evalPath,
+        fixturePath = fixturePath,
         caseName = caseName,
         model = model,
         reasoning = reasoning,

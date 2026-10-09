@@ -1,4 +1,4 @@
-# Shell reference (SKILL.md §3, §4)
+# Shell reference
 
 Read this when writing or reviewing a bash script, a container entrypoint, a CI step, or a helper script that starts servers or watchers. Shell is where orphaned processes are most common, because `&` is one character and the cleanup is twelve lines.
 
@@ -17,7 +17,7 @@ Where a command is allowed to fail, say so explicitly: `cmd || true`, or `if cmd
 
 ## Own your children
 
-Every `&` records a PID. A `trap` kills what was recorded. `wait` runs before exit. Complete template:
+Every owned background job records its identity. A trap terminates recorded groups and waits for direct children. Illustrative Linux launcher (assumes setsid does not fork away from the recorded leader):
 
 ```bash
 #!/usr/bin/env bash
@@ -31,6 +31,12 @@ cleanup() {
   for pid in "${pids[@]:-}"; do
     [[ -n "$pid" ]] || continue
     kill -- -"$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true   # group first, then pid
+  done
+  # Give cooperative children a bounded grace interval, then escalate.
+  sleep 2
+  for pid in "${pids[@]:-}"; do
+    [[ -n "$pid" ]] || continue
+    kill -KILL -- -"$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
   done
   wait 2>/dev/null || true
   exit "$code"
@@ -59,7 +65,7 @@ Why each part:
 - `trap - ...` inside `cleanup` prevents recursion when `exit` fires `EXIT` again.
 - `wait` after killing lets children die before the script returns; otherwise the caller sees the script finished while ports are still held.
 
-On macOS `setsid` is not installed by default (`brew install util-linux`). Fallback: `kill "$pid"` plus `pkill -P "$pid"` to reach direct children.
+Process-group containment and setsid availability vary by platform. Killing a PID plus its currently discovered direct children is not equivalent to containing the descendant tree. For robust launchers, use the platform's supervisor and identity facilities; children that escape the recorded group need another owner. Waiting can still be unbounded for a child stuck in an uninterruptible kernel operation, so the outer supervisor must enforce the final process deadline.
 
 ## timeout
 

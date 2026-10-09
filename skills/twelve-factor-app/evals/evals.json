@@ -1,0 +1,34 @@
+{
+  "skill_name": "twelve-factor-app",
+  "evals": [
+    {
+      "id": 1,
+      "name": "config-drift",
+      "prompt": "Fix the sessions service's deployment configuration. Operators report that staging connects to localhost even when they supply the production database settings, malformed numeric settings are silently ignored, and changing the raw environment map after configuration creates inconsistent session expiry behavior. Missing or unusable platform settings must fail before serving work with a useful error naming the setting. Keep existing public APIs compatible, document how operators configure it, add regression tests, and run scala-cli test . --server=false.",
+      "expected_output": "A compatible validated configuration boundary with consistent deployment behavior, useful redacted failures, configuration-driven policy, and operator examples.",
+      "files": ["tests/twelve-factor/config-drift/starter"],
+      "expectations": [
+        "Explicit settings behave identically across deployment names.",
+        "Missing required settings fail with the setting name.",
+        "Malformed and out-of-range numeric settings fail with the setting name.",
+        "Blank or malformed backing-service bindings fail without disclosing credentials.",
+        "Policy consumes validated configuration rather than re-reading raw settings.",
+        "Required deployment settings are documented with safe examples."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "replica-sessions",
+      "prompt": "Fix the sessions module: users are logged out when a web replica is replaced, and signing out on another replica sometimes leaves the session usable. We already supply the production session store through application wiring. Operators also cannot filter the platform logs or trace an operation back to its incoming request, and session tokens have appeared in the logs. Preserve the public API and successful same-instance behavior. Add regression coverage and run scala-cli test . --server=false.",
+      "expected_output": "Session behavior backed by the supplied durable store across replicas, observable failures, and safe structured correlated platform events.",
+      "files": ["tests/twelve-factor/replica-sessions/starter"],
+      "expectations": [
+        "Replacement and concurrent replicas observe stored sessions.",
+        "Session revocation is visible to every replica without a stale local cache.",
+        "The supplied backing-service contract is used without concrete-store assumptions.",
+        "Store failures propagate and are never reported as successful sign-ins.",
+        "Successful events are line-oriented structured JSON with request correlation and no session credentials."
+      ]
+    }
+  ]
+}

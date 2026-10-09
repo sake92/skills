@@ -1,4 +1,4 @@
-# Lifecycle reference (SKILL.md §3)
+# Lifecycle reference
 
 Read this when writing or reviewing startup code, signal handling, shutdown, a Dockerfile entrypoint, or health probes.
 
@@ -24,7 +24,7 @@ Exit codes after a signal follow the shell convention 128 + signal number: 130 a
    - Scheduler: cancel timers so no new job starts.
    - Batch job: stop picking up the next item; finish or checkpoint the current one.
 3. **Drain with a deadline.** Wait for in-flight work, but not forever. Budget arithmetic: `drain deadline = grace period − cleanup budget − margin`. With the Kubernetes default of 30 s: drain for at most 20 s, keep 5 s for cleanup, 5 s margin.
-4. **Release resources** in reverse order of acquisition: connection pools, file handles, temporary directories, child processes (kill the tree, see SKILL.md §4).
+4. **Release resources** in reverse order of acquisition: connection pools, file handles, temporary directories, child processes (kill the tree, see SKILL.md ownership guidance).
 5. **Exit** with the right code: 0 if the shutdown was clean, 143 if you want to signal that it was signal-initiated, non-zero if drain timed out and work was abandoned.
 
 Cleanup has its own timeout. A `close()` that blocks on a dead database must not prevent exit.
@@ -37,7 +37,7 @@ If a second `SIGTERM` or `SIGINT` arrives while cleanup is running: skip the rem
 
 1. The pod is marked `Terminating` and removed from Service endpoints. This propagation is **not instantaneous**; kube-proxy and ingress controllers catch up over the next second or so. Traffic can still arrive after step 3.
 2. The `preStop` hook runs, if defined. A `sleep 5` here is a common, legitimate way to let endpoint removal propagate before the process is told to stop.
-3. `SIGTERM` is sent to PID 1 of each container. The grace period timer (`terminationGracePeriodSeconds`, default 30) starts here.
+3. `SIGTERM` is sent to PID 1 of each container. The grace period includes the preStop hook; do not assume the full budget remains when the signal arrives.
 4. When the timer expires, `SIGKILL`.
 
 Implications for the code: fail the readiness probe immediately on `SIGTERM`, keep the listener serving for a moment, drain within the budget above. If your shutdown needs longer than 30 s, raise the grace period in the manifest; do not silently exceed it.
@@ -77,7 +77,7 @@ Fail fast on:
 
 Order of operations in `main`:
 
-1. Print one line (`myapp starting`) within 100 ms.
+1. Report startup promptly if the user or supervisor needs progress feedback.
 2. Load and validate configuration.
 3. Install signal handlers and the shutdown hook.
 4. Connect to backing services with timeouts.

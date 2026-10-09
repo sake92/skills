@@ -1,0 +1,91 @@
+diff --git a/README.md b/README.md
+index 718d1c7..735bde3 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,11 @@
+ # Sessions service configuration
+ 
+-This module is used by the deployed sessions service and its admin commands. The platform supplies PORT, DATABASE_URL, and SESSION_TTL_MINUTES. The same artifact is deployed to staging and production. APP_ENV is descriptive metadata.
++This module is used by the deployed sessions service and its admin commands. The platform supplies PORT, DATABASE_URL, and SESSION_TTL_MINUTES. The same artifact is deployed to staging and production. APP_ENV is descriptive metadata; it does not select a database endpoint. Set all three required settings in the runtime environment for every deploy:
++
++- `PORT`: integer from 1 through 65535
++- `DATABASE_URL`: non-blank URL for the attached database
++- `SESSION_TTL_MINUTES`: positive integer
++
++Configuration is validated by `Config.load` before the service starts work; missing, blank, malformed, or out-of-range values raise an error naming the setting. No development or production database defaults are embedded in the artifact.
+ 
+ Run `scala-cli test . --server=false`. Preserve Config.load(Map), Config's fields, and SessionPolicy's constructor/methods because callers use them.
+diff --git a/src/main/scala/service/Config.scala b/src/main/scala/service/Config.scala
+index 5c1368e..a1a4779 100644
+--- a/src/main/scala/service/Config.scala
++++ b/src/main/scala/service/Config.scala
+@@ -4,15 +4,23 @@ case class Config(port: Int, databaseUrl: String, sessionTtlMinutes: Int)
+ 
+ object Config:
+   def load(env: Map[String, String]): Config =
+-    val database = if env.getOrElse("APP_ENV", "development") == "production" then
+-      env.getOrElse("DATABASE_URL", "postgres://localhost/prod")
+-    else "postgres://localhost/dev"
+-    Config(
+-      env.get("PORT").flatMap(_.toIntOption).getOrElse(8080),
+-      database,
+-      env.get("SESSION_TTL_MINUTES").flatMap(_.toIntOption).getOrElse(60)
+-    )
++    val port = requiredInt(env, "PORT")
++    val database = required(env, "DATABASE_URL")
++    val ttl = requiredInt(env, "SESSION_TTL_MINUTES")
++    if port < 1 || port > 65535 then
++      throw new IllegalArgumentException("PORT must be between 1 and 65535")
++    if ttl <= 0 then
++      throw new IllegalArgumentException("SESSION_TTL_MINUTES must be a positive integer")
++    Config(port, database, ttl)
++
++  private def required(env: Map[String, String], name: String): String =
++    env.get(name).map(_.trim).filter(_.nonEmpty)
++      .getOrElse(throw new IllegalArgumentException(s"$name is required and must not be blank"))
++
++  private def requiredInt(env: Map[String, String], name: String): Int =
++    val raw = required(env, name)
++    raw.toIntOption.getOrElse(throw new IllegalArgumentException(s"$name must be an integer"))
+ 
+ final class SessionPolicy(config: Config, environment: Map[String, String]):
+-  def expiresAfterMinutes: Int = environment.get("SESSION_TTL_MINUTES").flatMap(_.toIntOption).getOrElse(60)
++  def expiresAfterMinutes: Int = config.sessionTtlMinutes
+   def endpoint: String = config.databaseUrl
+diff --git a/src/test/scala/service/ConfigSuite.scala b/src/test/scala/service/ConfigSuite.scala
+index f6c293c..0f228c3 100644
+--- a/src/test/scala/service/ConfigSuite.scala
++++ b/src/test/scala/service/ConfigSuite.scala
+@@ -10,7 +10,30 @@ class ConfigSuite extends munit.FunSuite:
+     )
+     assertEquals(Config.load(env), Config(9000, "postgres://db/service", 45))
+   }
+-  test("policy exposes endpoint") {
++  test("policy exposes endpoint and uses immutable config for expiry") {
+     val config = Config(9000, "postgres://db/service", 45)
+-    assertEquals(new SessionPolicy(config, Map.empty).endpoint, config.databaseUrl)
++    val rawEnvironment = scala.collection.mutable.Map("SESSION_TTL_MINUTES" -> "10")
++    val policy = new SessionPolicy(config, rawEnvironment.toMap)
++    assertEquals(policy.endpoint, config.databaseUrl)
++    assertEquals(policy.expiresAfterMinutes, 45)
++    rawEnvironment.update("SESSION_TTL_MINUTES", "99")
++    assertEquals(policy.expiresAfterMinutes, 45)
++  }
++
++  test("database URL is used regardless of descriptive APP_ENV") {
++    assertEquals(Config.load(Map("APP_ENV" -> "staging", "PORT" -> "9000", "DATABASE_URL" -> "postgres://staging/db", "SESSION_TTL_MINUTES" -> "45")).databaseUrl, "postgres://staging/db")
++  }
++
++  test("missing required configuration names the setting") {
++    for name <- List("PORT", "DATABASE_URL", "SESSION_TTL_MINUTES") do
++      val env = Map("PORT" -> "9000", "DATABASE_URL" -> "postgres://db/service", "SESSION_TTL_MINUTES" -> "45") - name
++      val error = intercept[IllegalArgumentException](Config.load(env))
++      assert(error.getMessage.contains(name))
++  }
++
++  test("malformed and unusable numeric settings fail with setting name") {
++    for (name, value) <- List("PORT" -> "oops", "SESSION_TTL_MINUTES" -> "oops", "PORT" -> "0", "SESSION_TTL_MINUTES" -> "0") do
++      val env = Map("PORT" -> "9000", "DATABASE_URL" -> "postgres://db/service", "SESSION_TTL_MINUTES" -> "45") + (name -> value)
++      val error = intercept[IllegalArgumentException](Config.load(env))
++      assert(error.getMessage.contains(name))
+   }

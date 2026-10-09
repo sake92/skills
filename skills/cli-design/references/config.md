@@ -1,4 +1,4 @@
-# Configuration reference (SKILL.md §1, §2)
+# Configuration reference
 
 Read this when adding a setting, writing a config loader, or reviewing how a program reads its environment.
 

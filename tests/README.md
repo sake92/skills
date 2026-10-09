@@ -1,5 +1,7 @@
 # Skill evaluations
 
+The [Twelve-Factor adoption check](twelve-factor/README.md) uses the same runner with `--skill-path`, `--eval-path`, and `--fixture-path` to compare external and local guidance on protected Scala fixtures. Architecture remains the default suite. Each new output iteration snapshots the evaluated skill under `evaluated-skill/` for provenance.
+
 The pragmatic-architecture eval set follows the Agent Skills benchmark layout:
 `evals.json`, fresh `with_skill` and `without_skill` workspaces, per-run
 `outputs/`, `grading.json`, `timing.json`, and a workspace-level

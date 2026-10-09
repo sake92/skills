@@ -1,4 +1,4 @@
-# Structured concurrency reference (SKILL.md §4)
+# Structured concurrency reference
 
 Read this when code spawns threads, tasks, coroutines, or subprocesses, or when reviewing shutdown and cancellation. Mechanics per platform are in `jvm.md` and `shell.md`.
 
@@ -34,17 +34,17 @@ Once every spawn is inside a scope, concurrency has a shape you can read from th
 Cancellation is a request, not a kill. The child must notice it:
 
 - Check for cancellation in every loop iteration.
-- Prefer interruptible or cancellable blocking calls (`poll(timeout)` over `take()`, `tryLock(timeout)` over `lock()`, a socket with a read timeout).
+- Prefer interruptible or cancellable waits. `take()` can be correct if interruption reliably stops its owned task; use timed waits when cancellation alone cannot unblock the operation.
 - Never swallow the cancellation signal. On the JVM that is `InterruptedException`; in asyncio `CancelledError`; in Kotlin `CancellationException`. Catching it to log and continue turns a cancellable task into an immortal one.
 - Propagate it: rethrow, or re-set the interrupt flag and return.
 
 ## Subprocesses are children too
 
-A subprocess is a child with an operating-system handle instead of a language one, and the same rules apply: it has an owner, a deadline, and a place its errors go. Three additional mechanics, because the OS does not do them for you:
+A subprocess has an owner, a cancellation path, and a place its errors go. Finite commands have deadlines; persistent children have supervision. Additional OS mechanics:
 
 - **Drain its output.** Pipes have a fixed buffer, commonly 64 KiB. A child that writes more than that to a pipe nobody reads blocks forever, and so does whoever eventually waits on it.
 - **Kill the tree.** Killing the direct child does not kill its children. A shell, a build tool, a package manager, and Node all spawn grandchildren, and those become orphans that keep running, keep ports open, and keep writing files.
-- **Control the environment.** The child inherits the parent's full environment by default, including every secret in it (SKILL.md §2). Pass an explicit environment when the child does not need the parent's.
+- **Control the environment.** The child inherits the parent's full environment by default, including every secret in it. Pass an explicit environment when the child does not need the parent's.
 
 ## Language primitives
 
