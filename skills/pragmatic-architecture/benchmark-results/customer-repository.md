@@ -114,8 +114,6 @@ This focused diff compares the baseline to the with-skill result, rather than co
 +    records.filter(customer => customer.region == region && customer.active).toList
 ```
 
-Full evidence: [with-skill patch](patches/customer-repository/with-skill.patch), [baseline patch](patches/customer-repository/without-skill.patch), [candidate comparison](patches/customer-repository/comparison.patch), and [grade reports](patches/customer-repository/grading.json). The first two patches are relative to each run’s starter.
-
 ## Grading
 
 Protected checks execute outside the candidate workspace. Judge checks assess the submitted source and tests. Every recorded assertion is shown below; a total alone would hide the separating criteria.

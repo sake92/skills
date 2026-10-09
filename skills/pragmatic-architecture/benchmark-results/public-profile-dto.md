@@ -131,8 +131,6 @@ This focused test diff shows the private-field assertions added by the with-skil
    test("missing profile and invalid URL identifier") {
 ```
 
-Full evidence: [with-skill patch](patches/public-profile-dto/with-skill.patch), [baseline patch](patches/public-profile-dto/without-skill.patch), [candidate comparison](patches/public-profile-dto/comparison.patch), and [grade reports](patches/public-profile-dto/grading.json). The first two patches are relative to each run’s starter.
-
 ## Grading
 
 Protected checks execute outside the candidate workspace. Judge checks assess the submitted source and tests. Every recorded assertion is shown below; a total alone would hide the separating criteria.
@@ -155,4 +153,4 @@ The earlier task explicitly specified a safe public contract and tied at 9/9. Th
 
 Recorded source: `tests/tmp/pragmatic-architecture-workspace/paired-decision-guidance-20261008/eval-6/`. Executor and qualitative judge: Pi 1.0.4 / GPT-6 Luna, low reasoning, one candidate per configuration. Timing measures candidate execution, not grading. This single pair does not establish consistency or a repeatable resource-cost difference.
 
-With-skill source: `iteration-20261008-195847`; baseline source: `iteration-20261008-200255`. The starter Git trees and task/assertion metadata were verified to match. The [exact evaluated skill](patches/public-profile-dto/evaluated-SKILL.md) is retained. The DTO candidate used the revised model-boundary guidance before the final upfront ID paragraph was added; DTO guidance was unchanged. Its completed smoke was reused for the baseline comparison.
+With-skill source: `iteration-20261008-195847`; baseline source: `iteration-20261008-200255`. The starter Git trees and task/assertion metadata were verified to match. The DTO candidate used the revised model-boundary guidance before the final upfront ID paragraph was added; DTO guidance was unchanged. Its completed smoke was reused for the baseline comparison.

@@ -115,8 +115,6 @@ This focused diff compares the baseline to the with-skill result, rather than co
        val found = repository.findByUserIdAndCourseId(userId, courseId)
 ```
 
-Full evidence: [with-skill patch](patches/teacher-course-ids/with-skill.patch), [baseline patch](patches/teacher-course-ids/without-skill.patch), [candidate comparison](patches/teacher-course-ids/comparison.patch), and [grade reports](patches/teacher-course-ids/grading.json). The first two patches are relative to each run’s starter.
-
 ## Grading
 
 Protected checks execute outside the candidate workspace. Judge checks assess the submitted source and tests. Every recorded assertion is shown below; a total alone would hide the separating criteria.
@@ -138,4 +136,4 @@ The original unguided raw-ID pair tied at 6/8. Strengthening section 4 still pro
 
 Recorded source: `tests/tmp/pragmatic-architecture-workspace/paired-decision-guidance-20261008/eval-5/`. Executor and qualitative judge: Pi 1.0.4 / GPT-6 Luna, low reasoning, one candidate per configuration. Timing measures candidate execution, not grading. This single pair does not establish consistency or a repeatable resource-cost difference.
 
-With-skill source: `iteration-20261008-200223`; baseline source: `iteration-20261008-200252`. The starter Git trees and task/assertion metadata were verified to match. The [exact evaluated skill](patches/teacher-course-ids/evaluated-SKILL.md) is retained. The ID candidate used the final upfront decision step.
+With-skill source: `iteration-20261008-200223`; baseline source: `iteration-20261008-200252`. The starter Git trees and task/assertion metadata were verified to match. The ID candidate used the final upfront decision step.

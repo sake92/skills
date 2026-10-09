@@ -132,8 +132,6 @@ This focused diff compares the baseline to the with-skill result, rather than co
        val booking = Booking(request.id, request.roomId, request.startMinute, request.endMinute)
 ```
 
-Full evidence: [with-skill patch](patches/booking-overlap-rule/with-skill.patch), [baseline patch](patches/booking-overlap-rule/without-skill.patch), [candidate comparison](patches/booking-overlap-rule/comparison.patch), and [grade reports](patches/booking-overlap-rule/grading.json). The first two patches are relative to each run’s starter.
-
 ## Grading
 
 Protected checks execute outside the candidate workspace. Judge checks assess the submitted source and tests. Every recorded assertion is shown below; a total alone would hide the separating criteria.

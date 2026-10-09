@@ -66,8 +66,6 @@ final class DiscountService @Inject() (repository: InvoiceRepository):
 
 The candidate-to-candidate diff is empty. The two submitted patches are identical.
 
-Full evidence: [with-skill patch](patches/legacy-discount-fix/with-skill.patch), [baseline patch](patches/legacy-discount-fix/without-skill.patch), [candidate comparison](patches/legacy-discount-fix/comparison.patch), and [grade reports](patches/legacy-discount-fix/grading.json). The first two patches are relative to each run’s starter.
-
 ## Grading
 
 Protected checks execute outside the candidate workspace. Judge checks assess the submitted source and tests. Every recorded assertion is shown below; a total alone would hide the separating criteria.

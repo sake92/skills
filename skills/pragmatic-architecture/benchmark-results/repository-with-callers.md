@@ -108,8 +108,6 @@ This focused diff compares the baseline to the with-skill result, rather than co
    def findById(id: String): Option[Customer] = records.find(_.id == id)
 ```
 
-Full evidence: [with-skill patch](patches/repository-with-callers/with-skill.patch), [baseline patch](patches/repository-with-callers/without-skill.patch), [candidate comparison](patches/repository-with-callers/comparison.patch), and [grade reports](patches/repository-with-callers/grading.json). The first two patches are relative to each run’s starter.
-
 ## Grading
 
 Protected checks execute outside the candidate workspace. Judge checks assess the submitted source and tests. Every recorded assertion is shown below; a total alone would hide the separating criteria.

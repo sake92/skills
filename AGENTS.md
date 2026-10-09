@@ -8,6 +8,7 @@
 - Keep protected graders outside candidate workspaces and do not disclose their assertions in task prompts.
 - Run a single `with-skill` smoke check before spending tokens on a full comparison.
 - Do not commit generated workspaces under `tests/tmp/`.
+- Commit example-run summaries and small code/diff excerpts only; do not commit raw candidate patches, generated grade reports, or evaluated skill snapshots under `benchmark-results/`.
 
 ## Commands
 

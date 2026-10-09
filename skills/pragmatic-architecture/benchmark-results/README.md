@@ -1,6 +1,6 @@
 # Benchmark results
 
-These pages show what the pragmatic-architecture skill changed in actual candidate submissions: code examples, patch comparisons, individual grades, and cases where it made no measured difference. Evaluated agents receive `SKILL.md`; these pages are for readers and maintainers.
+These pages summarize example runs of the pragmatic-architecture skill: code excerpts, small diffs, individual grades, and cases where it made no measured difference. Evaluated agents receive `SKILL.md`; these pages are for readers and maintainers.
 
 Each row lists **with skill / without skill**. Open a case to see the code and the criteria behind its score.
 
@@ -19,9 +19,9 @@ All six comparisons used Pi 1.0.4 with GPT-6 Luna at low reasoning, once per con
 
 Repository cases show narrower public APIs without losing caller-required behavior. The ID case shows a distinct design decision: opaque IDs prevent the demonstrated mix-up at compile time. Both DTO candidates chose a public projection; the skill's advantage there was leak-detecting regression coverage. Legacy and booking ties remain visible rather than being excluded from the results.
 
-The ID result followed adaptive skill tuning on the evaluated case. It needs repeated or held-out runs before being treated as reliable general improvement. The DTO run used the revised model-boundary guidance before the final upfront ID decision paragraph; its DTO instructions were unchanged. Exact evaluated skill texts are retained with those two pages. The other four results predate those revisions and were not rerun. No aggregate represents all six cases under one unchanged skill version.
+The ID result followed adaptive skill tuning on the evaluated case. It needs repeated or held-out runs before being treated as reliable general improvement. The DTO run used the revised model-boundary guidance before the final upfront ID decision paragraph; its DTO instructions were unchanged. The other four results predate those revisions and were not rerun. No aggregate represents all six cases under one unchanged skill version.
 
-Full candidate patches and grade reports are retained inside this folder, so the pages do not depend on ignored generated workspaces. Patches compare each candidate to its starter; comparison patches compare baseline to with-skill. Source run identifiers on each page permit tracing the examples back to the local transcripts. Timing and token differences from one pair can reflect cache state, load, or sampling; they are not stable efficiency estimates.
+The summaries and selected code excerpts describe the recorded runs; they do not guarantee identical results on rerun. Source run identifiers refer to local generated workspaces. Timing and token differences from one pair can reflect cache state, load, or sampling; they are not stable efficiency estimates.
 
 The final ID/DTO comparison reused completed smoke candidates and verified matching starter trees and task metadata within each pair. Five candidate runs cost 78,401 tokens, including an unsuccessful intermediate ID smoke; the four reported comparison candidates cost 61,773. Existing full review artifacts remain under `tests/tmp/`, which is not committed.
 
