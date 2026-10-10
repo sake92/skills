@@ -23,7 +23,7 @@ Inspect candidate patches and preserve generated runs, grading reports, snapshot
 
 These validate the skill's subprocess ownership, graceful/forced termination and bounded-wait guidance. The protected Linux grader uses a JNA subreaper to adopt and reap fixture helpers; it never signals live helpers before assertions. Independent containment stops remaining fixture processes after failed assertions. This measures observable termination and workspace release rather than portable descendant reaping by the candidate.
 
-The starter scores 2/7, the corrected reference 7/7, and the earlier single-snapshot implementation 6/7. A fresh baseline ran first, then coverage was frozen before with-skill: [6/7 versus 4/7](../../skills/process-hygiene/benchmark-results/worker-timeout-development.md). This is an adaptive development comparison. Use the commands above with `--case worker-timeout` to select it; omitting `--case` runs both fixtures.
+The starter scores 2/7, the corrected reference 7/7, and the earlier single-snapshot implementation 6/7. A fresh baseline ran first, then coverage was frozen before with-skill: [6/7 versus 4/7](../../skills/process-hygiene/benchmark-results/worker-timeout-development.md). This is an adaptive development comparison. Use the commands above with `--case worker-timeout` to select it; omitting `--case` runs all fixtures.
 
 ## Worker cancellation case
 
@@ -34,6 +34,18 @@ Six protected checks cover ordinary exits/logs, uncancelled timeout, graceful ca
 Readiness and TERM markers synchronize the protected scenarios. A grader-owned caller thread records its actual outcome; assertions check both the returned/thrown result and live fixture processes/workspace locks. Linux subreaper containment reaps helpers without signalling them before assertions. The starter passes its two visible tests and scores 2/6 protected checks. A corrected reference scores 6/6; a budget-restarting mutant scores 5/6, taking about 1.56s against a 1.00s cancellation limit.
 
 Select this case using `--case worker-cancellation`. Baseline ran first, then coverage was frozen. The original skill tied at 5/6; after two guidance revisions, a with-skill run passed 6/6 against the retained 5/6 baseline. See the [full development history](../../skills/process-hygiene/benchmark-results/worker-cancellation.md). Raw proofs and candidate artifacts remain under ignored `tests/tmp/`.
+
+## Parallel build case
+
+`parallel-build` exercises an owned fixed-thread executor through a build-launch adapter. Its two visible tests start green. The starter waits for results in submission order and only requests executor shutdown, allowing later failures to remain hidden behind blocked work and cancelled tasks to continue using the workspace. The task describes these symptoms without naming completion queues, worker handles or the protected scenarios.
+
+Eight protected checks cover ordered successful results and the launch adapter, bounded concurrent execution, prompt observation of a later failure, active and queued work on caller cancellation, task-finalizer and executor termination, repeated cleanup interruption preserving the original failure, partial submission failure, and supplied-factory worker resource scopes. These validate the skill's thread/task/executor ownership, failure propagation, cancellable waits, bounded fan-out, partial-startup cleanup and bounded cleanup despite further interruption.
+
+The supplied factory may wrap worker execution in a resource scope. Executor termination can precede that scope's finalization; the grader requires actual worker termination before the build call completes. It observes cooperative tasks using latches and tracks real threads through the public factory. Daemon flags contain broken outputs but do not satisfy the termination assertions. Guard cleanup runs after assertions, releasing blocked tasks and joining fixture threads.
+
+The starter scores 2/8 with 2/2 visible tests passing; an independent corrected reference scores 8/8. A mutant that requests cancellation without waiting scores 5/8. The repeated-interruption check confirms cleanup and original-failure preservation for a cooperative finalizer; it does not independently distinguish budget renewal. The worker-cancellation case supplies that separate adversarial budget check.
+
+Select this case using `--case parallel-build`. Baseline ran first for development, then the eight-check case was frozen before with-skill. The original skill did not complete; a first revision tied at 7/8, and a second passed 8/8 against the retained 7/8 baseline. The [development report](../../skills/process-hygiene/benchmark-results/parallel-build.md) includes the rejected draft's perfect baseline and all earlier outputs. Generated proofs and real candidate runs remain under ignored `tests/tmp/`.
 
 ## Source responsibilities
 

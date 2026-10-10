@@ -83,6 +83,12 @@ Runtime.getRuntime().addShutdownHook(new Thread(() -> killTree(dev.toHandle())))
 
 An `ExecutorService` is created by the component that uses it and closed in that component's close path, never a static field that lives until the JVM dies.
 
+Retain each submitted future immediately rather than assigning the collection only after all submissions succeed. A later rejection or thread-factory failure still leaves earlier work owned. Observe failures in completion order, for example with `ExecutorCompletionService`, and separately place successful values in their public result order. On failure or cancellation, cancel sibling futures and prevent queued work from starting before awaiting cleanup.
+
+`Future.cancel(true)` requests interruption; it does not join the task's finalizer. `awaitTermination` waits for the executor's lifetime, but a supplied `ThreadFactory` can wrap its worker runnable in a resource scope whose `finally` runs after the executor declares termination. Retain the actual threads returned by that factory and join them too, using the remaining time from the same cleanup deadline. Preserve the supplied factory and its context rather than replacing it. These are distinct completion boundaries.
+
+Register the returned `Thread` as the factory creates it and retain it until joining establishes actual termination. A set maintained by adding/removing `Thread.currentThread()` inside the executor's runnable measures only that inner runnable's lifetime; it becomes empty before an outer factory scope finishes. It cannot establish that the worker has stopped.
+
 ```java
 final class ReportService implements AutoCloseable {
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
@@ -101,6 +107,8 @@ final class ReportService implements AutoCloseable {
     }
 }
 ```
+
+This shutdown sketch does not finish cleanup after interruption. For an API that promises resources are released before return, use the bounded cleanup procedure in [InterruptedException](#interruptedexception): request cancellation, continue individual waits despite further interrupts, and propagate cancellation only after cleanup. Report incomplete termination when the cleanup budget expires. Include worker-thread joins if the supplied factory extends their lifetime beyond executor termination.
 
 On JDK 19+ `ExecutorService` is `AutoCloseable`; `close()` performs shutdown-and-await, and try-with-resources scopes a short-lived pool to a block:
 

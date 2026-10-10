@@ -49,6 +49,23 @@
         "Repeated cancellation during cleanup cannot abandon work or restart the cleanup budget.",
         "Cancellation arriving during timeout cleanup remains cancellation and finishes cleanup."
       ]
+    },
+    {
+      "id": 4,
+      "name": "parallel-build",
+      "files": ["tests/process-hygiene/parallel-build/starter"],
+      "expected_output": "A compatible parallel build owner that promptly observes task failures, cancels remaining work, joins worker cleanup and closes its executor before reporting results, failure or cancellation.",
+      "prompt": "Our parallel build launcher sometimes hangs after a module fails, and cancelled builds keep touching the workspace after the launcher says they stopped. Fix this execution path while preserving public APIs, successful result ordering and configured parallelism. Honor the documented lifecycle contract, add regression coverage, and run scala-cli test . --server=false.",
+      "expectations": [
+        "Successful concurrent builds preserve input order, all results and the launch adapter.",
+        "Parallelism limits active work without serializing a parallel build.",
+        "A later task's failure is observed promptly and cancels an earlier blocked sibling.",
+        "Caller cancellation stops active tasks, prevents queued work and propagates interruption.",
+        "Completed cancellation joins worker finalizers and terminates the owned executor.",
+        "Repeated interruption during cleanup retains the original failure and waits within one budget.",
+        "Partial submission failure stops and joins already-started tasks.",
+        "Cancellation waits for supplied-factory worker context finalization, not just executor termination."
+      ]
     }
   ],
   "skill_name": "process-hygiene"

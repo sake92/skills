@@ -29,7 +29,10 @@ Read only the relevant reference: [concurrency](references/concurrency.md), [lif
 ## Threads, tasks, and executors
 
 - Keep handles and join/await owned work. Transfer long-lived work explicitly to a longer-lived owner; document intentional detaching and its replacement owner.
+- Register each handle as acquisition succeeds, so a later launch or submission failure cannot hide already-started work from cleanup.
+- Observe concurrent failures independently of result ordering. Waiting for handles in submission order can hide a later failure behind an earlier blocked task; stop sibling work promptly while preserving the public result order.
 - Close owned executors: stop submissions, request shutdown, await within a deadline, then cancel remaining work. Daemon status does not replace ownership.
+- Await the actual lifetime boundary. A cancelled future can precede task cleanup, and executor termination can precede finalization around its workers. When a supplied thread factory owns outer resource scopes, retain the threads returned by that factory and join them within the same cleanup deadline. Tracking only active inner runnables, or removing a handle when such a runnable exits, loses the outer cleanup; retain handles until the actual threads have terminated.
 - Propagate failures and cancellation according to the API contract. Do not swallow an interrupt or cancellation and continue the loop.
 - Cancellation starts cleanup; it must not abandon cleanup. During cleanup, catch further interruption at each individual wait, record it and continue releasing owned work under the original deadline; propagate cancellation after cleanup finishes. Do not catch interruption outside cleanup and retry the whole operation: that renews grace periods and can lose retained handles. An interruptible wait inside `finally` can otherwise leave owned work alive. Clearing an interrupt flag at cleanup entry does not handle later interrupts.
 - Make waits cancellable. An interruptible queue wait may legitimately have no polling timeout; an uncancellable blocking operation needs a bound or a reliable unblock mechanism.
