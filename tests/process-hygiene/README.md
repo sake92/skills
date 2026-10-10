@@ -25,6 +25,16 @@ These validate the skill's subprocess ownership, graceful/forced termination and
 
 The starter scores 2/7, the corrected reference 7/7, and the earlier single-snapshot implementation 6/7. A fresh baseline ran first, then coverage was frozen before with-skill: [6/7 versus 4/7](../../skills/process-hygiene/benchmark-results/worker-timeout-development.md). This is an adaptive development comparison. Use the commands above with `--case worker-timeout` to select it; omitting `--case` runs both fixtures.
 
+## Worker cancellation case
+
+`worker-cancellation` starts with the worker attempt API and normal tree cleanup already implemented. The scheduler owns the calling thread and cancels by interrupting it. The starter incorrectly converts interruption to a timeout report; its cleanup waits also abort on interruption. The task describes cancellation symptoms without revealing timing scenarios or implementation helpers.
+
+Six protected checks cover ordinary exits/logs, uncancelled timeout, graceful cancellation and workspace release, resistant helpers after parent exit, repeated interruption during cleanup, and cancellation during timeout cleanup. These validate cancellation propagation, cancellable waits, retained subprocess ownership and bounded cleanup. Cancellation must remain observable after cleanup rather than being returned as success or timeout. Propagating `InterruptedException` is the public API contract; the grader does not require the interrupt flag also to remain set after propagation.
+
+Readiness and TERM markers synchronize the protected scenarios. A grader-owned caller thread records its actual outcome; assertions check both the returned/thrown result and live fixture processes/workspace locks. Linux subreaper containment reaps helpers without signalling them before assertions. The starter passes its two visible tests and scores 2/6 protected checks. A corrected reference scores 6/6; a budget-restarting mutant scores 5/6, taking about 1.56s against a 1.00s cancellation limit.
+
+Select this case using `--case worker-cancellation`. Baseline ran first, then coverage was frozen. The original skill tied at 5/6; after two guidance revisions, a with-skill run passed 6/6 against the retained 5/6 baseline. See the [full development history](../../skills/process-hygiene/benchmark-results/worker-cancellation.md). Raw proofs and candidate artifacts remain under ignored `tests/tmp/`.
+
 ## Source responsibilities
 
 - Mill `core/api/src/mill/api/SystemStreamsUtils.scala`: task-specific stream routing, raw inheritance and input policy.
