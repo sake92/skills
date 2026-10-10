@@ -30,10 +30,7 @@ The short upstream time includes the incomplete session task and is not an effic
 
 ## Evidence
 
-Repository evidence snapshots accompany this document:
-
-- [Upstream benchmark](upstream/benchmark.json), [local benchmark](local/benchmark.json).
-- Per-case patches and grading under `upstream/` and `local/`, including the empty upstream session patch.
+Recorded grades are summarized in the [skill README](../README.md). Raw candidate patches, generated grade reports, and benchmark JSON are archived under ignored `tests/tmp/historical-twelve-factor-evidence/` in the evaluation worktree. They are not committed report artifacts.
 
 Full generated workspaces remain ignored and retained:
 

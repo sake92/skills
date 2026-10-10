@@ -2,32 +2,22 @@
   "skill_name": "twelve-factor-app",
   "evals": [
     {
-      "id": 1,
-      "name": "config-drift",
-      "prompt": "Fix the sessions service's deployment configuration. Operators report that staging connects to localhost even when they supply the production database settings, malformed numeric settings are silently ignored, and changing the raw environment map after configuration creates inconsistent session expiry behavior. Missing or unusable platform settings must fail before serving work with a useful error naming the setting. Keep existing public APIs compatible, document how operators configure it, add regression tests, and run scala-cli test . --server=false.",
-      "expected_output": "A compatible validated configuration boundary with consistent deployment behavior, useful redacted failures, configuration-driven policy, and operator examples.",
-      "files": ["tests/twelve-factor/config-drift/starter"],
+      "id": 3,
+      "name": "runtime-bindings",
+      "prompt": "We deploy the booking gateway to production and temporary review deployments. Reviews keep reading the wrong directory even though operators supply their connection settings, and changing the environment map after startup changes request behavior. Fix the deployment setup so a new deployment can follow the README contract without adding source changes or profile files. Preserve the public APIs and GET /slots behavior, add regression coverage, document a safe operator example, and run scala-cli test . --server=false.",
+      "expected_output": "A gateway using independent validated runtime settings and stable component configuration, with actual HTTP resource bindings replaceable across deployments and preserved request/failure behavior.",
+      "files": [
+        "tests/twelve-factor/runtime-bindings/starter"
+      ],
       "expectations": [
-        "Explicit settings behave identically across deployment names.",
-        "Missing required settings fail with the setting name.",
-        "Malformed and out-of-range numeric settings fail with the setting name.",
-        "Blank or malformed backing-service bindings fail without disclosing credentials.",
-        "Policy consumes validated configuration rather than re-reading raw settings.",
-        "Required deployment settings are documented with safe examples."
-      ]
-    },
-    {
-      "id": 2,
-      "name": "replica-sessions",
-      "prompt": "Fix the sessions module: users are logged out when a web replica is replaced, and signing out on another replica sometimes leaves the session usable. We already supply the production session store through application wiring. Operators also cannot filter the platform logs or trace an operation back to its incoming request, and session tokens have appeared in the logs. Preserve the public API and successful same-instance behavior. Add regression coverage and run scala-cli test . --server=false.",
-      "expected_output": "Session behavior backed by the supplied durable store across replicas, observable failures, and safe structured correlated platform events.",
-      "files": ["tests/twelve-factor/replica-sessions/starter"],
-      "expectations": [
-        "Replacement and concurrent replicas observe stored sessions.",
-        "Session revocation is visible to every replica without a stale local cache.",
-        "The supplied backing-service contract is used without concrete-store assumptions.",
-        "Store failures propagate and are never reported as successful sign-ins.",
-        "Successful events are line-oriented structured JSON with request correlation and no session credentials."
+        "III: Independent runtime settings have the same meaning for every deployment label.",
+        "III: Missing and unusable required settings fail with the setting name.",
+        "III: Supplied optional settings are validated rather than silently defaulted.",
+        "III: Invalid deployment settings terminate the real entrypoint before it serves work.",
+        "III: Started components consume their validated settings without rereading the environment.",
+        "IV: The same compiled service uses replacement endpoint paths, queries, and credentials in fresh processes.",
+        "IV: Directory failures remain failures without exposing credentials or upstream payloads.",
+        "III: Invalid bindings and credentials produce useful credential-safe errors."
       ]
     }
   ]

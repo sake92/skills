@@ -8,11 +8,11 @@ The skill's Subprocesses section covers pipe draining and exit/failure propagati
 
 The grader bounds each invocation at ten seconds. It independently kills its fixture process tree and releases handshake streams and guard threads, so a broken submission cannot hang the suite. These outer bounds contain tests; they do not require candidates to add timeout APIs. Validate the green starter against the protected grader, then verify a corrected reference passes all checks.
 
-Run one with-skill smoke before its matched baseline, keeping the prompt, fixtures, grader, model, reasoning, and skill fixed. The two runs form the initial comparison:
+For new cases, run and inspect the baseline before skill tuning. Freeze the prompt, fixtures, and grader, then run a with-skill smoke before a larger comparison. Keep model, reasoning, tools, permissions, and budget matched. The commands below rerun the existing example pair:
 
 ```bash
-scala tests/run-eval.scala --server=false -- output --skill-path skills/process-hygiene --fixture-path tests/process-hygiene --case build-task-stdio --configuration with-skill --runs 1 --skip-judge --parallelism 1
 scala tests/run-eval.scala --server=false -- output --skill-path skills/process-hygiene --fixture-path tests/process-hygiene --case build-task-stdio --configuration without-skill --runs 1 --skip-judge --parallelism 1
+scala tests/run-eval.scala --server=false -- output --skill-path skills/process-hygiene --fixture-path tests/process-hygiene --case build-task-stdio --configuration with-skill --runs 1 --skip-judge --parallelism 1
 ```
 
 Inspect candidate patches and preserve generated runs, grading reports, snapshots and the review viewer under ignored `tests/tmp/`. Commit only example-run summaries and small code/diff excerpts under `benchmark-results/`. A single pair gives initial evidence, not a stable reliability estimate.

@@ -1,6 +1,6 @@
 # Skill evaluations
 
-The [Twelve-Factor adoption check](twelve-factor/README.md) uses the same runner with `--skill-path`, `--eval-path`, and `--fixture-path` to compare external and local guidance on protected Scala fixtures. Architecture remains the default suite. Each new output iteration snapshots the evaluated skill under `evaluated-skill/` for provenance.
+The [Twelve-Factor evaluations](twelve-factor/README.md) use the same runner with `--skill-path`, `--eval-path`, and `--fixture-path`. Runtime bindings is the first baseline-qualified active case; the earlier tied/incomplete adoption cases are historical. Architecture remains the default suite. Each new output iteration snapshots the evaluated skill under `evaluated-skill/` for provenance.
 
 The [process-hygiene fixtures](process-hygiene/README.md) evaluate build-task stdio and revised worker timeout cleanup. Their protected integration tests run real Linux tools. Raw patches, grades, and skill snapshots stay under ignored `tests/tmp/`; repository reports contain summaries and small excerpts only.
 
@@ -25,7 +25,18 @@ scala tests/run-eval.scala --server=false -- output \
   --runs 3
 ```
 
-Before spending tokens on a comparison, smoke-test one side independently:
+Qualify new cases with the plain-model baseline first. Inspect genuine protected-check failures before tuning the skill; a perfect baseline remains a non-discriminating control. Freeze the task, fixture, and grader, then smoke-test with skill before spending tokens on a full comparison. Keep model, reasoning, tools, permissions, and budget matched; disclose adaptive development and confirm improvement on fresh cases.
+
+Run the baseline independently:
+
+```bash
+scala tests/run-eval.scala --server=false -- output \
+  --case customer-repository \
+  --configuration without-skill \
+  --runs 1
+```
+
+Run the with-skill smoke after baseline qualification:
 
 ```bash
 scala tests/run-eval.scala --server=false -- output \

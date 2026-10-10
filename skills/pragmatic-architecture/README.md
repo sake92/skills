@@ -6,6 +6,8 @@ A compact [architecture skill](SKILL.md) for smaller interfaces, clearer boundar
 
 One paired run per fixture. Details, code snippets, and limitations are in [benchmark-results/](benchmark-results/README.md).
 
+Four example pairs showed higher protected/judged scores with skill; legacy discount and booking overlap tied and demonstrate no measured benefit. The ID result followed adaptive tuning. Skill versions differ across cases, so these rows are not one frozen-suite effectiveness estimate.
+
 | Fixture | With skill | Without skill |
 | --- | ---: | ---: |
 | [Customer repository](benchmark-results/customer-repository.md) | 10/10 | 7/10 |
