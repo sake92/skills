@@ -34,6 +34,21 @@
         "Cleanup uses one overall budget rather than a fresh grace period per helper.",
         "Cleanup stops replacement work started while the worker handles graceful termination."
       ]
+    },
+    {
+      "id": 3,
+      "name": "worker-cancellation",
+      "files": ["tests/process-hygiene/worker-cancellation/starter"],
+      "expected_output": "Cancellation remains observable to the scheduler after the attempt relinquishes worker processes and workspace resources within its cleanup budget, preserving ordinary results and deadlines.",
+      "prompt": "Cancelling a build sometimes gets reported as a timeout, and cancelled attempts occasionally keep writing progress or leave the workspace busy when users retry. Fix the launcher while preserving public APIs, ordinary command results and attempt logs. Honor the documented attempt limits, add regression coverage, and run scala-cli test . --server=false.",
+      "expectations": [
+        "Ordinary exits preserve exit status, launch settings and separate attempt logs.",
+        "An uncancelled deadline still returns TimedOut after stopping the worker.",
+        "Cancellation propagates InterruptedException after graceful workspace release.",
+        "Cancellation stops resistant helpers even after the launcher exits.",
+        "Repeated cancellation during cleanup cannot abandon work or restart the cleanup budget.",
+        "Cancellation arriving during timeout cleanup remains cancellation and finishes cleanup."
+      ]
     }
   ],
   "skill_name": "process-hygiene"

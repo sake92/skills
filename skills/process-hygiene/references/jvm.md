@@ -170,6 +170,10 @@ catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
 
 Loops check `Thread.currentThread().isInterrupted()` each iteration when they do no blocking call that would throw.
 
+Cancellation of ordinary work and cancellation during resource cleanup need different treatment. Stop ordinary work promptly, but let bounded cleanup finish relinquishing processes, threads and resources before propagating cancellation. `Thread.interrupted()` clears only the current flag; another interrupt can arrive during the next `sleep`, `join` or `waitFor`.
+
+Within cleanup, catch interruption at each interruptible wait, remember it, and continue only the cleanup steps using the same monotonic deadline. Do not retry the entire cleanup operation with a fresh grace period or lose retained process handles. At cleanup completion, propagate `InterruptedException` if that is the API contract, or restore the interrupt flag for the caller to observe. Preserve an existing cancellation/failure as the primary outcome and attach cleanup failures when appropriate. A `finally` block is not sufficient if its first interrupted wait prevents the remaining release steps from running.
+
 ## Daemon threads
 
 `setDaemon(true)` lets the JVM exit without waiting for the thread. That is acceptable only when the thread's abrupt death cannot corrupt anything: a metrics ticker, a cache warmer, a periodic log flush of already-durable data. Never for a thread that writes to a database, a file, or a queue. Require a comment on the `setDaemon` call saying why it is safe. A daemon thread is still owned; it is stopped in its owner's close path in the normal case, and the daemon flag covers only the abnormal one.
