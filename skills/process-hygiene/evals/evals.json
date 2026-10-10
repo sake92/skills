@@ -1,0 +1,24 @@
+{
+  "evals": [
+    {
+      "expected_output": "A compatible task execution path forwarding live byte-preserving streams, applying the explicit stdin policy without consuming launcher input, retaining borrowed streams, and propagating real exit codes through task events and the entrypoint.",
+      "name": "build-task-stdio",
+      "files": [
+        "tests/process-hygiene/build-task-stdio/starter"
+      ],
+      "id": 1,
+      "expectations": [
+        "A prompt without a newline is delivered and flushed before the tool waits for interactive input.",
+        "Stdout and stderr are forwarded separately without changing bytes or final-newline state.",
+        "Document stdin delivers exact bytes and EOF, including binary bytes.",
+        "Closed stdin delivers EOF without consuming or closing launcher input.",
+        "The tool exit code reaches task outcomes, completion events, and the launcher entrypoint.",
+        "Large stdout and stderr complete without deadlock or output loss.",
+        "Borrowed task streams and interactive input remain usable across subsequent tasks.",
+        "Argument vectors, working directory, and environment overrides retain their behavior."
+      ],
+      "prompt": "Fix this build launcher's forked-tool execution path. Users report that tools waiting for input show no prompt, diagnostics appear as normal task output, some builds hang with verbose tools, and failed tools are reported as successful tasks. The launcher is reused for subsequent tasks. Follow the documented API contract, preserve existing public APIs and launch configuration, add regression tests, and run scala-cli test . --server=false. Keep this change focused on stdio and exit-result handling."
+    }
+  ],
+  "skill_name": "process-hygiene"
+}

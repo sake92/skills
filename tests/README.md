@@ -2,6 +2,8 @@
 
 The [Twelve-Factor adoption check](twelve-factor/README.md) uses the same runner with `--skill-path`, `--eval-path`, and `--fixture-path` to compare external and local guidance on protected Scala fixtures. Architecture remains the default suite. Each new output iteration snapshots the evaluated skill under `evaluated-skill/` for provenance.
 
+The [process-hygiene fixture](process-hygiene/README.md) evaluates a build-task execution path with live subprocess streams, explicit input policies, task events and exit results. Its protected integration tests run real Linux tools. Raw patches, grades, and skill snapshots stay under ignored `tests/tmp/`; repository reports contain summaries and small excerpts only.
+
 The pragmatic-architecture eval set follows the Agent Skills benchmark layout:
 `evals.json`, fresh `with_skill` and `without_skill` workspaces, per-run
 `outputs/`, `grading.json`, `timing.json`, and a workspace-level
