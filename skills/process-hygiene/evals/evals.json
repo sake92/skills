@@ -18,6 +18,22 @@
         "Argument vectors, working directory, and environment overrides retain their behavior."
       ],
       "prompt": "Fix this build launcher's forked-tool execution path. Users report that tools waiting for input show no prompt, diagnostics appear as normal task output, some builds hang with verbose tools, and failed tools are reported as successful tasks. The launcher is reused for subsequent tasks. Follow the documented API contract, preserve existing public APIs and launch configuration, add regression tests, and run scala-cli test . --server=false. Keep this change focused on stdio and exit-result handling."
+    },
+    {
+      "id": 2,
+      "name": "worker-timeout",
+      "files": ["tests/process-hygiene/worker-timeout/starter"],
+      "expected_output": "A compatible worker owner that ends the attempt's work within its cleanup budget before returning a timeout report, preserving ordinary execution and graceful cleanup.",
+      "prompt": "Some compile attempts reported as timed out keep updating progress.log after WorkerRunner has returned, and retries report 'workspace busy'. Fix the existing worker runner while preserving public APIs, ordinary command results, and attempt logs. Honor the documented attempt limits, add regression coverage, and run scala-cli test . --server=false.",
+      "expectations": [
+        "Ordinary completions preserve exit codes, launch settings, and separate attempt logs.",
+        "An unresponsive direct worker stops within budget and retains the timeout report.",
+        "A cooperative helper gets a graceful cleanup opportunity before workspace reuse.",
+        "A TERM-resistant helper is stopped even when its worker exits during graceful shutdown.",
+        "Timeout cleanup stops nested helpers rather than only the worker's immediate children.",
+        "Cleanup uses one overall budget rather than a fresh grace period per helper.",
+        "Cleanup stops replacement work started while the worker handles graceful termination."
+      ]
     }
   ],
   "skill_name": "process-hygiene"

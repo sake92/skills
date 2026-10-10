@@ -2,13 +2,14 @@
 
 Scope: lifecycle and ownership of threads, tasks, executors, and subprocesses. Terminal UX and deployment architecture live in the sibling skills.
 
-The [build-task stdio fixture](../../tests/process-hygiene/README.md) exercises a configured process runner, byte-stream bridge, task results/events and launcher adapter. Descendant cleanup, cancellation, thread/executor ownership and service lifecycle remain unevaluated. Upstream results do not prove effectiveness for this skill.
+The [evaluation fixtures](../../tests/process-hygiene/README.md) exercise build-task stdio and worker timeout cleanup. Cancellation, thread/executor ownership and service lifecycle remain unevaluated. Upstream results do not prove effectiveness for this skill.
 
 | Case | With skill | Without skill |
 | --- | ---: | ---: |
 | [Build-task stdio](benchmark-results/build-task-stdio.md) | 8/8 | 7/8 |
+| [Worker timeout development revision](benchmark-results/worker-timeout-development.md) | 6/7 | 4/7 |
 
-One matched pair favored the with-skill output on live prompt flushing. This is initial evidence, not a stable estimate of skill effectiveness.
+The stdio pair favored with-skill on live prompt flushing. The baseline-first worker development revision favored with-skill on retaining helpers after their parent exited, but still exposed a shutdown race. These single pairs do not establish reliable skill effectiveness; the adaptive development result needs held-out confirmation.
 
 Sources informing the revision:
 

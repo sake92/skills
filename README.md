@@ -8,7 +8,7 @@ Skills for hardcore engineering:
 - [`cli-design/`](./skills/cli-design) — terminal interfaces, flags, help, output contracts, exit codes, interactivity, and CLI configuration conventions.
 - [`twelve-factor-app/`](./skills/twelve-factor-app) — deployment configuration, backing services, stateless instances, releases, parity, platform logs, and admin tasks.
 
-The [process-hygiene comparison](./skills/process-hygiene/README.md) scored 8/8 with skill versus 7/8 without on build-task stdio. This is single-pair evidence, not a reliability estimate. Descendant cleanup, cancellation and thread ownership remain unevaluated. CLI design is unevaluated local guidance. The [Twelve-Factor comparison](./skills/twelve-factor-app/README.md) found no local uplift and configuration gaps in the upstream candidate, so the local deployment skill remains provisional.
+The [process-hygiene comparisons](./skills/process-hygiene/README.md) scored 8/8 with skill versus 7/8 without on build-task stdio, and 6/7 versus 4/7 on the revised worker timeout case. These are single-pair observations, including an adaptive development case, not a reliability estimate. Cancellation and thread ownership remain unevaluated. CLI design is unevaluated local guidance. The [Twelve-Factor comparison](./skills/twelve-factor-app/README.md) found no local uplift and configuration gaps in the upstream candidate, so the local deployment skill remains provisional.
 
 Reproducible with-skill versus without-skill evaluations live under
 [`tests/`](./tests), with current pragmatic-architecture results summarized in

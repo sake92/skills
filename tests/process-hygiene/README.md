@@ -17,6 +17,14 @@ scala tests/run-eval.scala --server=false -- output --skill-path skills/process-
 
 Inspect candidate patches and preserve generated runs, grading reports, snapshots and the review viewer under ignored `tests/tmp/`. Commit only example-run summaries and small code/diff excerpts under `benchmark-results/`. A single pair gives initial evidence, not a stable reliability estimate.
 
+## Worker timeout development case
+
+`worker-timeout` is the revised seven-check fixture. Its two visible tests start green. The symptom-only prompt reports progress and workspace contention after timeout without naming the ownership mechanism. Protected checks cover ordinary results and logs, resistant direct workers, cooperative cleanup, retained helpers after parent exit, nested helpers, one shared budget, and replacement work started during TERM handling.
+
+These validate the skill's subprocess ownership, graceful/forced termination and bounded-wait guidance. The protected Linux grader uses a JNA subreaper to adopt and reap fixture helpers; it never signals live helpers before assertions. Independent containment stops remaining fixture processes after failed assertions. This measures observable termination and workspace release rather than portable descendant reaping by the candidate.
+
+The starter scores 2/7, the corrected reference 7/7, and the earlier single-snapshot implementation 6/7. A fresh baseline ran first, then coverage was frozen before with-skill: [6/7 versus 4/7](../../skills/process-hygiene/benchmark-results/worker-timeout-development.md). This is an adaptive development comparison. Use the commands above with `--case worker-timeout` to select it; omitting `--case` runs both fixtures.
+
 ## Source responsibilities
 
 - Mill `core/api/src/mill/api/SystemStreamsUtils.scala`: task-specific stream routing, raw inheritance and input policy.
