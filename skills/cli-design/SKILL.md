@@ -7,6 +7,14 @@ description: 'Design and review command-line interfaces: arguments, flags, subco
 
 Preserve existing invocations and documented contracts. New machine-output modes need their own scripting contract; do not inherit human-output chatter or prompts.
 
+## Choose the parser first
+
+Research and choose before production edits; integrate that choice when implementing argument changes:
+
+1. Read current official documentation for the language/platform's native argument facilities and established parsing libraries. Compare support for the requested grammar, runtime compatibility, maintenance, tests, and adoption. A local cache search is not documentation research.
+2. Choose a suitable tested parser and briefly record the documentation links and reason. If the current parser is handwritten, replace its argument dispatch as part of the change. Delegate token handling, option arity, repetitions, `--`, and usage errors to the selected parser; keep domain validation separate.
+3. Add the dependency when needed and verify the parser's actual API. Do not start by extending a flag loop or pattern match and defer migration until later. Manual argument parsing requires an explicit user request; if constraints prevent using a tested parser, resolve that constraint with the user. Simplicity, an existing prototype, and time savings do not grant that exception. Acknowledging skipped migration in the final answer does not complete this step.
+
 ## Reproduce before implementing
 
 Before production edits, add boundary reproducers using existing invocations so missing new flags cannot mask inherited defects. For commands with file input or destructive confirmation, adapt these acceptance tests to the interface:
@@ -29,11 +37,14 @@ assert no_confirmation_prompt(blocked)
 
 Run them red, fix those boundary defects, and run them green with the old suite. Codec errors need source context at the reading/decoding boundary; piped approval is not interactive authorization. Preserve documented successful invocations, not those defects.
 
-Then add failing feature tests covering direct/file machine output, empty input, invalid options, missing files, output failures, and closed stdin. Implement the feature and rerun the suite. Use bounded real-process tests when terminal behavior requires them; explain inapplicable cases.
+Turn each requested behavior into a failing regression before implementing it. Include meaningful boundaries: zero versus omitted limits, repeated options, directory versus file filters, invalid typed values, and literal paths where applicable. Cover direct/file machine output, empty input, missing files, output failures, and closed stdin for relevant commands. Use bounded real-process tests when terminal behavior requires them.
+
+For hierarchical filters, exercise both relative-path patterns and basename patterns against matching directories with deeper descendants. A subtree rule must apply to matching ancestors, not only to each leaf's path or basename.
+
+Validate all options and domain values before output side effects. Compile patterns and validate ranges at this boundary so invalid input produces a usage error without replacing an existing destination. Implement the feature and rerun the suite. When a reproducer fails, inspect and fix the implementation, then rerun; a known failing regression means the task is still unfinished.
 
 ## Implement
 
-- Before changing argument parsing, briefly research native facilities and established libraries in current official docs. Check runtime support, maintenance, tests, and real-world use. Reuse a suitable tested parser; an existing handwritten parser is not a reason to extend it. Parse manually only if the user explicitly insists; otherwise resolve blocking constraints with them. Explain the choice briefly.
 - Provide discoverable help/examples, version output, consistent long flags, and strict rejection of unknown arguments. Validate typed inputs before side effects.
 - In machine mode, stdout contains only the payload. When that payload goes to a file, keep stdout empty; completion messages, progress, and diagnostics go to stderr. Preserve documented legacy human output separately.
 - Check that stdin is interactive and prompting is enabled **before reading an answer**. Otherwise fail promptly and name the explicit answer/override flag. Piped input is not confirmation for a destructive operation.
@@ -44,6 +55,6 @@ Then add failing feature tests covering direct/file machine output, empty input,
 
 ## Verify
 
-Report the inherited-boundary reproducers and red-to-green evidence before claiming completion. Check help and legacy compatibility. Do not weaken assertions to accept defective behavior; identify any verification gap.
+Before finishing, inspect production argument handling: does the chosen native/library parser actually consume the arguments, or did a handwritten dispatcher remain? Correct any skipped migration unless the user explicitly requested manual parsing. Then run the requested test command after the final edit and inspect its exit status and failures. Completion requires the old suite and new regressions to pass. Report the parser choice, inherited-boundary reproducers, and red-to-green evidence. Check help and legacy compatibility. Do not weaken assertions to accept defective behavior; identify any verification gap.
 
 Read [interface details](references/cli.md) only for relevant conventions beyond these rules. Read [configuration](references/config.md) only when changing configuration sources, locations, or precedence. Use process-hygiene for lifecycle and twelve-factor-app for deployment architecture.
