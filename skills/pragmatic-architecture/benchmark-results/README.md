@@ -27,4 +27,4 @@ The final ID/DTO comparison reused completed smoke candidates and verified match
 
 The earlier legacy order case was removed after identical passing patches. The current six-case set retains its ties.
 
-See the [skill overview](../README.md), [coverage analysis](../../../analysis.md), and [evaluation workflow](../../../tests/README.md).
+See the [skill overview](../README.md), [coverage analysis](../analysis.md), and [evaluation workflow](../../../tests/README.md).

@@ -1,4 +1,6 @@
 /tests/tmp/
+/.basamake/
+/.worktrees/
 /tests/.bsp/
 /tests/.scala-build/
 **/.bsp/

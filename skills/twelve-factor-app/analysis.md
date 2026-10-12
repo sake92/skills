@@ -36,8 +36,6 @@ Configuration, stateless process behavior, disposability, and administrative tas
 
 Codebase provenance and the organizational parts of dev/prod parity need audit evidence and explicit limits. They should not become invented coding tasks merely to force a score difference. All twelve remain in scope, with already-satisfied, untested, tied, improved, and regressed outcomes distinguished.
 
-The existing local evaluation scored 8/11 with the skill and 8/11 without it. Its two small modules do not demonstrate uplift or full Twelve-Factor coverage. Their validation, URL-shape, and structured-log checks include application-contract requirements beyond the canonical factors. The [earlier comparison](benchmark-results/comparison.md) remains historical evidence, rather than a certification of the skill.
-
 ## Initial repository choice
 
 The first new fixture is a small Scala service adaptation of `sharaf-api-starter`'s configuration boundary, application wiring, and service startup responsibilities. The source starter already has environment-driven database configuration; this fixture does not claim that the source repository has the injected defects.
@@ -53,10 +51,10 @@ The [first frozen pair](benchmark-results/runtime-bindings.md) scored 8/8 with t
 | III. Config | Six protected checks; one pair 6/6 with skill versus 5/6 without, including additional gateway contract checks. |
 | IV. Backing services | Two protected HTTP checks; tied 2/2, supporting coverage without skill uplift. |
 | V. Build, release, run | Deployment-workflow evaluation outstanding. |
-| VI. Processes | Independent state/replacement evaluation outstanding; old session case is non-qualifying history. |
+| VI. Processes | Independent state/replacement evaluation outstanding. |
 | VII. Port binding | Packaged-service evaluation outstanding. |
 | VIII. Concurrency | Independent process-formation evaluation outstanding. |
 | IX. Disposability | Service shutdown/crash-recovery evaluation outstanding. |
 | X. Dev/prod parity | Service parity evaluation and organizational audit outstanding. |
-| XI. Logs | Platform-stream evaluation outstanding; old JSON collector checks are not canonical coverage. |
+| XI. Logs | Platform-stream evaluation outstanding. |
 | XII. Admin processes | Release/config-compatible one-off task evaluation outstanding. |

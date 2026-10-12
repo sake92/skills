@@ -15,7 +15,7 @@ scala tests/run-eval.scala --server=false -- output \
   --runs 1 --skip-judge --parallelism 1
 ```
 
-Inspect the patch and grading. If any observed baseline scores 100%, the case fails qualification: develop a harder realistic task and run a fresh baseline before proceeding. Preserve that rejected attempt as development history.
+Inspect the patch and grading. If any observed baseline scores 100%, the case fails qualification: develop a harder realistic task and run a fresh baseline before proceeding. Keep development notes under ignored `tests/tmp/`.
 
 Once the baseline has meaningful failures, freeze the prompt, starter, and protected grader. Run a single with-skill smoke:
 
@@ -33,19 +33,3 @@ With-skill must score strictly higher than no-skill while preserving existing be
 Runs retain transcripts, candidate patches, grading, timing, and skill snapshots under ignored `tests/tmp/twelve-factor-app-workspace/`. Generate the static review viewer with the skill-creator's `eval-viewer/generate_review.py`, as described in [the runner guide](../README.md). Commit summaries and small code/diff excerpts only.
 
 The [first runtime-bindings pair](../../skills/twelve-factor-app/benchmark-results/runtime-bindings.md) scored 8/8 with skill against 7/8 without. The unchanged-skill smoke was reused as the paired candidate after verifying identical starter trees and task metadata. This single pair is initial evidence, not a stable estimate. Fresh held-out confirmation remains outstanding.
-
-## Rerun historical cases
-
-The earlier `config-drift` and `replica-sessions` cases failed the current uplift gate and are excluded from the active eval set. Their fixtures and [historical comparison](../../skills/twelve-factor-app/benchmark-results/comparison.md) remain available.
-
-Select their definitions explicitly, for example:
-
-```bash
-scala tests/run-eval.scala --server=false -- output \
-  --skill-path skills/twelve-factor-app \
-  --eval-path skills/twelve-factor-app/evals/historical-evals.json \
-  --fixture-path tests/twelve-factor --case config-drift \
-  --configuration without-skill --runs 1 --skip-judge --parallelism 1
-```
-
-The older upstream comparison used citypaul/.dotfiles at `cd4028d57d6e4e95814f7b8ee55ca13c23a9c2f0`, skill `claude/.claude/skills/twelve-factor/`, with its Node reference unchanged. Its ignored upstream eval file contained only those two historical cases and changed `skill_name` to `twelve-factor`. It is not evidence for the new case or for Scala transfer across all twelve factors.

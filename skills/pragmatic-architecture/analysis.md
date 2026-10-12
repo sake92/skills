@@ -24,7 +24,7 @@ compiler-safe IDs in the ID case; both DTO candidates separate public models,
 but only the with-skill candidate adds leak regression coverage. Added coverage is not itself
 evidence of added skill benefit. Each result is one paired run, not a reliable
 estimate of improvement across the skill. See
-[benchmark results](skills/pragmatic-architecture/benchmark-results/README.md) for
+[benchmark results](benchmark-results/README.md) for
 resource costs and interpretation.
 
 The remaining sections describe unresolved coverage and grading gaps.
@@ -277,4 +277,4 @@ helps.
 The largest wholly uncovered area is dependency-cycle prevention (section 2).
 Other distinct additions include external API compatibility, divergent versus
 aligned models, repeatable type-safety decision improvements, and enforcement/review
-judgment. Existing execution instructions are in [tests/README.md](tests/README.md).
+judgment. Existing execution instructions are in [tests/README.md](../../tests/README.md).

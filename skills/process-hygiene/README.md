@@ -11,7 +11,7 @@ The [evaluation fixtures](../../tests/process-hygiene/README.md) exercise build-
 | [Worker cancellation development](benchmark-results/worker-cancellation.md) | 6/6 | 5/6 |
 | [Parallel build development](benchmark-results/parallel-build.md) | 8/8 | 7/8 |
 
-The stdio pair favored with-skill on live prompt flushing. The worker timeout development revision favored with-skill on retaining helpers after their parent exited, but still exposed a shutdown race. Cancellation initially tied at 5/6; two skill revisions produced a 6/6 output that finishes cleanup despite repeated interruption. Parallel build initially had a perfect baseline on a rejected seven-check draft; the revised eight-check case exposes worker scopes that outlive executor termination. Two skill revisions produced an 8/8 output after a noncompletion and a 7/8 tie. Both development reports retain earlier failures and reuse their frozen baselines. These adaptive single-run results need held-out confirmation.
+These are single-run examples; several followed adaptive skill revisions. Case reports retain rejected attempts, ties, and remaining failures. Held-out confirmation remains outstanding.
 
 Sources informing the revision:
 

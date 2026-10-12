@@ -10,16 +10,4 @@ The first baseline-first case meets the strict score gate with the unchanged ski
 
 See the [factor analysis](analysis.md), [workflow](../../tests/twelve-factor/README.md), and [case evidence and costs](benchmark-results/runtime-bindings.md).
 
-## Historical development cases
-
-These older comparisons did not meet the current uplift gate. Their definitions are retained separately in `evals/historical-evals.json`; they are excluded from the active eval set.
-
-| Case | Local | Its baseline | Citypaul | Its baseline |
-| --- | ---: | ---: | ---: | ---: |
-| Configuration drift | 3/6 | 3/6 | 4/6 | 4/6 |
-| Replica sessions/logs | 5/5 | 5/5 | 0/5 | 5/5 |
-| Total checks | 8/11 | 8/11 | 4/11 | 9/11 |
-
-The local skill showed no quality uplift in these older cases. Citypaul did not meet the adoption gate. Its session candidate made no edits; the 0/5 is an incomplete task, not proof that its guidance is incorrect.
-
-See the [historical comparison](benchmark-results/comparison.md) and pinned upstream [skill](https://github.com/citypaul/.dotfiles/tree/cd4028d57d6e4e95814f7b8ee55ca13c23a9c2f0/claude/.claude/skills/twelve-factor).
+Related guidance reviewed: [citypaul's Twelve-Factor skill](https://github.com/citypaul/.dotfiles/tree/cd4028d57d6e4e95814f7b8ee55ca13c23a9c2f0/claude/.claude/skills/twelve-factor).

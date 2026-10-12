@@ -1,6 +1,6 @@
 # Skill evaluations
 
-The [Twelve-Factor evaluations](twelve-factor/README.md) use the same runner with `--skill-path`, `--eval-path`, and `--fixture-path`. Runtime bindings is the first baseline-qualified active case; the earlier tied/incomplete adoption cases are historical. Architecture remains the default suite. Each new output iteration snapshots the evaluated skill under `evaluated-skill/` for provenance.
+The [Twelve-Factor evaluations](twelve-factor/README.md) use the same runner with `--skill-path`, `--eval-path`, and `--fixture-path`. Runtime bindings is the first baseline-qualified active case. Architecture remains the default suite. Each new output iteration snapshots the evaluated skill under `evaluated-skill/` for provenance.
 
 The [process-hygiene fixtures](process-hygiene/README.md) evaluate build-task stdio, revised worker timeout cleanup, and cancellation during work/cleanup. Their protected integration tests run real Linux tools. Raw patches, grades, and skill snapshots stay under ignored `tests/tmp/`; repository reports contain summaries and small excerpts only.
 
