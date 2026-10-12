@@ -32,7 +32,7 @@ execution, excluding grading; tokens count input and output, excluding cached in
 | [Pragmatic architecture](skills/pragmatic-architecture/README.md) | 26/35 (74.3%) | 35/35 (100%) | +25.7 pp |
 | [Process hygiene](skills/process-hygiene/README.md) | 23/29 (79.3%) | 28/29 (96.6%) | +17.2 pp |
 | [Twelve-Factor app](skills/twelve-factor-app/README.md) | 7/8 (87.5%) | 8/8 (100%) | +12.5 pp |
-| Codeps | Unevaluated | — | — |
+| [Codeps](skills/codeps/README.md) | 8/13 (61.5%) | 13/13 (100%) | +38.5 pp |
 | CLI design | Unevaluated | — | — |
 
 Scores pool passed checks across the published examples; **pp** means percentage

@@ -1,0 +1,36 @@
+{
+  "skill_name": "codeps",
+  "evals": [
+    {
+      "id": 1,
+      "name": "dependency-knot",
+      "prompt": "The customer directory has become hard to change: updates to the HTTP response models keep requiring edits in services, repositories and persistence, and the CRM and reconciliation jobs are caught in the same dependency knot. Use the project's dependency evidence to untangle this application. Preserve the existing controller and job entry points, their behavior and output, and keep the change proportional. Verify the resulting dependency structure, explain the evidence and chosen boundary in architecture.md, add useful regression coverage, and run scala-cli test . --server=false. The project README documents the existing build and analysis tools.",
+      "expected_output": "A focused correction to the API/service/repository/DAO boundary, compatible HTTP and job consumers, and trustworthy before/after dependency evidence from the same application scope.",
+      "files": ["tests/codeps/dependency-knot/starter"],
+      "expectations": [
+        "Directory endpoints retain active ordering, normalization, lookup and missing-customer behavior.",
+        "Creation preserves validation, duplicate rejection, normalized output and subsequent lookup.",
+        "CRM synchronization preserves ordered partial results and shares directory state.",
+        "CSV export and reconciliation retain their independent consumer contracts.",
+        "A protected clean build has no package or file dependency cycle in application code.",
+        "The submitted final dependency report agrees with an independent clean build in both scopes.",
+        "Before and after evidence keeps the application scope and labels the analyzed source state correctly."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "report-triage",
+      "prompt": "After the scheduler split, our CI dependency report still flags a legacy package cycle and apparently unused export adapters. Review reports/dependencies.json and this application to choose the next maintenance task. Write review.json using the tracker format in the README, covering the cycle and orphan findings with supporting evidence and current package/file cycle counts. No production changes have been approved. Verify the existing consumers with scala-cli test . --server=false. The project README documents the existing build and analysis tools.",
+      "expected_output": "A current, evidence-backed review that distinguishes missing retired sources from live refactoring targets and recognizes configured runtime adapters rather than treating static orphan findings as deletion proof.",
+      "files": ["tests/codeps/report-triage/starter"],
+      "expectations": [
+        "The review distinguishes the missing retired sources from live refactoring targets.",
+        "CSV and audit adapters are retained with evidence of their configured runtime loading.",
+        "Current package and file cycle counts agree with an independent clean build.",
+        "The saved current report covers the existing application and agrees with the protected graph.",
+        "The review does not change production sources or deployment plugin configuration.",
+        "Configured adapters still load in HTTP and nightly consumers after the review."
+      ]
+    }
+  ]
+}

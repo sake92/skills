@@ -1,0 +1,7 @@
+projects:
+  app:
+    root: .
+    source: semanticdb
+    inputs: [target/classes]
+    include: [app]
+    skip-tests: true
