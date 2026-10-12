@@ -1,5 +1,6 @@
 ---
 name: codeps
+compatibility: 'Requires shell execution, Codeps v0.4 CLI, Git, and a supported dependency producer (SemanticDB, jdeps, or Codeps export JSON). Optional Code Maat analysis requires Bash and Java; downloading its JAR requires curl and network access.'
 description: "Analyze a codebase's package or file dependency structure before refactoring or after adding new packages, modules, or cross-package dependencies: find cycles, change propagators, over-broad or mutable public APIs, dead-code candidates, and structural boundaries; use when planning module/package splits, reducing coupling or incremental-build churn, or comparing architecture health across commits; also use to verify that a feature branch introduced no cycle or coupling regression. Do not use for a mechanical local move, symbol lookup, or rename."
 ---
 
