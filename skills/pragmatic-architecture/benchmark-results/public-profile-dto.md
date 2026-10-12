@@ -14,6 +14,8 @@ Both candidates independently introduced essentially the same public DTO using T
 | Candidate seconds | 72.752 | 91.162 |
 | Candidate tokens | 21,802 | 17,216 |
 
+Score gain: **+11.1 percentage points** (88.9% → 100%).
+
 ## Code from the submissions
 
 The following excerpts are copied from the recorded candidates. Imports and surrounding declarations are retained where helpful; these are not rewritten ideal solutions.

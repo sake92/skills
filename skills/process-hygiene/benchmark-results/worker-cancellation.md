@@ -5,6 +5,8 @@
 | No skill baseline | 5/6 | 59.85s | 17,863 |
 | With skill | **6/6** | 82.06s | 23,307 |
 
+Score gain: **+16.7 percentage points** (83.3% → 100%).
+
 With-skill passes repeated cancellation during cleanup; baseline leaves the root alive. All other checks pass in both. The with-skill run uses 5,444 more input/output tokens and takes 22.22s longer than the retained baseline. It is adaptive single-run evidence, not a reliability estimate.
 
 The new [fixture](../../../tests/process-hygiene/worker-cancellation/starter/) starts with normal process-tree cleanup implemented. Its bugs are converting interruption into a timeout report and allowing later interrupts to abort cleanup. The symptom-only prompt mentions incorrect cancellation reports and busy workspaces, without revealing protected timing scenarios or implementation helpers.

@@ -5,6 +5,8 @@
 | No skill baseline | 7/8 | 95.48s | 23,252 |
 | With skill | **8/8** | 94.74s | 22,324 |
 
+Score gain: **+12.5 percentage points** (87.5% → 100%).
+
 The final output joins actual worker threads after executor termination, allowing supplied-factory resource scopes to finish before reporting cancellation. Baseline passes the other seven checks but returns while that scope is still closing. The final run uses 928 fewer input/output tokens and takes 0.74s less than baseline. These are adaptive single-run observations, not a reliability estimate.
 
 The [fixture](../../../tests/process-hygiene/parallel-build/starter/) is an original Scala build-launch path with a request/result model, supplied thread factory, executor owner, runner and command adapter. Its visible tests start green. The symptom-only prompt reports hangs after module failures and workspace activity after cancellation; it does not name completion queues, handle retention or protected timing scenarios. The README documents the lifecycle contract, including worker-local scopes. This contract is an explicit hint shared by both configurations.

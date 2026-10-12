@@ -7,6 +7,8 @@ One baseline-first pair with the unchanged Twelve-Factor skill. No qualitative j
 | Without skill | 7/8 | 3 passing | 16,671 | 65.4 s |
 | With skill | 8/8 | 4 passing | 25,661 | 105.9 s |
 
+Score gain: **+12.5 percentage points** (87.5% → 100%).
+
 The case meets the acceptance gate: the observed no-skill grade is below 100%, and with-skill scores strictly higher and reaches 100%. This is one development pair, not a held-out estimate or a guarantee that future baseline runs cannot pass everything. Any subsequently observed perfect baseline invalidates qualification under the repository gate.
 
 ## What differed

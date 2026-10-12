@@ -8,11 +8,13 @@ One paired run per fixture. Details, code snippets, and limitations are in [benc
 
 These four example pairs showed higher protected/judged scores with skill. The ID result followed adaptive tuning. Skill versions differ across cases, so these rows are not one frozen-suite effectiveness estimate.
 
-| Fixture | With skill | Without skill |
-| --- | ---: | ---: |
-| [Customer repository](benchmark-results/customer-repository.md) | 10/10 | 7/10 |
-| [Repository with callers](benchmark-results/repository-with-callers.md) | 8/8 | 5/8 |
-| [Teacher/course IDs](benchmark-results/teacher-course-ids.md) | 8/8 | 6/8 |
-| [Public profile DTO](benchmark-results/public-profile-dto.md) | 9/9 | 8/9 |
+| Fixture | With skill | Without skill | Score gain (pp) |
+| --- | ---: | ---: | ---: |
+| [Customer repository](benchmark-results/customer-repository.md) | 10/10 | 7/10 | +30.0 |
+| [Repository with callers](benchmark-results/repository-with-callers.md) | 8/8 | 5/8 | +37.5 |
+| [Teacher/course IDs](benchmark-results/teacher-course-ids.md) | 8/8 | 6/8 | +25.0 |
+| [Public profile DTO](benchmark-results/public-profile-dto.md) | 9/9 | 8/9 | +11.1 |
+
+Score gain is the difference in pass rates, in percentage points.
 
 [Evaluation workflow](../../tests/README.md)

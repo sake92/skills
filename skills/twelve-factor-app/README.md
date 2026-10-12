@@ -2,9 +2,11 @@
 
 Protected Scala/MUnit grading; no LLM judge.
 
-| Qualified case | With skill | Without skill |
-| --- | ---: | ---: |
-| [Runtime bindings](benchmark-results/runtime-bindings.md) | 8/8 | 7/8 |
+| Qualified case | With skill | Without skill | Score gain (pp) |
+| --- | ---: | ---: | ---: |
+| [Runtime bindings](benchmark-results/runtime-bindings.md) | 8/8 | 7/8 | +12.5 |
+
+Score gain is the difference in pass rates, in percentage points.
 
 The first baseline-first case meets the strict score gate with the unchanged skill. The difference is use of the validated configuration during component wiring. This is initial evidence for one task, not reliable effectiveness or coverage of all twelve factors. Backing-service checks tied within that case.
 

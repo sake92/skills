@@ -4,12 +4,14 @@ Scope: lifecycle and ownership of threads, tasks, executors, and subprocesses. T
 
 The [evaluation fixtures](../../tests/process-hygiene/README.md) exercise build-task stdio, worker timeout cleanup, cancellation during work and cleanup, and thread/executor ownership. Service lifecycle remains unevaluated. Upstream results do not prove effectiveness for this skill.
 
-| Case | With skill | Without skill |
-| --- | ---: | ---: |
-| [Build-task stdio](benchmark-results/build-task-stdio.md) | 8/8 | 7/8 |
-| [Worker timeout development revision](benchmark-results/worker-timeout-development.md) | 6/7 | 4/7 |
-| [Worker cancellation development](benchmark-results/worker-cancellation.md) | 6/6 | 5/6 |
-| [Parallel build development](benchmark-results/parallel-build.md) | 8/8 | 7/8 |
+| Case | With skill | Without skill | Score gain (pp) |
+| --- | ---: | ---: | ---: |
+| [Build-task stdio](benchmark-results/build-task-stdio.md) | 8/8 | 7/8 | +12.5 |
+| [Worker timeout development revision](benchmark-results/worker-timeout-development.md) | 6/7 | 4/7 | +28.6 |
+| [Worker cancellation development](benchmark-results/worker-cancellation.md) | 6/6 | 5/6 | +16.7 |
+| [Parallel build development](benchmark-results/parallel-build.md) | 8/8 | 7/8 | +12.5 |
+
+Score gain is the difference in pass rates, in percentage points.
 
 These are single-run examples; several followed adaptive skill revisions. Case reports describe current results and limitations. Held-out confirmation remains outstanding.
 

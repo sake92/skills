@@ -5,6 +5,8 @@
 | With skill | 6/7 | 113.50s | 38,083 |
 | Without skill | 4/7 | 82.21s | 20,874 |
 
+Score gain: **+28.6 percentage points** (57.1% → 85.7%).
+
 Both candidates completed fixes and passed their visible 3/3 tests. With-skill stopped resistant and nested helpers after their parent exited. It still leaked replacement work started during shutdown. Baseline handled that replacement but lost track of helpers when their parent exited. The net difference is two checks in favor of with-skill, at higher time and token cost.
 
 ## Fixture and validation

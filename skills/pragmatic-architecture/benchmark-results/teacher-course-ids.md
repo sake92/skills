@@ -16,6 +16,8 @@ Both candidates fixed the immediate reversal and added regression tests. Only th
 | Candidate seconds | 65.780 | 38.560 |
 | Candidate tokens | 14,540 | 8,215 |
 
+Score gain: **+25.0 percentage points** (75% → 100%).
+
 ## Code from the submissions
 
 The following excerpts are copied from the recorded candidates. Imports and surrounding declarations are retained where helpful; these are not rewritten ideal solutions.

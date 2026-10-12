@@ -5,6 +5,8 @@
 | With skill | 8/8 | 102.40s | 30,390 |
 | Without skill | 7/8 | 86.67s | 18,485 |
 
+Score gain: **+12.5 percentage points** (87.5% → 100%).
+
 The with-skill output passed the live prompt/input handshake; the baseline stalled because it flushed the task output only after EOF. All seven other checks passed in both configurations. This single pair favored the with-skill output on one behavior, at higher candidate time and token cost; it does not establish reliable uplift or prove that a particular instruction caused the difference.
 
 ## Fixture and coverage

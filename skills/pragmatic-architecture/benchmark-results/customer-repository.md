@@ -22,6 +22,8 @@ The baseline implemented the requested lookups but retained public mutable backi
 | Candidate seconds | 58.817 | 49.724 |
 | Candidate tokens | 12,892 | 11,138 |
 
+Score gain: **+30.0 percentage points** (70% → 100%).
+
 ## Code from the submissions
 
 The following excerpts are copied from the recorded candidates. Imports and surrounding declarations are retained where helpful; these are not rewritten ideal solutions.

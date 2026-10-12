@@ -4,12 +4,14 @@ These pages summarize example runs of the pragmatic-architecture skill: code exc
 
 Each row lists **with skill / without skill**. Open a case to see the code and the criteria behind its score.
 
-| Fixture | Grade | What the code shows |
-| --- | ---: | --- |
-| [customer-repository](customer-repository.md) | 10/10 / 7/10 | Skill hides mutable state and removes unused collection helpers. |
-| [repository-with-callers](repository-with-callers.md) | 8/8 / 5/8 | Skill narrows the API while preserving the export caller’s snapshot. |
-| [teacher-course-ids](teacher-course-ids.md) | 8/8 / 6/8 | Only the skill candidate adds compiler-safe IDs through lookup and cache. |
-| [public-profile-dto](public-profile-dto.md) | 9/9 / 8/9 | Both introduce DTOs; only the skill candidate tests private-field exclusion. |
+| Fixture | Grade | Score gain (pp) | What the code shows |
+| --- | ---: | ---: | --- |
+| [customer-repository](customer-repository.md) | 10/10 / 7/10 | +30.0 | Skill hides mutable state and removes unused collection helpers. |
+| [repository-with-callers](repository-with-callers.md) | 8/8 / 5/8 | +37.5 | Skill narrows the API while preserving the export caller’s snapshot. |
+| [teacher-course-ids](teacher-course-ids.md) | 8/8 / 6/8 | +25.0 | Only the skill candidate adds compiler-safe IDs through lookup and cache. |
+| [public-profile-dto](public-profile-dto.md) | 9/9 / 8/9 | +11.1 | Both introduce DTOs; only the skill candidate tests private-field exclusion. |
+
+Score gain is the difference in pass rates, in percentage points.
 
 ## Reading the results
 

@@ -16,6 +16,8 @@ Both candidates preserved the real export caller through `snapshot`. The with-sk
 | Candidate seconds | 49.690 | 38.542 |
 | Candidate tokens | 13,263 | 13,803 |
 
+Score gain: **+37.5 percentage points** (62.5% → 100%).
+
 ## Code from the submissions
 
 The following excerpts are copied from the recorded candidates. Imports and surrounding declarations are retained where helpful; these are not rewritten ideal solutions.
