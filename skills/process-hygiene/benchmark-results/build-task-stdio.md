@@ -9,7 +9,7 @@ The with-skill output passed the live prompt/input handshake; the baseline stall
 
 ## Fixture and coverage
 
-The [starter](../../../tests/process-hygiene/build-task-stdio/starter/) is a standalone Scala build-task path across four production files: launch/input models, a stream pump, a forked-tool runner, and task-event/result handling with a launcher adapter. It adapts responsibilities observed in Mill and Deder; it is original fixture code, not a verbatim extraction. It replaces the rejected command-wrapper example, which was removed along with its report and generated runs.
+The [starter](../../../tests/process-hygiene/build-task-stdio/starter/) is a standalone Scala build-task path across four production files: launch/input models, a stream pump, a forked-tool runner, and task-event/result handling with a launcher adapter. It adapts responsibilities observed in Mill and Deder; it is original fixture code, not a verbatim extraction.
 
 The starter has two passing tests. Protected checks invoke actual Linux tools and verify:
 
@@ -39,9 +39,7 @@ The baseline writes during the loop but flushes after EOF. Its own prompt test u
 
 ## Reproduction and limits
 
-- One with-skill smoke followed by one matched baseline: `gpt-6-luna`, reasoning `low`, Pi 1.0.4, Scala 3.9.0 and MUnit 1.3.6. No qualitative judge. Instructions and graders stayed fixed; identical starter Git trees and task metadata are checked when combining results. The with-skill transcript confirms SKILL.md was read.
-- Repository base: `b78ba67`; the new fixture and eval definitions were uncommitted during evaluation. Skill instructions were unchanged.
+- One with-skill smoke followed by one matched baseline, without a qualitative judge. Instructions and graders stayed fixed; identical starter Git trees and task metadata were verified. The with-skill transcript confirms SKILL.md was read.
 - Source repositories inspected: Mill `3e2de013bc3ff6fe65746a51e051adc05d244a6d`, Deder `0d965f9babc73336b8985eb234cbfb614b3fd4ec`. Relevant source paths are listed in [the eval README](../../../tests/process-hygiene/README.md).
-- Raw runs: `tests/tmp/process-hygiene-workspace/iteration-20261009-161650/` and `iteration-20261009-161907/`. Combined benchmark, complete patches, grades, transcripts, snapshots and `review.html`: `tests/tmp/process-hygiene-workspace/comparison-20261009-161650/`. Grader proof: `tests/tmp/build-task-stdio-grader-proof/`. These generated artifacts stay ignored; only this summary and excerpt belong in the repository report.
-- Time measures candidate execution; tokens count input plus output, excluding cached input. Protected grading took another 11.13s with skill and 21.09s without, including the baseline's ten-second handshake timeout.
+- Protected grading took another 11.13s with skill and 21.09s without, including the baseline's ten-second handshake timeout.
 - This fixture covers normal stdio completion and input/output ownership. It does not validate cancellation, descendants, operation deadlines, pump-failure propagation, executors, service lifecycle, or real terminal/PTY inheritance. Those require separate cases.

@@ -11,6 +11,10 @@ Skills for hardcore engineering:
 Evaluation tooling lives under [`tests/`](./tests). See individual skill READMEs
 for evaluation status, example results, and related skills.
 
+Unless stated otherwise, evaluation examples use Pi 1.0.4 with GPT-6 Luna at low
+reasoning, with one candidate per configuration. Reported time covers candidate
+execution, excluding grading; tokens count input and output, excluding cached input.
+
 ## Install
 
 Claude Code, Cursor, Codex, OpenCode...

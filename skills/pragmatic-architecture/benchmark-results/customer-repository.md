@@ -144,6 +144,4 @@ passed the qualitative checks. The baseline retained public mutable `records`,
 `all`, and `query`; the with-skill candidate removed or hid them. Structural
 checks separated the candidates in this pair.
 
-Recorded source: `tests/tmp/pragmatic-architecture-workspace/iteration-20261007-140831/eval-1/`. Executor and qualitative judge: Pi 1.0.4 / GPT-6 Luna, low reasoning, one candidate per configuration. Timing measures candidate execution, not grading. This single pair does not establish consistency or a repeatable resource-cost difference.
-
 This pair predates the final ID/DTO skill revisions; it was not rerun with the current skill.

@@ -132,8 +132,4 @@ Protected checks execute outside the candidate workspace. Judge checks assess th
 
 ## Interpretation and provenance
 
-The original unguided raw-ID pair tied at 6/8. Strengthening section 4 still produced a 6/8 smoke (`20261008-195850`, 45.816 seconds, 16,628 tokens). Adding an upfront bug-cause decision step produced this 8/8 result. This was adaptive tuning on the same case, not a held-out improvement estimate. The earlier guided starter supplied opaque types and explicitly requested compiler safety; its 9/9 tie measured reuse and execution under a different rubric.
-
-Recorded source: `tests/tmp/pragmatic-architecture-workspace/paired-decision-guidance-20261008/eval-5/`. Executor and qualitative judge: Pi 1.0.4 / GPT-6 Luna, low reasoning, one candidate per configuration. Timing measures candidate execution, not grading. This single pair does not establish consistency or a repeatable resource-cost difference.
-
-With-skill source: `iteration-20261008-200223`; baseline source: `iteration-20261008-200252`. The starter Git trees and task/assertion metadata were verified to match. The ID candidate used the final upfront decision step.
+The skill was tuned on this case before the recorded comparison. This is adaptive single-run evidence and needs held-out confirmation.

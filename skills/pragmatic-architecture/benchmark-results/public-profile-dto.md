@@ -149,8 +149,4 @@ Protected checks execute outside the candidate workspace. Judge checks assess th
 
 ## Interpretation and provenance
 
-The earlier task explicitly specified a safe public contract and tied at 9/9. This ordinary feature request leaves recognition of the public/private boundary to the agent. Both candidates made that decision; the separating result concerns regression tests. Protected validation accepts a public projection (6/6) and rejects a feature-complete leaking response only on private-data exclusion (5/6). The Vue changes were inspected; this compact fixture has no browser/build test.
-
-Recorded source: `tests/tmp/pragmatic-architecture-workspace/paired-decision-guidance-20261008/eval-6/`. Executor and qualitative judge: Pi 1.0.4 / GPT-6 Luna, low reasoning, one candidate per configuration. Timing measures candidate execution, not grading. This single pair does not establish consistency or a repeatable resource-cost difference.
-
-With-skill source: `iteration-20261008-195847`; baseline source: `iteration-20261008-200255`. The starter Git trees and task/assertion metadata were verified to match. The DTO candidate used the revised model-boundary guidance before the final upfront ID paragraph was added; DTO guidance was unchanged. Its completed smoke was reused for the baseline comparison.
+This ordinary feature request leaves recognition of the public/private boundary to the agent. Both candidates made that decision; the separating result concerns regression tests. Protected validation accepts a public projection (6/6) and rejects a feature-complete leaking response only on private-data exclusion (5/6). The Vue changes were inspected; this compact fixture has no browser/build test.

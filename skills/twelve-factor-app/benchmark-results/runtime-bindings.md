@@ -1,6 +1,6 @@
 # Runtime bindings: first qualified case
 
-One baseline-first pair on 2026-10-10, Pi 1.0.4, GPT-6 Luna/low. The Twelve-Factor skill was unchanged. No qualitative judge was used.
+One baseline-first pair with the unchanged Twelve-Factor skill. No qualitative judge was used.
 
 | Configuration | Protected checks | Candidate tests | Candidate tokens | Candidate time |
 | --- | ---: | ---: | ---: | ---: |
@@ -43,12 +43,3 @@ Protected MUnit tests start real local HTTP endpoints and launch fresh gateway J
 Starter trees, task metadata, skill text, model, reasoning, tools, and permissions were matched. The prompt, fixture, and grader were frozen before either model run. Only the starter was supplied to candidates; protected checks were added during grading. The with-skill trace confirms a read of SKILL.md. Patch review found focused config/client/test/documentation changes and preserved visible behavior.
 
 Candidate token count excludes cached input under the existing runner metric. With skill consumed 8,990 more recorded tokens and 40.5 s more candidate time. These one-pair differences are not stable efficiency estimates. Grading took 14.3 s without skill and 12.9 s with skill. Both candidates wrote operator examples with doubled shell line-continuation backslashes; those examples need human correction and are outside the scored behavior. The with-skill implementation also trims input strings before validating them; untested edge cases remain.
-
-## Retained local evidence
-
-- Baseline: `tests/tmp/twelve-factor-app-workspace/iteration-20261010-164620/`.
-- With-skill smoke: `tests/tmp/twelve-factor-app-workspace/iteration-20261010-164807/`.
-- Combined pair and static viewer: `tests/tmp/twelve-factor-app-workspace/runtime-bindings-pair-20261010/`.
-- Grader proof: `tests/tmp/runtime-bindings-grader-proof/`.
-
-The combined pair reuses the two completed candidates; it is not a third run. Its provenance records the equal starter tree `b070cd7b818b1fbe81b1e1db435de979cf4b1293`. The repository base was `d11c0dfed3a4fb2467d62930ea51d2611bd0a6de`; fixture and maintainer changes were uncommitted. Full transcripts, patches, grades, timings, and snapshots stay under ignored `tests/tmp/`.

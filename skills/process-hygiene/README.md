@@ -11,12 +11,10 @@ The [evaluation fixtures](../../tests/process-hygiene/README.md) exercise build-
 | [Worker cancellation development](benchmark-results/worker-cancellation.md) | 6/6 | 5/6 |
 | [Parallel build development](benchmark-results/parallel-build.md) | 8/8 | 7/8 |
 
-These are single-run examples; several followed adaptive skill revisions. Case reports retain rejected attempts, ties, and remaining failures. Held-out confirmation remains outstanding.
+These are single-run examples; several followed adaptive skill revisions. Case reports describe current results and limitations. Held-out confirmation remains outstanding.
 
 Sources informing the revision:
 
 - [pproenca's Go process skill](https://github.com/pproenca/dot-skills/tree/master/skills/.experimental/go-process-cli), MIT: process groups, graceful cancellation before force-kill, cancellable waits, reaping, and entrypoint-owned exit. Restated as language-independent principles without copying code. No corresponding agent-output benchmark was found.
 - [Chris Banes's Kotlin concurrency skill](https://github.com/chrisbanes/skills/tree/main/skills/kotlin-concurrency-and-flow), Apache-2.0: preserve APIs exposing cancellation/result/failure ownership; avoid unnecessary background wrappers. Restated in original wording. Upstream [evals](https://github.com/chrisbanes/skills/blob/main/evals/README.md) cover Kotlin concerns, not this skill's subprocess mechanics.
 - Nathaniel J. Smith's structured-concurrency argument and Candea/Fox's crash-only design inform the existing references.
-
-Future cases should confirm improvements on held-out fixtures, then cover cancellation during acquisition, service startup/shutdown and signals, cleanup-budget exhaustion with uncooperative tasks, and a no-change control for a correct ownership API. Start fixtures green and grade public behavior. Keep raw eval artifacts under ignored `tests/tmp/`; reports contain summaries and small excerpts only.

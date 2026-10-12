@@ -1,6 +1,6 @@
 # Run Twelve-Factor evaluations
 
-The active suite is a small Scala service adaptation, not a complete production checkout or Twelve-Factor certification. The [factor analysis](../../skills/twelve-factor-app/analysis.md) explains all twelve factors and distinguishes executable coverage from audit evidence.
+The active suite is a small Scala service adaptation, not a complete production checkout or Twelve-Factor certification. The [skill README](../../skills/twelve-factor-app/README.md) lists coverage for all twelve factors.
 
 ## Qualify a case
 

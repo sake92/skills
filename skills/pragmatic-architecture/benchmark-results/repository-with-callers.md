@@ -140,6 +140,4 @@ preserved ID lookup and export behavior. The baseline retained public mutable
 removed unused helpers while preserving `snapshot`. The three separating checks
 were structural assertion failures, not grader compilation errors.
 
-Recorded source: `tests/tmp/pragmatic-architecture-workspace/iteration-20261008-070906/eval-2/`. Executor and qualitative judge: Pi 1.0.4 / GPT-6 Luna, low reasoning, one candidate per configuration. Timing measures candidate execution, not grading. This single pair does not establish consistency or a repeatable resource-cost difference.
-
 This pair predates the final ID/DTO skill revisions; it was not rerun with the current skill.

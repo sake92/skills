@@ -11,7 +11,7 @@ The pragmatic-architecture eval set follows the Agent Skills benchmark layout:
 
 Install [Pi](https://pi.dev/), start it once, and use
 `/login openai-codex` to authorize the OpenAI provider. Then run the eval set
-with the default GPT-6 Luna executor and judge:
+with the [default evaluation setup](../README.md):
 
 ```bash
 scala tests/run-eval.scala --server=false -- output
@@ -25,7 +25,7 @@ scala tests/run-eval.scala --server=false -- output \
   --runs 3
 ```
 
-Qualify new cases with the plain-model baseline first. Inspect genuine protected-check failures before tuning the skill; a perfect baseline remains a non-discriminating control. Freeze the task, fixture, and grader, then smoke-test with skill before spending tokens on a full comparison. Keep model, reasoning, tools, permissions, and budget matched; disclose adaptive development and confirm improvement on fresh cases.
+Qualify new cases with the plain-model baseline first. Inspect genuine protected-check failures before tuning the skill; reject cases with a perfect baseline and keep their history in ignored local notes. Freeze the task, fixture, and grader, then smoke-test with skill before spending tokens on a full comparison. Keep model, reasoning, tools, permissions, and budget matched; disclose adaptive development and confirm improvement on fresh cases.
 
 Run the baseline independently:
 
@@ -53,19 +53,6 @@ The caller-compatibility scenario can be selected with
 tests and an existing consumer of the immutable snapshot API. The task requests
 email lookup support; protected grading checks the enhancement and preservation
 of the needed API alongside removal of unused mutable escape hatches.
-
-Two further cases use the same runner and directory layout:
-
-- `--case legacy-discount-fix`: fix premature monetary rounding while preserving
-  existing constructor injection and controller/export contracts.
-- `--case booking-overlap-rule`: preserve one shared booking creation invariant
-  across HTTP, direct business calls, and ordered batch import. Protected
-  Scalameta checks also reject business collaborator construction inside adapters;
-  the fixture's application wiring can supply changed constructor dependencies.
-
-Both starters begin with passing MUnit suites. The protected suites expose the
-reported bugs only during grading. Qualitative judges assess architectural
-tradeoffs and focused candidate regression coverage separately from behavior.
 
 Two FlowRun-inspired cases add positive type-safety and response-model coverage:
 
