@@ -5,32 +5,27 @@ description: 'Design and review command-line interfaces: arguments, flags, subco
 
 # CLI design
 
-Make common invocations discoverable and scripts predictable. Preserve existing invocation and output contracts unless the task authorizes changing them.
+Preserve existing invocations and documented contracts. New machine-output modes need their own scripting contract; do not inherit human-output chatter or prompts.
 
-1. Identify users, common invocations, input sources, output consumers, and compatibility constraints.
-2. Specify commands, arguments/flags, examples, output modes, and meaningful failure codes.
-3. Implement with the repository's argument parser. Validate inputs before side effects.
-4. Exercise help, success/failure, redirected output, and non-interactive execution.
+## Reproduce before implementing
 
-Read [interface conventions](references/cli.md) for details and [configuration](references/config.md) when adding flags, environment variables, or files.
+1. Map the affected invocations and their intended contracts: successful output, usage errors, input/output failures, and interactive/non-interactive behavior. Shared failure and prompt paths reused by a new feature belong to its regression scope.
+2. Write regression tests **before changing production code**. Test the intended contract, not a snapshot of current mistakes. Capture stdout/stderr separately and assert exit codes and file effects. Include separate reproducers for malformed input and unattended confirmation wherever those paths exist, even if their implementation is inherited. Cover direct/file machine output and piped/closed stdin; explain any inapplicable scenario. Use bounded real-process tests when in-process calls cannot reproduce terminal behavior.
+3. Run the reproducers and confirm they fail for the intended reason; isolate each failure so one missing feature does not mask another defect. Then implement the fix and rerun them alongside existing tests.
 
-## Interface contract
+## Implement
 
-- Provide concise help/examples, full --help, and --version. Choose no-argument behavior from the tool's purpose; filters may legitimately read stdin.
-- Use consistent long flags and subcommands. Keep positionals for obvious primary inputs. Do not silently interpret typos or abbreviations as another command.
-- Data goes to stdout; diagnostics/progress to stderr. Provide stable JSON or plain output where automation needs it. Human formatting may evolve separately.
-- Return zero on success and nonzero on failure. Distinguish failures callers need to handle differently. Keep process exit at the entrypoint so cleanup runs.
-- Gate decoration on the stream receiving it. Honor NO_COLOR, TERM=dumb, and --no-color. Never corrupt redirected data with progress.
-- Prompt only with interactive input and prompting enabled. Provide flags for prompt answers and a non-interactive path that fails promptly on missing input.
-- Make destructive actions deliberate, using dry-run/confirmation appropriate to the operation. Never accept secret values in command-line arguments.
-- Explain expected failures with the input at fault and an actionable next step. Show stack traces only in diagnostic mode.
+- Before changing argument parsing, briefly research native facilities and established libraries in current official docs. Check runtime support, maintenance, tests, and real-world use. Reuse a suitable tested parser; an existing handwritten parser is not a reason to extend it. Parse manually only if the user explicitly insists; otherwise resolve blocking constraints with them. Explain the choice briefly.
+- Provide discoverable help/examples, version output, consistent long flags, and strict rejection of unknown arguments. Validate typed inputs before side effects.
+- In machine mode, stdout contains only the payload. When that payload goes to a file, keep stdout empty; completion messages, progress, and diagnostics go to stderr. Preserve documented legacy human output separately.
+- Check that stdin is interactive and prompting is enabled **before reading an answer**. Otherwise fail promptly and name the explicit answer/override flag. Piped input is not confirmation for a destructive operation.
+- Expected errors name the operation, affected input/path, cause, and useful next step. Do not merely print an exception message. Stack traces belong in diagnostic mode.
+- Exit zero on success and nonzero on failure; distinguish failures scripts must handle differently. Keep process exit at the entrypoint.
+- Gate decoration on the receiving stream; honor NO_COLOR, TERM=dumb, and --no-color. Accept secrets through files, stdin, or platform mechanisms, and redact diagnostics.
+- Preserve configuration precedence; parse and validate once, then pass typed values.
 
-## Configuration
+## Verify
 
-- Invocation-specific settings belong in flags; deployment/user settings may come from environment/files; shared project rules belong in versioned files.
-- Preserve existing precedence. For a new tool, flags > environment > project file > user file > system file > defaults is a starting convention; document the actual sources and order.
-- Parse and validate once, then pass typed values. Track sources for useful errors and redact secrets.
-- Honor standard environment variables and platform-owned names. Prefix new application variables. Use platform-appropriate config/cache/state paths.
-- Prefer secret files, stdin, or platform secrets. Never print secrets in errors, debug dumps, or logs.
+Confirm each reproducer now passes, help and invalid options behave correctly, and existing contracts remain compatible. Report the reproduced failure and red-to-green evidence. Do not weaken an assertion to accept the defective behavior.
 
-Lifecycle mechanics belong to process-hygiene; service deployment architecture belongs to twelve-factor-app.
+Read [interface details](references/cli.md) only for relevant conventions beyond these rules. Read [configuration](references/config.md) only when changing configuration sources, locations, or precedence. Use process-hygiene for lifecycle and twelve-factor-app for deployment architecture.
