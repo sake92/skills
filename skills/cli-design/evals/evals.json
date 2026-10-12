@@ -1,0 +1,25 @@
+{
+  "skill_name": "cli-design",
+  "evals": [
+    {
+      "id": 1,
+      "name": "json-export",
+      "prompt": "Our nightly stock reconciliation job needs JSON from this exporter. Add --format json to the existing export command; keep table as the default and support --format table too. Use the record shape described in the README, including empty inventories, and make JSON mode work with the existing --output option. Preserve the existing operator workflows and add useful regression tests. Run scala-cli test . --server=false.",
+      "expected_output": "A compatible JSON export feature usable by the nightly job, including file output and predictable command failures.",
+      "files": [
+        "tests/cli-design/json-export/starter"
+      ],
+      "expectations": [
+        "JSON stdout is one complete array with correct fields, escaping, types and input ordering.",
+        "Empty JSON exports produce an empty array and succeed.",
+        "JSON file export writes the payload without emitting data or completion chatter on stdout.",
+        "Explicit force replaces an existing JSON file correctly.",
+        "Unattended overwrite refuses promptly without prompting or modifying the file.",
+        "Invalid output formats and incomplete options report usage failure before modifying an output.",
+        "Missing or malformed sources and unwritable destinations fail with useful stderr and no stdout payload.",
+        "Existing table stdout and file-output contracts remain compatible.",
+        "Help advertises the JSON option and version remains available without reading input."
+      ]
+    }
+  ]
+}

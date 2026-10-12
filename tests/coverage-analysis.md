@@ -1,6 +1,6 @@
 # Evaluation coverage gaps
 
-Inventory checked on 2026-10-12. This describes checked-in evaluation coverage, not overall skill effectiveness.
+Inventory checked on 2026-10-12, before qualifying the first CLI case. This describes checked-in evaluation coverage, not overall skill effectiveness.
 
 | Priority | Skill or concern | Missing coverage |
 | --- | --- | --- |
@@ -28,3 +28,5 @@ New cases require passing visible starter tests and a protected grader verified 
 - [Codeps examples and limitations](../skills/codeps/README.md)
 - [Architecture examples and limitations](../skills/pragmatic-architecture/README.md)
 - [Evaluation workflow](README.md)
+
+The first qualified CLI development case is now [inventory JSON export](../skills/cli-design/benchmark-results/json-export.md). Its 7/9 result leaves overwrite and error-context failures; the broader gaps above remain.
