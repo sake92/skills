@@ -1,6 +1,6 @@
 # Skill evaluations
 
-The [CLI design fixture](cli-design/README.md) evaluates JSON export, file-output streams, failures, overwrite behavior, and legacy table compatibility. Its reproducer-first development smoke improves two checks while retaining two known failures.
+The [CLI design fixture](cli-design/README.md) evaluates JSON export, file-output streams, failures, overwrite behavior, and legacy table compatibility. Its selected concrete-reproducer development smoke improves three checks while retaining a malformed-input diagnostic failure.
 
 The [Codeps fixtures](codeps/README.md) evaluate a layered dependency knot and a
 review of stale findings and runtime-loaded plugins. Both configurations have

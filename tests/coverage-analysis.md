@@ -29,4 +29,4 @@ New cases require passing visible starter tests and a protected grader verified 
 - [Architecture examples and limitations](../skills/pragmatic-architecture/README.md)
 - [Evaluation workflow](README.md)
 
-The first qualified CLI development case is now [inventory JSON export](../skills/cli-design/benchmark-results/json-export.md). Its 7/9 result leaves overwrite and error-context failures; the broader gaps above remain.
+The first qualified CLI development case is now [inventory JSON export](../skills/cli-design/benchmark-results/json-export.md). Its best observed 8/9 result leaves an error-context failure; the broader gaps above remain.

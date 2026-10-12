@@ -9,9 +9,27 @@ Preserve existing invocations and documented contracts. New machine-output modes
 
 ## Reproduce before implementing
 
-1. Map the affected invocations and their intended contracts: successful output, usage errors, input/output failures, and interactive/non-interactive behavior. Shared failure and prompt paths reused by a new feature belong to its regression scope.
-2. Write regression tests **before changing production code**. Test the intended contract, not a snapshot of current mistakes. Capture stdout/stderr separately and assert exit codes and file effects. Include separate reproducers for malformed input and unattended confirmation wherever those paths exist, even if their implementation is inherited. Cover direct/file machine output and piped/closed stdin; explain any inapplicable scenario. Use bounded real-process tests when in-process calls cannot reproduce terminal behavior.
-3. Run the reproducers and confirm they fail for the intended reason; isolate each failure so one missing feature does not mask another defect. Then implement the fix and rerun them alongside existing tests.
+Before production edits, add boundary reproducers using existing invocations so missing new flags cannot mask inherited defects. For commands with file input or destructive confirmation, adapt these acceptance tests to the interface:
+
+```text
+bad = run(input_file = malformed_file)
+assert bad.exit != 0
+assert malformed_file.path in bad.stderr
+assert bad.stdout is empty
+
+before = contents(existing_destination)
+blocked = run(output = existing_destination,
+              stdin = affirmative_reply, interactive = false)
+assert blocked.exit != 0
+assert contents(existing_destination) == before
+assert blocked.stdout is empty
+assert explicit_override_option in blocked.stderr
+assert no_confirmation_prompt(blocked)
+```
+
+Run them red, fix those boundary defects, and run them green with the old suite. Codec errors need source context at the reading/decoding boundary; piped approval is not interactive authorization. Preserve documented successful invocations, not those defects.
+
+Then add failing feature tests covering direct/file machine output, empty input, invalid options, missing files, output failures, and closed stdin. Implement the feature and rerun the suite. Use bounded real-process tests when terminal behavior requires them; explain inapplicable cases.
 
 ## Implement
 
@@ -26,6 +44,6 @@ Preserve existing invocations and documented contracts. New machine-output modes
 
 ## Verify
 
-Confirm each reproducer now passes, help and invalid options behave correctly, and existing contracts remain compatible. Report the reproduced failure and red-to-green evidence. Do not weaken an assertion to accept the defective behavior.
+Report the inherited-boundary reproducers and red-to-green evidence before claiming completion. Check help and legacy compatibility. Do not weaken assertions to accept defective behavior; identify any verification gap.
 
 Read [interface details](references/cli.md) only for relevant conventions beyond these rules. Read [configuration](references/config.md) only when changing configuration sources, locations, or precedence. Use process-hygiene for lifecycle and twelve-factor-app for deployment architecture.

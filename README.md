@@ -33,7 +33,7 @@ execution, excluding grading; tokens count input and output, excluding cached in
 | [Process hygiene](skills/process-hygiene/README.md) | 23/29 (79.3%) | 28/29 (96.6%) | +17.2 pp |
 | [Twelve-Factor app](skills/twelve-factor-app/README.md) | 7/8 (87.5%) | 8/8 (100%) | +12.5 pp |
 | [Codeps](skills/codeps/README.md) | 8/13 (61.5%) | 13/13 (100%) | +38.5 pp |
-| [CLI design](skills/cli-design/README.md) | 5/9 (55.6%) | 7/9 (77.8%) | +22.2 pp |
+| [CLI design](skills/cli-design/README.md) | 5/9 (55.6%) | 8/9 (88.9%) | +33.3 pp |
 
 Scores pool passed checks across the published examples; **pp** means percentage
 points. These are selected single-run examples, some developed adaptively, not
