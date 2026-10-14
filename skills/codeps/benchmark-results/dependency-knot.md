@@ -1,55 +1,47 @@
 # Layered dependency knot
 
+Codeps 0.6.0 rerun, 2026-10-14. Pi 1.0.4, GPT-6 Luna at low reasoning,
+one completed matched pair, five-minute candidate limit, identical tools and
+permissions, protected Scala/MUnit grading, no LLM judge.
+
 | Configuration | Protected checks | Candidate time | Candidate tokens |
 | --- | ---: | ---: | ---: |
-| With skill | 7/7 | 202.7 s | 60,040 |
-| Without skill | 5/7 | 155.5 s | 33,747 |
+| With skill | 7/7 | 201.8 s | 53,870 |
+| Without skill | 6/7 | 226.1 s | 57,209 |
 
-Score gain: **+28.6 percentage points** (71.4% → 100%).
+Score gain: **+14.3 percentage points** (85.7% → 100%). Candidate tokens fell
+3,339 (5.8%) in this completed pair.
 
 ## Task and fixture
 
 The [customer directory](../../../tests/codeps/dependency-knot/starter/) has 12
 production files across API, services, repositories, DAO, jobs and application
 wiring. Its two visible tests pass before the task. HTTP types and policy create
-a four-package knot, while the file graph is acyclic. The task asks for a focused
+a four-package knot, while the file graph is acyclic. The task requests a focused
 boundary correction with preserved controller/job behavior and dependency
-verification, without naming the desired implementation.
+verification, without naming the implementation.
 
-## What differed
+## Observed results
 
-Both candidates introduced a domain customer model and preserved the tested
-directory, export and job behavior. Baseline still imports the HTTP input:
+Both candidates introduced a domain customer contract, eliminated the package
+cycle, preserved checked behavior, and saved a final report agreeing with an
+independent clean build. The baseline removed its health history during cleanup:
 
-```scala
-import app.api.CustomerInput
-import app.domain.Customer
-import app.repositories.CustomerRepository
-
-final class CustomerService(repository: CustomerRepository):
-  def create(input: CustomerInput): Either[String, Customer] =
+```shell
+rm -f .codeps/app.ndjson
 ```
 
-That leaves an API/service package cycle. With-skill moves the service command
-into the domain:
+That discarded the required before/after evidence. With skill retained the
+history and used bounded package/file findings followed by cycle inspection:
 
-```scala
-import app.domain.{Customer, NewCustomer}
-import app.repositories.CustomerRepository
-
-final class CustomerService(repository: CustomerRepository):
-  def create(input: NewCustomer): Either[String, Customer] =
+```shell
+codeps findings --project app --limit 10 --format json
+codeps findings --project app --scope files --limit 10 --format json
+codeps inspect-cycle --project app --id scc:app.api --format json
 ```
 
-The API keeps its original input model and maps it at the controller boundary:
-
-```scala
-def create(input: CustomerInput): HttpResult =
-  service.create(NewCustomer(input.id, input.name, input.region)) match
-```
-
-It also labels uncommitted post-change reports as `worktree:boundary` and
-`worktree:boundary-final`. Baseline records both reports under unchanged `HEAD`.
+Its final evidence reports no package or file cycles. API package fan-in fell
+from 5 to 1; the domain contract has fan-in 6.
 
 ## Grading
 
@@ -59,22 +51,23 @@ It also labels uncommitted post-change reports as `worktree:boundary` and
 | Creation validation, duplicate rejection, output and later lookup | Pass | Pass |
 | Ordered CRM partial results and shared directory state | Pass | Pass |
 | CSV and reconciliation contracts | Pass | Pass |
-| Independently rebuilt package/file graphs are acyclic | Pass | Fail |
+| Independently rebuilt package/file graphs are acyclic | Pass | Pass |
 | Submitted final report matches the protected fresh graph | Pass | Pass |
 | Before/after scope and analyzed-state labeling | Pass | Fail |
 
-The last two failures are related to the remaining cycle and verification
-workflow, rather than two independent behavior defects. Baseline's final report
-accurately shows the remaining cycle; the agent nevertheless declares the
-refactoring complete. Direct source compatibility of every job constructor is
-outside the protected consumer checks.
+## Limits
 
-## Limits and cost
+The plain-model baseline was run and inspected before the with-skill smoke.
+Starter trees, prompts, graders, and skill were verified unchanged. An initial
+baseline and initial with-skill attempt timed out at 300 seconds, each with a
+roughly 184-second gap between assistant responses; a sandboxed retry failed
+on Pi credential/settings locks. These invalid attempts remain in ignored local
+notes and are excluded. Completed runs used matching permissions.
 
-The final with-skill smoke was paired with the previously qualified baseline after
-verifying identical starter trees and task metadata. The skill was tuned on the
-frozen case; this is adaptive development evidence, not a held-out estimate.
-It used 26,293 more candidate tokens and took 47.2 s longer in this pair.
-No stable quality or efficiency rate follows from one run.
+The skill was previously tuned on this fixture. One completed pair after
+invalid attempts is selected development evidence, not held-out confirmation or
+a stable quality, token-efficiency, or latency estimate. Candidate tokens count
+input and output, excluding cached input; candidate time excludes grading.
+The earlier published example scored 7/7 with skill versus 5/7 without.
 
 See the [workflow and grader validation](../../../tests/codeps/README.md).
