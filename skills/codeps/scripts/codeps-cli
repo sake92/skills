@@ -1,64 +1,36 @@
 #!/usr/bin/env bash
-# codeps CLI bootstrap + runner for the Codeps skill.
-#
-# Usage:
-#   bash /path/to/scripts/codeps-cli <codeps-args...>
-#
-# Subcommands (see https://sake92.github.io/codeps/reference/cli.html):
-#   status [--config path] [--project id]... [--commit sha] [--generated-at instant] [--out index.html]
-#   inspect-cycle --id <cycle-id> [--project id] [--scope packages|files] [--format table|json]
-#   inspect-node --id <node-id> [--project id] [--scope packages|files] [--format table|json]
-#
-# - Downloads the pinned codeps release jar on first use, cached at ~/.cache/codeps/.
-# - Set CODEPS_JAR=/path/to/jar to use a specific (e.g. locally built) jar instead.
-# - Set CODEPS_CACHE_DIR to change the cache location.
+# Run the Codeps 0.6.0 CLI, downloading its pinned JAR on first use.
+# Usage: bash /path/to/scripts/codeps-cli <codeps-args...>
+# CODEPS_JAR overrides the JAR path but must still report version 0.6.0.
+# CODEPS_CACHE_DIR overrides the default ~/.cache/codeps directory.
 set -euo pipefail
 
+VERSION="0.6.0"
 CACHE_DIR="${CODEPS_CACHE_DIR:-$HOME/.cache/codeps}"
-# Pinned release — bump when a new codeps release lands (https://github.com/sake92/codeps/releases)
-# v0.4.0 = repository-configured status, combined package/file metrics, history, and HTML dashboard.
-RELEASE_URL="https://github.com/sake92/codeps/releases/download/v0.4.0/codeps-cli-0.4.0.jar"
+RELEASE_URL="https://github.com/sake92/codeps/releases/download/v${VERSION}/codeps-cli-${VERSION}.jar"
+JAR="${CODEPS_JAR:-$CACHE_DIR/codeps-cli-${VERSION}.jar}"
 
-if [[ -n "${CODEPS_JAR:-}" ]]; then
-  if [[ ! -f "$CODEPS_JAR" ]]; then
+if [[ ! -f "$JAR" ]]; then
+  if [[ -n "${CODEPS_JAR:-}" ]]; then
     echo "error: CODEPS_JAR is set but file does not exist: $CODEPS_JAR" >&2
     exit 1
   fi
-  JAR="$CODEPS_JAR"
-else
-  JAR="$CACHE_DIR/codeps.jar"
-fi
-
-download_pinned() {
-  if ! curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"; then
-    echo "error: failed to download the pinned codeps release ($RELEASE_URL)" >&2
-    echo "  if the release is not published yet, set CODEPS_JAR=/path/to/codeps.jar (e.g. a local build)" >&2
-    rm -f "$JAR"
-    exit 1
-  fi
-}
-
-if [[ ! -f "$JAR" ]]; then
   mkdir -p "$CACHE_DIR"
-  echo "Downloading codeps jar to $JAR ..." >&2
-  download_pinned
-fi
-
-# Sanity-check on every run. Reject and replace cached pre-v0.4 jars so the
-# skill cannot accidentally use the removed export/report workflow.
-if ! grep -qF -- "status" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
-  if [[ -n "${CODEPS_JAR:-}" ]]; then
-    echo "error: CODEPS_JAR does not support the Codeps v0.4 status workflow; use a v0.4.0+ build" >&2
-    exit 1
-  fi
-  echo "warning: cached jar is an outdated codeps, replacing it with the pinned v0.4.0 release ..." >&2
-  rm -f "$JAR"
-  download_pinned
-  if ! grep -qF -- "status" <<<"$(java -jar "$JAR" --help 2>&1 || true)"; then
-    echo "error: downloaded jar does not support the Codeps v0.4 status workflow; set CODEPS_JAR to a v0.4.0+ build" >&2
+  echo "Downloading Codeps $VERSION to $JAR ..." >&2
+  if ! curl -L --fail --silent --show-error -o "$JAR" "$RELEASE_URL"; then
+    echo "error: failed to download Codeps $VERSION ($RELEASE_URL)" >&2
     rm -f "$JAR"
     exit 1
   fi
+fi
+
+if ! ACTUAL_VERSION="$(java -jar "$JAR" --version)"; then
+  echo "error: cannot read Codeps version from $JAR" >&2
+  exit 1
+fi
+if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
+  echo "error: this skill requires Codeps $VERSION; $JAR reports $ACTUAL_VERSION" >&2
+  exit 1
 fi
 
 exec java -jar "$JAR" "$@"

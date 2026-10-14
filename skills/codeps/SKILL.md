@@ -1,6 +1,6 @@
 ---
 name: codeps
-compatibility: 'Requires shell execution, Codeps v0.4 CLI, Git, and a supported dependency producer (SemanticDB, jdeps, or Codeps export JSON). Optional Code Maat analysis requires Bash and Java; downloading its JAR requires curl and network access.'
+compatibility: 'Requires shell execution, Codeps 0.6.0 CLI, Git, and a supported dependency producer (SemanticDB, jdeps, or Codeps export JSON). The bundled CLI runner requires Bash, Java, curl, and network access for its first download. Optional Code Maat analysis requires Bash and Java.'
 description: "Analyze a codebase's package or file dependency structure before refactoring or after adding new packages, modules, or cross-package dependencies: find cycles, change propagators, over-broad or mutable public APIs, dead-code candidates, and structural boundaries; use when planning module/package splits, reducing coupling or incremental-build churn, or comparing architecture health across commits; also use to verify that a feature branch introduced no cycle or coupling regression. Do not use for a mechanical local move, symbol lookup, or rename."
 ---
 
@@ -12,7 +12,7 @@ description: "Analyze a codebase's package or file dependency structure before r
 
 Codeps is language- and build-tool-agnostic. First identify the dependency producer the repository already supports; do not add one merely to run an analysis.
 
-- For Codeps v0.4, read [the Codeps workflow](references/codeps.md).
+- For Codeps 0.6.0, read [the Codeps workflow](references/codeps.md). Check `codeps --version`; use only 0.6.0, or the bundled pinned runner when the installed CLI differs.
 - For Scala or JVM builds that produce SemanticDB, also read [SemanticDB input](references/semanticdb.md).
 - For Java/JVM class dependencies, read [jdeps input](references/jdeps.md).
 - For every other language or build tool, read [generic export input](references/export-input.md) and use its native dependency data to emit the Codeps export format.
@@ -24,10 +24,10 @@ If no trustworthy producer exists, report that limitation. Do not infer a depend
 ## Analysis loop
 
 1. Build successfully and generate a fresh report before claiming current graph facts, including in a review that authorizes no production edits. Running the existing build and analyzer establishes evidence; it does not authorize a refactoring. A cached report describes its input snapshot, not necessarily the checkout. Incremental builds can retain dependency artifacts for deleted or moved sources, so check that each relevant reported source path exists (except configured generated-source roots). Missing sources require fresh build inputs and reanalysis, not a recommendation to refactor or delete nonexistent code. If the build cannot complete, report current counts as unknown rather than copying cached counts.
-2. Start with package-level structure for architectural decisions. Use file-level detail to locate the responsible implementation or assess incremental-build impact.
+2. Start with bounded package findings: `codeps findings --project <id> --limit 10 --format json`. Check `total`, `omitted`, and `sourceFindingsOmitted`; a selection is exhaustive only when both omission counts are zero. Filter by kind or severity, then inspect selected subjects with `inspect-node` or `inspect-cycle`, preserving project and scope. Use `--scope files` to locate the responsible implementation or assess incremental-build impact. Parse only needed fields; use the published JSON schemas linked in the workflow reference when building a parser or validating output, rather than dumping full reports or schemas into context.
 3. Triage in order: cycles; high propagators; public surface and mutability; low structural use; then orphans. Read the named code and its consumers before choosing a design move.
 4. Make the smallest refactoring supported by the evidence. Prefer extraction, dependency inversion, API narrowing, or state encapsulation over broad moves. Preserve supported callers when moving public declarations: types, constructor/factory names, companion operations, and entry points are all part of source compatibility. A type alias alone may not preserve construction syntax. Exercise an unchanged caller rather than updating every test to the new location.
-5. Rebuild and regenerate the report after the change, then compare the affected metrics and findings with the prior comparable snapshot. For committed source, record its actual commit. For uncommitted source, pass an explicit temporary label such as `--commit worktree:refactor`; do not label changed inputs as unchanged `HEAD` or commit the user's changes merely to obtain a label. A refactoring is not graph-verified until this loop closes. A successful analyzer run after a failed or partial build is not fresh evidence.
+5. Rebuild and regenerate the report after the change, then compare the affected metrics and findings with the prior comparable snapshot. Codeps records the full HEAD hash for a clean checkout and adds `-dirty` for staged, unstaged, or untracked changes; ignored build artifacts do not mark it dirty. An explicit temporary label such as `--commit worktree:refactor` is optional. Do not override changed inputs with unchanged `HEAD` or commit the user's changes merely to obtain a label. A refactoring is not graph-verified until this loop closes. A successful analyzer run after a failed or partial build is not fresh evidence.
 
 ## Static × evolutionary decisions
 

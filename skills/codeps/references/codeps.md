@@ -1,4 +1,4 @@
-# Codeps v0.4 workflow
+# Codeps 0.6.0 workflow
 
 Codeps is a repository-configured dependency-health tracker. One `status` run parses the configured input, analyzes package and (when supplied) file graphs, updates compact history, saves the detailed JSON report, and renders a static HTML dashboard.
 
@@ -6,7 +6,10 @@ On macOS or Linux, install the CLI with Homebrew before running the workflow:
 
 ```bash
 brew install sake92/tap/codeps
+codeps --version
 ```
+
+Use only version `0.6.0`. If the installed CLI differs, run the bundled `scripts/codeps-cli` from the skill directory with the same arguments; it downloads and verifies the pinned 0.6.0 JAR. Do not fall back to older releases or the moving `main` build.
 
 ## Configure once
 
@@ -41,7 +44,7 @@ projects:
     source: semanticdb
     inputs: [target]
     skip-tests: true
-    exclude: [java.**, scala.**]
+    exclude: [java, scala]
 ```
 
 Inputs and analysis settings define the baseline. Preserve them while tracking a history; if they change materially, begin a new history deliberately.
@@ -58,10 +61,18 @@ Do not trust a report after compilation fails or is partial: the source data may
 
 ### Commit identity is not working-tree identity
 
-Without `--commit`, Codeps records `HEAD`; it does **not** detect uncommitted source or build-input changes. Therefore, never record a dirty-tree analysis as ordinary commit history: it would incorrectly associate the current working state with the previous commit.
+Without overrides, Codeps resolves snapshot metadata once before processing any projects:
+
+| Checkout | Snapshot ID | Snapshot timestamp |
+|---|---|---|
+| Clean Git checkout | Full HEAD hash | HEAD committer timestamp |
+| Staged, unstaged, or untracked changes | Full HEAD hash plus `-dirty` | Analysis time |
+| No resolvable HEAD | Epoch milliseconds | Analysis time |
+
+Ignored files do not mark the checkout dirty. This detects Git changes, not stale ignored build inputs; a successful fresh build is still required. Cached reports retain their analysis timestamps unless `--generated-at` overrides them.
 
 - For a tracked snapshot, commit first and then run `status`.
-- For an exploratory dirty-tree report, use an explicit non-commit label such as `--commit worktree:my-change`, treat the resulting history row as temporary, and do not commit it as a commit snapshot.
+- For an exploratory dirty-tree report, accept the automatic `-dirty` suffix or use an explicit label such as `--commit worktree:my-change`. Treat the resulting history row as temporary.
 - For deterministic CI/replay snapshots, pass the actual `--commit <sha>` and `--generated-at <ISO-8601 instant>` (or set `SOURCE_DATE_EPOCH` when comparing report JSON).
 
 For project `app`, Codeps writes:
@@ -76,15 +87,43 @@ Open or inspect the HTML report for the high-level history and package/file tren
 
 ## Triage and drill down
 
-Start from `packages` in `.codeps/out/app/report.json`; use `files` to identify the implementation responsible for a package-level issue. `files` is absent for sources without file data, such as jdeps.
+Start with bounded package findings; use file findings to identify the responsible implementation. Sources without file data, such as jdeps, serialize `files` as `null` in the report.
+
+```bash
+codeps findings --project app --limit 10 --format json
+codeps findings --project app --kind cycle --limit 10 --format json
+codeps findings --project app --scope files --severity high --limit 5 --format json
+```
+
+These commands read cached evidence without analyzing inputs or rewriting report/history. Kind and severity are exact filters, applied before the limit. Kinds are `cycle`, `propagator`, `mutableSurface`, and `structuralUse`; severities are `critical`, `high`, `medium`, and `low`. Limits range from 1 to 10,000; no matches returns an empty array successfully.
+
+Parse the envelope's `project`, `scope`, `generatedAt`, `total`, `omitted`, `sourceFindingsOmitted`, and `findings`. `total = findings.length + omitted`; `sourceFindingsOmitted` counts findings discarded before caching and cannot be recovered with a larger selection limit. Claim an exhaustive selection only when both omission counts are zero. Keep output small with filters and selected inspections. Read specific fields from the full report only when the task needs evidence outside findings, such as summary counts or orphans.
 
 Use cached detail views after `status`:
 
 ```bash
 codeps inspect-cycle --project app --id scc:com.example.orders
-codeps inspect-node --project app --id com.example.orders
-codeps inspect-node --project app --scope files --id src/com/example/orders/Orders.scala
+codeps inspect-node --project app --id com.example.orders --format json
+codeps inspect-node --project app --scope files --id src/com/example/orders/Orders.scala --format json
 ```
+
+A finding's `nextAction` is a hint, not a complete command. Add the CLI, selected project and scope, custom config if any, and shell quoting for the subject ID.
+
+### Published JSON contracts
+
+Use these schemas to generate a parser or validate saved JSON locally. Resolve their shared `definitions.schema.json` reference; fetch only the contracts needed for the task and keep full schemas out of the conversation context. Report and findings envelopes carry `schemaVersion`; inspection objects do not.
+
+| Output | Schema |
+|---|---|
+| Bounded findings | [findings.schema.json](https://sake92.github.io/codeps/schemas/findings.schema.json) |
+| Full cached report | [report.schema.json](https://sake92.github.io/codeps/schemas/report.schema.json) |
+| Node inspection | [inspect-node.schema.json](https://sake92.github.io/codeps/schemas/inspect-node.schema.json) |
+| Cycle inspection | [inspect-cycle.schema.json](https://sake92.github.io/codeps/schemas/inspect-cycle.schema.json) |
+| Each history NDJSON row | [history.schema.json](https://sake92.github.io/codeps/schemas/history.schema.json) |
+| Producer export input | [export.schema.json](https://sake92.github.io/codeps/schemas/export.schema.json) |
+| Shared definitions | [definitions.schema.json](https://sake92.github.io/codeps/schemas/definitions.schema.json) |
+
+The published URLs track the documentation deployment. Save the schemas used for a reproducible validation and check their compatibility with the pinned CLI when the documentation changes.
 
 Triage in this order:
 
@@ -98,7 +137,7 @@ The health score and combined dashboard score are directional summaries. Compare
 
 ## Verify and track change
 
-After the refactoring, commit it, compile, run the same `status` command, and compare the relevant package and file snapshots. If a pre-commit check is necessary, use an explicitly labeled temporary snapshot rather than `HEAD`:
+After the refactoring, compile, run the same `status` command, and compare the relevant package and file snapshots. Use the automatic dirty-tree identity or an explicit temporary label for a pre-commit check; record an actual commit snapshot once the user has committed:
 
 - removed cycle → cycle count/nodes/internal edges decrease and package health normally recovers;
 - narrower or encapsulated API → `mutPorts`/`publicMutableSurface` and relevant exposed surface decrease;
