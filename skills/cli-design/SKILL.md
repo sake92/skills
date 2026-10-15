@@ -17,6 +17,8 @@ Research and choose before production edits; integrate that choice when implemen
 
 ## Reproduce before implementing
 
+Apply the pragmatic-testing method: reuse existing process fixtures, assert observable behavior, and verify regressions fail for the intended reason before fixing them. Keep the CLI contracts below as the acceptance criteria.
+
 Before production edits, add boundary reproducers using existing invocations so missing new flags cannot mask inherited defects. For commands with file input or destructive confirmation, adapt these acceptance tests to the interface:
 
 ```text

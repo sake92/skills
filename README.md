@@ -3,6 +3,7 @@
 Skills for hardcore engineering:
 
 - [`pragmatic-architecture/`](./skills/pragmatic-architecture) — practical design principles: small interfaces, locality, clear dependencies, validation, and behavioral testing, balanced against effort, migration risk, and existing project conventions.
+- [`pragmatic-testing/`](./skills/pragmatic-testing) — behavior-focused testing through realistic boundaries, reuse of test services and API clients, integration tests, and regression evidence.
 - [`codeps/`](./skills/codeps) — measure the dependency graph before refactoring with [Codeps](https://github.com/sake92/codeps): generate package/file health status from SemanticDB, jdeps, or a generic export; diagnose cycles, change propagators, public surface, mutable state, structural use, and orphan candidates; compare health and findings through commits, then verify refactorings on a fresh build and report.
 - [`process-hygiene/`](./skills/process-hygiene) — startup/shutdown, signals, cancellation, and ownership of tasks, threads, executors, and subprocesses. Includes JVM and shell references.
 - [`cli-design/`](./skills/cli-design) — terminal interfaces, flags, help, output contracts, exit codes, interactivity, and CLI configuration conventions.
@@ -33,6 +34,7 @@ execution, excluding grading; tokens count input and output, excluding cached in
 | [Process hygiene](skills/process-hygiene/README.md) | 23/29 (79.3%) | 28/29 (96.6%) | +17.2 pp |
 | [Twelve-Factor app](skills/twelve-factor-app/README.md) | 7/8 (87.5%) | 8/8 (100%) | +12.5 pp |
 | [Codeps](skills/codeps/README.md) | 8/13 (61.5%) | 13/13 (100%) | +38.5 pp |
+| [Pragmatic testing](skills/pragmatic-testing/README.md) | 5/8 (62.5%) | 7/8 (87.5%) | +25.0 pp |
 | [CLI design](skills/cli-design/README.md) | 5/9 (55.6%) | 9/9 (100%) | +44.4 pp |
 
 Scores pool passed checks across the published examples; **pp** means percentage

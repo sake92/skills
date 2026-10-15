@@ -1,5 +1,7 @@
 # Skill evaluations
 
+The [pragmatic-testing fixture](pragmatic-testing/README.md) starts with an empty test directory around a Sharaf/SQLite application. It evaluates initial test choices, detection of independent defects, and stability across harmless JSON formatting changes. The selected pair scores 5/8 without skill and 7/8 with skill; both agents chose HTTP tests with real SQLite.
+
 The [CLI design fixture](cli-design/README.md) evaluates JSON export, file-output streams, failures, overwrite behavior, and legacy table compatibility. Its selected concrete-reproducer development smoke improves three checks while retaining a malformed-input diagnostic failure.
 
 The [Codeps fixtures](codeps/README.md) evaluate a layered dependency knot and a
