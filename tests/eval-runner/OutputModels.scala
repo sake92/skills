@@ -11,6 +11,7 @@ case class OutputConfig(
     configuration: Option[String] = None,
     runs: Int = 1,
     timeoutMinutes: Int = 30,
+    gradingTimeoutMinutes: Option[Int] = None,
     runJudge: Boolean = true,
     parallelism: Int = 4
 )

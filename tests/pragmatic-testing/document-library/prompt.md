@@ -1,0 +1,1 @@
+Add automated tests for this application so we can change it confidently. Set up whatever testing support is needed, run the tests, and briefly explain your choices. Leave application source and existing runtime dependencies unchanged.

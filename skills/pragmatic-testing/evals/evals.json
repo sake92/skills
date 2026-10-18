@@ -1,0 +1,44 @@
+{
+  "skill_name": "pragmatic-testing",
+  "evals": [
+    {
+      "id": 2,
+      "name": "directory-api",
+      "prompt": "Add automated tests for this application so we can change it confidently. Set up whatever testing support is needed, run the tests, and briefly explain your choices. Leave application source and existing runtime dependencies unchanged.",
+      "expected_output": "A runnable initial test suite protecting observable application behavior, with meaningful boundaries, isolated state, and assertions stable across compatible implementation changes.",
+      "files": [
+        "tests/pragmatic-testing/directory-api/starter"
+      ],
+      "expectations": [
+        "Production behavior and dependencies are preserved and the submitted tests pass.",
+        "The tests detect an HTTP update wired to the wrong request fields.",
+        "The tests detect internal fields exposed by the user lookup response.",
+        "The tests detect invalid updates changing stored data.",
+        "The tests detect stale revisions being accepted.",
+        "The tests detect failed updates leaving an email-history event.",
+        "The tests detect successful updates not reaching persistent storage.",
+        "The tests pass with harmless JSON property reordering."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "document-library",
+      "prompt": "Add automated tests for this application so we can change it confidently. Set up whatever testing support is needed, run the tests, and briefly explain your choices. Leave application source and existing runtime dependencies unchanged.",
+      "expected_output": "A runnable initial suite exercising the application with controlled S3 behavior and meaningful independent assertions.",
+      "files": [
+        "tests/pragmatic-testing/document-library/starter"
+      ],
+      "expectations": [
+        "Production behavior and dependencies are preserved and the submitted tests pass.",
+        "The tests detect storing objects at an incorrect S3 key even when download shares the error.",
+        "The tests detect HTTP replacement binding request fields incorrectly.",
+        "The tests detect binary content being corrupted during upload.",
+        "The tests detect losing the uploaded S3 content type.",
+        "The tests detect failed S3 uploads publishing metadata.",
+        "The tests detect missing backing objects returning a service failure instead of 404.",
+        "The tests detect invalid uploads creating documents.",
+        "The tests pass with harmless JSON property reordering."
+      ]
+    }
+  ]
+}

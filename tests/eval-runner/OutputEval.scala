@@ -22,6 +22,7 @@ def runOutputEval(config: OutputConfig): Unit = {
 private def outputEnvironment(config: OutputConfig): OutputEnvironment = {
   require(config.runs > 0, "runs must be positive")
   require(config.timeoutMinutes > 0, "timeout-minutes must be positive")
+  require(config.gradingTimeoutMinutes.forall(_ > 0), "grading-timeout-minutes must be positive")
   require(config.parallelism > 0, "parallelism must be positive")
 
   val root = os.pwd

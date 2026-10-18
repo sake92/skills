@@ -10,26 +10,36 @@ def gradeOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(c
   val deterministicTexts = context.eval.expectations.filterNot(qualitative.toSet)
   val deterministicPath = context.runDir / "deterministic-grading.json"
   val graderRoot = context.runDir / "protected-grading"
-  val excluded = Set(".git", ".scala-build", ".bsp")
-  copyTree(environment.evalRoot / "grading", graderRoot / "common", excluded)
-  copyTree(environment.evalRoot / context.eval.name / "grading", graderRoot / "case", excluded)
+  val gradingSources = snapshotGradingSources(
+    environment.root,
+    List(environment.evalRoot / "grading", environment.evalRoot / context.eval.name / "grading"),
+    graderRoot
+  )
   val deterministic = runProcess(
     s"${context.eval.name} ${context.configuration} deterministic grade ${context.runNumber}",
     Seq(
       "scala-cli",
-      "test",
-      (graderRoot / "common").toString,
-      (graderRoot / "case").toString,
-      context.work.toString,
-      "--server=false"
-    ),
+      "test"
+    ) ++ gradingSources.map(_.toString) ++
+      // Replay graders compile submissions in child processes; keep candidate dependencies out of their classpath.
+      Option
+        .unless(os.isFile(environment.evalRoot / context.eval.name / "grading/replays-submission"))(
+          context.work.toString
+        )
+        .toSeq ++ Seq("--server=false"),
     environment.root,
     context.runDir / "grading.log",
     env = Map(
       "SUBMISSION_DIR" -> context.work.toString,
       "GRADING_JSON" -> deterministicPath.toString
     ),
-    timeoutMs = environment.timeoutMs
+    timeoutMs = config.gradingTimeoutMinutes.fold(environment.timeoutMs)(_.toLong * 60_000)
+  )
+  require(
+    !os.isFile(environment.evalRoot / context.eval.name / "grading/replays-submission") ||
+      os.isFile(deterministicPath),
+    s"${context.eval.name} replay grading did not produce a report (exit ${deterministic.exit_code}); " +
+      "evaluation incomplete, no coverage score can be reported. See grading.log."
   )
   val deterministicReport =
     if os.isFile(deterministicPath) then os.read(deterministicPath).parseJson[GradingReport]

@@ -34,6 +34,7 @@ object EvalCli {
       @arg(doc = "Runs per eval and configuration") runs: Int = 1,
       @arg(doc = "Maximum concurrent Pi subprocesses") parallelism: Int = 4,
       @arg(doc = "Timeout for each subprocess") timeoutMinutes: Int = 30,
+      @arg(doc = "Deterministic grader timeout; defaults to timeout-minutes") gradingTimeoutMinutes: Option[Int],
       @arg(doc = "Run candidates and deterministic grading only") skipJudge: Flag
   ): Unit =
     runOutputEval(
@@ -48,6 +49,7 @@ object EvalCli {
         configuration = configuration,
         runs = runs,
         timeoutMinutes = timeoutMinutes,
+        gradingTimeoutMinutes = gradingTimeoutMinutes,
         runJudge = !skipJudge.value,
         parallelism = parallelism
       )

@@ -39,10 +39,15 @@ def parseJudgeReport(text: String): JudgeReport =
   text.substring(start, end + 1).parseJson[JudgeReport]
 
 def terminalAssistantError(events: List[PiEvent]): Option[String] =
-  events.filter(_.`type` == "message_end").flatMap(_.message)
-    .filter(_.role == "assistant").lastOption
-    .filter(_.stopReason.contains("error"))
-    .map(_.errorMessage.getOrElse("Assistant stopped with an unspecified provider error"))
+  events
+    .filter(_.`type` == "message_end")
+    .flatMap(_.message)
+    .filter(_.role == "assistant")
+    .lastOption match
+    case None                                                                => Some("no completed assistant response")
+    case Some(message) if message.stopReason.exists(Set("error", "aborted")) =>
+      Some(message.errorMessage.getOrElse(s"assistant ${message.stopReason.get}"))
+    case _ => None
 
 def metrics(
     work: os.Path,
@@ -79,9 +84,7 @@ private def skillWasRead(events: List[PiEvent], name: String): Boolean =
   val starts = events.filter(_.`type` == "tool_execution_start")
   val identifiedStarts = starts.flatMap(event => event.toolCallId.map(id => id -> event))
   val byId = identifiedStarts.toMap
-  val successful = events.filter(event =>
-    event.`type` == "tool_execution_end" && event.isError.contains(false)
-  )
+  val successful = events.filter(event => event.`type` == "tool_execution_end" && event.isError.contains(false))
   successful.exists: completed =>
     val started = completed.toolCallId.flatMap(byId.get)
     val requested = started.exists: event =>

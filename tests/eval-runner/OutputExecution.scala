@@ -124,15 +124,16 @@ def runOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(con
   Candidate(context, process, used, measured)
 
 def validateOutputCandidates(candidates: List[Candidate]): Unit = {
-  val failed = candidates.filter: candidate =>
+  val failed = candidates.flatMap: candidate =>
     val transcript = candidate.context.runDir / "outputs/transcript.jsonl"
-    val providerError = terminalAssistantError(parseEvents(transcript))
-    providerError.foreach(error => System.err.println(s"Candidate provider error: $error"))
-    candidate.process.exit_code != 0 || providerError.nonEmpty
-  failed.foreach: candidate =>
+    val failure =
+      if candidate.process.exit_code != 0 then Some(s"process exit ${candidate.process.exit_code}")
+      else terminalAssistantError(parseEvents(transcript))
+    failure.map(reason => candidate -> reason)
+  failed.foreach: (candidate, reason) =>
     System.err.println(
       s"Candidate failed: ${candidate.context.eval.name} ${candidate.context.configuration} " +
-        s"#${candidate.context.runNumber}; see ${candidate.context.runDir / "outputs/pi.stderr.log"}"
+        s"#${candidate.context.runNumber}: $reason; see ${candidate.context.runDir / "outputs/transcript.jsonl"}"
     )
   require(failed.isEmpty, s"${failed.size} candidate runs failed; no benchmark was produced")
 
