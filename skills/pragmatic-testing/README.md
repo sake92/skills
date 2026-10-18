@@ -12,9 +12,9 @@ Agent instructions live in [SKILL.md](SKILL.md). CLI contracts remain in cli-des
 
 The original skill revision's [empty-tests Sharaf directory example](benchmark-results/directory-api.md) scored **5/8 without skill → 7/8 with skill**. Both agents chose HTTP tests with real SQLite; the gain was in assertions, while transaction rollback coverage remained missing.
 
-The [fixture and commands](../../tests/pragmatic-testing/README.md) start without test dependencies or scaffolding. This is one adaptively developed matched pair; fresh held-out confirmation remains outstanding. It does not establish reliable effectiveness or external-service/Testcontainers coverage.
+The generalized revision was rerun on 2026-10-18 after merging main and again scored **7/8** on the directory example. Failed-update rollback remains missing. The [fixtures and commands](../../tests/pragmatic-testing/README.md) start without test dependencies or scaffolding.
 
-The current revision's [empty-tests S3 document example](benchmark-results/document-library.md) scored **7/9 without skill → 9/9 with skill** in a selected adaptive comparison. The agent reused Floci/Testcontainers and the real SDK, caught all seven injected defects, and passed clean and JSON-formatting controls. It still omitted failed replacement coverage and did not follow every instruction; this is development evidence, not reliable effectiveness or exhaustive coverage.
+The generalized revision's fresh [empty-tests S3 document run](benchmark-results/document-library.md) scored **9/9**, against the qualified **7/9 baseline**. It reused Floci/Testcontainers and the real SDK through the optional references, caught all seven injected defects, and passed clean and JSON-formatting controls. It also tests failed replacement, though that behavior has no separate protected mutation. Both reruns use familiar development cases; fresh held-out confirmation remains outstanding. These results do not establish reliable effectiveness, exhaustive coverage, or perfect instruction following.
 
 ## Sources
 

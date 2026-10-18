@@ -34,7 +34,7 @@ execution, excluding grading; tokens count input and output, excluding cached in
 | [Process hygiene](skills/process-hygiene/README.md) | 23/29 (79.3%) | 28/29 (96.6%) | +17.2 pp |
 | [Twelve-Factor app](skills/twelve-factor-app/README.md) | 7/8 (87.5%) | 8/8 (100%) | +12.5 pp |
 | [Codeps](skills/codeps/README.md) | 9/13 (69.2%) | 12/13 (92.3%) | +23.1 pp |
-| [Pragmatic testing](skills/pragmatic-testing/README.md) | 5/8 (62.5%) | 7/8 (87.5%) | +25.0 pp |
+| [Pragmatic testing](skills/pragmatic-testing/README.md) | 12/17 (70.6%) | 16/17 (94.1%) | +23.5 pp |
 | [CLI design](skills/cli-design/README.md) | 5/9 (55.6%) | 9/9 (100%) | +44.4 pp |
 
 Scores pool passed checks across the published examples; **pp** means percentage

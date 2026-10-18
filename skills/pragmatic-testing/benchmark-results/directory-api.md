@@ -50,3 +50,9 @@ Pi/OpenAI gpt-6-luna, low reasoning, read/bash/edit/write tools, one candidate p
 The protected handwritten reference passed 8/8; the empty starter received 0/8. The grader's test-execution parser initially missed MUnit 1.1's success format; that initial grade is invalid. The parser was corrected, the reference revalidated, and the unchanged baseline regraded to 5/8 before with-skill execution. Both scores above use the same corrected grader.
 
 This is one adaptively developed example, not a reliable effectiveness estimate. Fresh held-out confirmation remains outstanding. SQLite is the actual application engine; this case does not establish Testcontainers, external fake-service discovery, or broader framework coverage. Fixtures and commands are in [tests/pragmatic-testing](../../../tests/pragmatic-testing/README.md). Raw candidate code, transcripts, grades, and skill snapshots remain ignored under tests/tmp/.
+
+## Generalized skill rerun, 2026-10-18
+
+After removing the service-specific instruction in revision `01dcbbf` and merging main in `8a003de`, a fresh with-skill run again scored **7/8**, against the qualified **5/8** baseline. It used the same low-reasoning model, tools, ten-minute candidate limit, prompt, starter, and protected assertions. The merged runner snapshots grader sources and their shared imports; deterministic grading had a twenty-minute cap and completed in 184.2 seconds.
+
+The new candidate chose one HTTP/SQLite journey with MUnit and ujson. It passed clean replay and the JSON positive control and caught the same five of six injected defects. Failed-update rollback remains missing. Generation took 205.9 seconds and 36,016 input/output tokens. This is another run on the familiar development case, not held-out confirmation. No candidate code was repaired by the maintainer.
