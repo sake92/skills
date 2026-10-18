@@ -1,22 +1,16 @@
 # Reproducible external-service setup
 
-## Scala/JVM S3
+## Dependency-specific setup
 
-Copy [FlociS3.test.scala](../assets/FlociS3.test.scala) into an empty directory and run:
+First identify the dependency boundary and the operations the contract needs. Search the repository for an existing fixture, client, generated client, container module, compose service, or test lifecycle helper. Reuse it when it provides the required behavior.
 
-```bash
-scala-cli test FlociS3.test.scala --server=false
-```
+If the project has no usable setup, research a maintained OSS emulator or Testcontainers module for the actual dependency. Check official documentation and upstream release/license/archival status, then run a minimal isolated smoke test for the exact operation needed (including important error behavior). Pin the versions that passed. Keep the smoke test separate from application scenarios; it proves setup, not application behavior.
 
-Prerequisites: Scala CLI, a working Docker daemon (`docker info`), and access to download pinned artifacts/images. No AWS account, credentials, manually started emulator, or reserved host port is needed. The module provides dummy credentials and the allocated endpoint. Testcontainers handles readiness and container cleanup; scoped resources close the SDK before the container, including when the test body fails.
-
-The example uses Floci image 2.3.0, its Testcontainers 2.x module 2.16.1, AWS SDK 2.42.29, MUnit 1.3.6, and Scala 3.9.0. [Upstream setup](https://floci.io/floci/testcontainers/java/) documents the module and SDK configuration. Keep existing application Scala/SDK versions when adapting; add only test dependencies and check compatibility. `.withDockerSocket(false)` avoids mounting the Docker socket into this S3-only service.
-
-Adapt `FlociS3Fixture.withS3` into your tests: construct the application with the supplied client and unique bucket, exercise its public API, and independently observe storage with the SDK. Close the application inside the callback, before the fixture closes the client. The included storage round trip proves setup only; it does not replace application behavior tests. For many scenarios, use the test framework's suite fixture to share container startup while retaining isolated data.
+Adapt the verified fixture into the application tests using the production client. Let the fixture own readiness, dynamically allocated endpoints, credentials, and cleanup. Close the application/client before the fixture. Share expensive startup only when scenario data remains isolated. Record emulator fidelity limits and any behavior that still needs a focused boundary double.
 
 ## Other services
 
-Use the [shortlist](preferred-tools.md), then check the maintained module's current example. Reuse the production client, generated clients, and existing framework fixtures. Confirm the operations you need; emulators do not prove full production-service compatibility.
+Use the [shortlist](preferred-tools.md) as leads, then check the maintained module's current example for the dependency you actually have. Reuse the production client, generated clients, and existing framework fixtures. Confirm the operations you need; emulators do not prove full production-service compatibility.
 
 A brief discovery pass can use Context7, official docs, or GitHub:
 

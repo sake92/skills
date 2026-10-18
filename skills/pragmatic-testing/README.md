@@ -4,9 +4,7 @@ Scope: selecting and implementing useful behavior tests for application features
 
 Reuse is part of the testing method: existing fixtures, fake services, emulators, container modules, maintained or generated API clients, and framework lifecycle support take precedence over custom test infrastructure when they fit the required behavior. Fidelity limits and protocol assertions remain explicit.
 
-The small [preferred-tools shortlist](references/preferred-tools.md) records maintained OSS services, pinned images/modules, licenses, a check date, and the scope of verification. Refresh it from upstream sources when choosing or adding a tool. [External-service setup](references/external-services.md) links a standalone [Scala/JVM S3 setup test](assets/FlociS3.test.scala) and explains adaptation. Run it from an empty directory to verify the pinned client/container setup before adding application scenarios.
-
-The standalone recipe was checked from two fresh temporary directories on 2026-10-16: the SDK round trip passed, and an intentional assertion failure still left no Floci container running. This verifies the setup and normal test-failure cleanup; it is not evidence of agent performance or application coverage.
+The small [preferred-tools shortlist](references/preferred-tools.md) records maintained OSS services, pinned images/modules, licenses, a check date, and the scope of verification. Refresh it from upstream sources when choosing or adding a tool. [External-service setup](references/external-services.md) explains how to research and verify a dependency-specific fixture before adding application scenarios.
 
 Agent instructions live in [SKILL.md](SKILL.md). CLI contracts remain in cli-design, lifecycle implementation in process-hygiene, and deployment configuration in twelve-factor-app.
 

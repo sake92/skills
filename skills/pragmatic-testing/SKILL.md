@@ -19,7 +19,7 @@ Inspect existing fixtures, clients, and framework support. Before adding infrast
 
 For containerized dependencies, default to an existing Testcontainers module. Let it own startup, readiness, allocated endpoints, and cleanup. Keep the production SDK and internal collaborators real. Custom protocol servers or SDK implementations usually recreate work a maintained emulator already handles; require a demonstrated gap before building one.
 
-For Scala/JVM S3, copy and run the [working Floci example](assets/FlociS3.test.scala), then adapt its fixture into the application tests. Read [setup notes](references/external-services.md) for the command and adaptation. For other stacks, use an equivalent maintained example or existing managed fixture.
+For an external dependency, start from the project's actual client and test setup. If no suitable setup exists, research a maintained emulator or Testcontainers module for that dependency, verify the smallest required operation in isolation, then adapt that fixture into the application tests. Use the relevant notes in [external-services](references/external-services.md); do not assume a particular service, image, framework, or language.
 
 ## 3. Implement the checklist
 
