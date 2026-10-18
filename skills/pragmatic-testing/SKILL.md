@@ -5,40 +5,36 @@ description: 'Choose and implement behavior-focused tests for features, bug fixe
 
 # Pragmatic testing
 
-Optimize for confidence in behavior and low maintenance cost. Prefer feature integration tests for applications. Choose tests by the failures they catch; avoid prescribed test ratios and coverage targets.
+Choose tests by failures caught and maintenance cost, without prescribed ratios or coverage targets.
 
-## Reuse first
+## 1. Plan behaviors before infrastructure
 
-Inspect existing tests and tooling before building anything. Reuse suitable fixtures, fake/mock services, emulators, Testcontainers modules, framework lifecycle support, and maintained or generated API clients—including clients for your own API. Check current documentation for unfamiliar APIs. Extend existing tools only for a demonstrated gap.
+Read the public contract. Before coding, write a compact table in task notes (a file if no task-list tool exists): **behavior | expected response and state | test name/status**. Include success, validation, missing resources, and documented dependency failures. Failed writes need preserved state and no partial effects; invalid input does not exercise dependency failure.
 
-Keep direct protocol assertions when a client would conceal the contract under test, such as headers or private JSON fields discarded during decoding. State relevant limitations of fakes and emulators.
+Prefer API-level tests for workflows with little standalone logic. Use focused unit/property tests for meaningful algorithms, calculations, branching, or state transitions; skip trivial getters/setters. Use the production database engine and migrations for database behavior, and the actual process for CLI/startup contracts.
 
-## Choose a realistic boundary
+## 2. Reuse a working setup
 
-Keep internal collaborators real by default. Use doubles at external boundaries for controlled failures, paid services, or destructive operations.
+Inspect existing fixtures, clients, and framework support. Before adding infrastructure, check the [preferred tools](references/preferred-tools.md) and briefly verify suitability, maintenance, license, and compatible versions through Context7, official docs, or GitHub. Prefer established OSS requiring no paid plan, vendor account, or license key.
 
-Prefer API-level behavior tests for workflows with little standalone logic. Add focused unit tests for meaningful algorithms, calculations, branching rules, or state transitions. Don't create a unit test for every class or method, or test trivial accessors just to increase coverage.
+For containerized dependencies, default to an existing Testcontainers module. Let it own startup, readiness, allocated endpoints, and cleanup. Keep the production SDK and internal collaborators real. Custom protocol servers or SDK implementations usually recreate work a maintained emulator already handles; require a demonstrated gap before building one.
 
-- **API feature:** exercise routing, validation, business code, serialization, and persistence through HTTP or a supported request harness.
-- **Database behavior:** use the production engine and migrations with Testcontainers or existing managed infrastructure; substitute engines cannot prove its SQL, constraints, or transactions.
-- **External API:** exercise the real client against an existing controlled service.
-- **CLI or packaging:** run the actual process and observe streams, exits, and files.
-- **Algorithms and intricate rules:** use focused examples and property-based tests with meaningful invariants and reproducible failures.
+For Scala/JVM S3, copy and run the [working Floci example](assets/FlociS3.test.scala), then adapt its fixture into the application tests. Read [setup notes](references/external-services.md) for the command and adaptation. For other stacks, use an equivalent maintained example or existing managed fixture.
 
-Keep scenarios independently runnable and focused on one coherent behavior. Add process/browser tests where startup or wiring risks require them.
+## 3. Implement the checklist
 
-## Prove behavior
+Before the first API test, build request/response helpers with the existing serializer and typed decoder (or JSON parser). Assert decoded values; regex extraction, substring checks, and raw JSON equality couple tests to formatting rather than behavior.
 
-Derive expectations from the intended contract or an independent model, rather than the implementation under test. Assert meaningful outputs, effects, relevant failure paths, and forbidden effects: no partial writes, duplicate operations, or private-data leaks. Avoid assertions about private helpers or internal call order. Review snapshots instead of accepting them automatically.
+Get one behavior green through the application and real collaborators, then complete the checklist. Keep scenarios independently runnable. Use focused boundary mocks for failures inaccessible through the maintained service.
 
-For bug fixes, reproduce through the failing boundary before production edits. Confirm failure for the intended reason, then fix and run the same test green without weakening assertions. Setup failures and missing symbols are not behavioral evidence. For refactors, establish passing behavior tests first. Report any unverified red step.
+For failure tests, establish valid starting state, trigger the intended fault, and observe the same system's resulting state. Verify the failing operation was reached; an earlier rejection tests a different path. Preserve the application and state while switching the dependency into failure mode.
 
-Use targeted mutation testing or reintroduce the defect when assertion strength is uncertain. Combine round-trip properties with independent examples; both directions can share a bug.
+Compare meaningful fields and independently persisted effects. Choose distinct, non-default values so swapped fields, hard-coded defaults, and shared round-trip bugs become visible. Keep protocol assertions where clients hide the contract. Ask which plausible bug each important assertion catches; if unclear, temporarily introduce that bug, verify a test-body failure, then revert it.
 
-## Keep tests reliable
+For bug fixes, demonstrate the intended failure before fixing it, then run the same test green. Setup/compilation errors are not regression evidence. Establish passing tests before refactoring.
 
-Reuse lifecycle support for readiness, bounded waits, and cleanup. Pin dependency versions; isolate data, temporary paths, and ports. Share expensive service startup without sharing scenario state. Control clocks/randomness where needed; preserve real concurrency when it is under test. Poll meaningful conditions with deadlines rather than sleeping or retrying whole tests.
+## 4. Verify the deliverable
 
-Run relevant existing and new tests after the final edit. Report behavior checked, real/doubled dependencies, red-to-green evidence where applicable, and gaps. Unavailable infrastructure means unverified tests, not permission to silently replace them with mocks.
+Deliver service lifecycle in the tests or a checked-in runner. Run the documented command from a fresh checkout without manually prestarted services. Use pinned dependencies, isolated data/ports, bounded waits, and owned cleanup; share expensive startup without sharing scenario state.
 
-Use cli-design for CLI contracts, process-hygiene for lifecycle implementation, and twelve-factor-app for deployment configuration.
+Reconcile the table with actual test names and assertions. A green suite does not cover a missing row: implement it or record a concrete blocker. Report the command/result, covered and blocked behaviors, real/doubled dependencies, and emulator limits. Unavailable infrastructure means unverified integration tests.

@@ -4,13 +4,19 @@ Scope: selecting and implementing useful behavior tests for application features
 
 Reuse is part of the testing method: existing fixtures, fake services, emulators, container modules, maintained or generated API clients, and framework lifecycle support take precedence over custom test infrastructure when they fit the required behavior. Fidelity limits and protocol assertions remain explicit.
 
+The small [preferred-tools shortlist](references/preferred-tools.md) records maintained OSS services, pinned images/modules, licenses, a check date, and the scope of verification. Refresh it from upstream sources when choosing or adding a tool. [External-service setup](references/external-services.md) links a standalone [Scala/JVM S3 setup test](assets/FlociS3.test.scala) and explains adaptation. Run it from an empty directory to verify the pinned client/container setup before adding application scenarios.
+
+The standalone recipe was checked from two fresh temporary directories on 2026-10-16: the SDK round trip passed, and an intentional assertion failure still left no Floci container running. This verifies the setup and normal test-failure cleanup; it is not evidence of agent performance or application coverage.
+
 Agent instructions live in [SKILL.md](SKILL.md). CLI contracts remain in cli-design, lifecycle implementation in process-hygiene, and deployment configuration in twelve-factor-app.
 
 ## Evaluation status
 
-The [empty-tests Sharaf directory example](benchmark-results/directory-api.md) scored **5/8 without skill → 7/8 with skill**. Both agents chose HTTP tests with real SQLite; the gain was in assertions, while transaction rollback coverage remained missing.
+The original skill revision's [empty-tests Sharaf directory example](benchmark-results/directory-api.md) scored **5/8 without skill → 7/8 with skill**. Both agents chose HTTP tests with real SQLite; the gain was in assertions, while transaction rollback coverage remained missing.
 
 The [fixture and commands](../../tests/pragmatic-testing/README.md) start without test dependencies or scaffolding. This is one adaptively developed matched pair; fresh held-out confirmation remains outstanding. It does not establish reliable effectiveness or external-service/Testcontainers coverage.
+
+The current revision's [empty-tests S3 document example](benchmark-results/document-library.md) scored **7/9 without skill → 9/9 with skill** in a selected adaptive comparison. The agent reused Floci/Testcontainers and the real SDK, caught all seven injected defects, and passed clean and JSON-formatting controls. It still omitted failed replacement coverage and did not follow every instruction; this is development evidence, not reliable effectiveness or exhaustive coverage.
 
 ## Sources
 

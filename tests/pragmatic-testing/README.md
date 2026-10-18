@@ -40,3 +40,31 @@ scala-cli test tests/pragmatic-testing/directory-api/starter \
 The reference passed 8/8 protected checks; the empty starter received 0/8. Control reports and evaluated agent artifacts stay under ignored `tests/tmp/`. Published [example results](../../skills/pragmatic-testing/benchmark-results/directory-api.md) contain only a summary and small excerpts.
 
 This case covers initial test selection, HTTP behavior and real SQLite semantics. It does not evaluate Postgres/Testcontainers, external-service-tool discovery, or process supervision. One adaptively developed matched pair is development evidence; fresh held-out confirmation remains outstanding.
+
+## S3 document-library case
+
+`document-library/starter` is a Sharaf application with AWS SDK v2 and an empty test directory. It supplies no test library, emulator setup, client wrapper, or example tests. Candidate workspaces receive only the starter. The protected grader and handwritten reference remain outside them.
+
+Run the baseline first with explicit settings:
+
+```bash
+scala tests/run-eval.scala --server=false -- output \
+  --skill-path skills/pragmatic-testing \
+  --fixture-path tests/pragmatic-testing \
+  --case document-library --configuration without-skill \
+  --model gpt-6-luna --reasoning high --runs 1 \
+  --timeout-minutes 10 --grading-timeout-minutes 20 --skip-judge
+```
+
+After a qualifying baseline below 100%, use the same command with `--configuration with-skill`. Docker must be available for emulator-based submissions. Keep candidate and grader budgets matched across configurations.
+
+The nine checks cover clean execution, seven independent defects (storage key, HTTP field binding, binary content, content type, failed-upload metadata, missing-object status, validation), and compatible JSON formatting. The `grading/replays-submission` marker isolates candidate test dependencies from the outer grader. The adapter supports MUnit and ScalaTest; mixed frameworks require separate validation. The reference scored 9/9 and the empty starter 0/9. Failed replacement is a known coverage limit, not included in the nine checks.
+
+Run the protected reference independently:
+
+```bash
+scala-cli test tests/pragmatic-testing/document-library/starter \
+  tests/pragmatic-testing/document-library/reference --server=false
+```
+
+The [selected result](../../skills/pragmatic-testing/benchmark-results/document-library.md) is 7/9 → 9/9 after adaptive skill development. Fresh held-out confirmation is outstanding. Raw candidates and development history stay ignored under `tests/tmp/`.

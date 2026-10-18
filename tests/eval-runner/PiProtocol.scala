@@ -18,7 +18,8 @@ case class PiMessage(
     role: String = "",
     content: List[PiContent] = Nil,
     usage: Option[PiUsage] = None,
-    stopReason: Option[String] = None
+    stopReason: Option[String] = None,
+    errorMessage: Option[String] = None
 ) derives JsonRW
 case class PiArgs(
     path: Option[String] = None,

@@ -120,6 +120,25 @@ receive only the starter; Pi receives the evaluated skill through its explicit
 `--skill` option for `with_skill`. Protected MUnit and Scalameta graders stay
 outside both candidate workspaces.
 
+A grader that compiles and replays submitted tests itself should include a
+`grading/replays-submission` marker in its case directory. The runner then compiles
+only protected grading sources in the outer process, isolating them from candidate
+test-framework dependencies. Other graders retain their existing shared compilation.
+
+Replay graders must emit their grading report. A missing report (including a
+grader timeout) aborts the evaluation instead of manufacturing a zero coverage
+score. `--timeout-minutes` sets the subprocess budget. For expensive deterministic
+replays, use `--grading-timeout-minutes 20` to raise only the grader budget while
+preserving the candidate budget (for example, `--timeout-minutes 10`). Omitting
+the override preserves existing behavior. Use the same budgets across compared
+configurations.
+
+Candidate runs must finish successfully. A terminal provider error, aborted response,
+or absent assistant response invalidates the run even when the process exits zero.
+Recovered errors followed by a completed response remain eligible for grading.
+Run the completion regression checks with
+`scala-cli test tests/run-eval.scala tests/eval-runner-tests --server=false`.
+
 The shared `grading/RepositoryStructure.scala` checker accepts case-specific
 required members. The original customer case requires the three lookups; the
 caller-compatibility case requires ID/email lookup and the existing snapshot.

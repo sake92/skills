@@ -19,6 +19,26 @@
         "The tests detect successful updates not reaching persistent storage.",
         "The tests pass with harmless JSON property reordering."
       ]
+    },
+    {
+      "id": 4,
+      "name": "document-library",
+      "prompt": "Add automated tests for this application so we can change it confidently. Set up whatever testing support is needed, run the tests, and briefly explain your choices. Leave application source and existing runtime dependencies unchanged.",
+      "expected_output": "A runnable initial suite exercising the application with controlled S3 behavior and meaningful independent assertions.",
+      "files": [
+        "tests/pragmatic-testing/document-library/starter"
+      ],
+      "expectations": [
+        "Production behavior and dependencies are preserved and the submitted tests pass.",
+        "The tests detect storing objects at an incorrect S3 key even when download shares the error.",
+        "The tests detect HTTP replacement binding request fields incorrectly.",
+        "The tests detect binary content being corrupted during upload.",
+        "The tests detect losing the uploaded S3 content type.",
+        "The tests detect failed S3 uploads publishing metadata.",
+        "The tests detect missing backing objects returning a service failure instead of 404.",
+        "The tests detect invalid uploads creating documents.",
+        "The tests pass with harmless JSON property reordering."
+      ]
     }
   ]
 }

@@ -15,17 +15,27 @@ def gradeOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(c
       "scala-cli",
       "test",
       (environment.evalRoot / "grading").toString,
-      (environment.evalRoot / context.eval.name / "grading").toString,
-      context.work.toString,
-      "--server=false"
-    ),
+      (environment.evalRoot / context.eval.name / "grading").toString
+    ) ++
+      // Replay graders compile submissions in child processes; keep candidate dependencies out of their classpath.
+      Option
+        .unless(os.isFile(environment.evalRoot / context.eval.name / "grading/replays-submission"))(
+          context.work.toString
+        )
+        .toSeq ++ Seq("--server=false"),
     environment.root,
     context.runDir / "grading.log",
     env = Map(
       "SUBMISSION_DIR" -> context.work.toString,
       "GRADING_JSON" -> deterministicPath.toString
     ),
-    timeoutMs = environment.timeoutMs
+    timeoutMs = config.gradingTimeoutMinutes.fold(environment.timeoutMs)(_.toLong * 60_000)
+  )
+  require(
+    !os.isFile(environment.evalRoot / context.eval.name / "grading/replays-submission") ||
+      os.isFile(deterministicPath),
+    s"${context.eval.name} replay grading did not produce a report (exit ${deterministic.exit_code}); " +
+      "evaluation incomplete, no coverage score can be reported. See grading.log."
   )
   val deterministicReport =
     if os.isFile(deterministicPath) then os.read(deterministicPath).parseJson[GradingReport]
