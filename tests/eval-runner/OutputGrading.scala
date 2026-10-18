@@ -9,13 +9,17 @@ def gradeOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(c
   val qualitative = judgeExpectations(rubric)
   val deterministicTexts = context.eval.expectations.filterNot(qualitative.toSet)
   val deterministicPath = context.runDir / "deterministic-grading.json"
+  val graderRoot = context.runDir / "protected-grading"
+  val excluded = Set(".git", ".scala-build", ".bsp")
+  copyTree(environment.evalRoot / "grading", graderRoot / "common", excluded)
+  copyTree(environment.evalRoot / context.eval.name / "grading", graderRoot / "case", excluded)
   val deterministic = runProcess(
     s"${context.eval.name} ${context.configuration} deterministic grade ${context.runNumber}",
     Seq(
       "scala-cli",
       "test",
-      (environment.evalRoot / "grading").toString,
-      (environment.evalRoot / context.eval.name / "grading").toString,
+      (graderRoot / "common").toString,
+      (graderRoot / "case").toString,
       context.work.toString,
       "--server=false"
     ),
@@ -37,7 +41,7 @@ def gradeOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(c
   )
 
   val judged =
-    if config.runJudge then qualitativeJudge(environment, config, context, rubric, qualitative)
+    if config.runJudge && qualitative.nonEmpty then qualitativeJudge(environment, config, context, rubric, qualitative)
     else Nil
   val allByText = (deterministicReport.expectations ++ judged).map(result => result.text -> result).toMap
   val included = if config.runJudge then context.eval.expectations else deterministicTexts

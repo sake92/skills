@@ -18,17 +18,21 @@ case class PiMessage(
     role: String = "",
     content: List[PiContent] = Nil,
     usage: Option[PiUsage] = None,
-    stopReason: Option[String] = None
+    stopReason: Option[String] = None,
+    errorMessage: Option[String] = None
 ) derives JsonRW
 case class PiArgs(
     path: Option[String] = None,
     command: Option[String] = None
 ) derives JsonRW
+case class PiToolResult(content: List[PiContent] = Nil) derives JsonRW
 case class PiEvent(
     `type`: String,
     usage: Option[PiUsage] = None,
     message: Option[PiMessage] = None,
     toolName: Option[String] = None,
     args: Option[PiArgs] = None,
-    isError: Option[Boolean] = None
+    isError: Option[Boolean] = None,
+    toolCallId: Option[String] = None,
+    result: Option[PiToolResult] = None
 ) derives JsonRW

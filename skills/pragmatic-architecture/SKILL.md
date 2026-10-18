@@ -5,79 +5,72 @@ description: Always load and use this skill when implementing or reviewing produ
 
 # Pragmatic Architecture
 
-Keep complexity local and interfaces small. Prefer modules that hide useful complexity over layers that mostly pass calls through.
+Complete the requested work with small interfaces, local complexity, and the least machinery that preserves its contracts. Keep architectural changes proportional to their concrete benefit, compatibility cost, migration risk, and maintenance effort.
 
-These are design preferences, not acceptance criteria. Apply them where they make the requested work simpler, safer, or easier to change.
+## Work in this order
 
-## Balance benefit against effort
+1. **Honor the user's stack.** When asked to use a framework, use its native APIs, utilities, test harnesses, clients, and startup helpers. Preserve the application's default handlers and middleware. An installed lower-level library is not a reason to bypass the requested framework. Adapt through its supported extension points first.
+2. **Inspect the affected boundary.** Read the surrounding implementation, the complete public surface of affected types, and their callers. Include framework entry points and external consumers. Before editing, identify the applicable contract protections below and the signatures or response fields they require changing. They are part of the requested operation, not optional cleanup.
+3. **Anchor behavior before implementation.** When the request supplies exact outputs, first capture those examples in regression tests with their expected values copied verbatim. Specific examples clarify general descriptions. Keep those expectations unchanged; do not replace them with the output your implementation happens to produce.
+4. **Implement locally.** Include the callers, tests, fixtures, or configuration required to finish the change. Preserve working behavior and leave unrelated debt alone. A small repair should not become a broad architectural migration.
+5. **Review the diff and run the relevant checks.** Verify both the requested behavior and the affected contracts. Inspect every added or replaced expression: split mixed processing stages into named local values and move every interpolated conditional into a local value, including nested branches and singular/plural wording. Passing behavior tests does not satisfy these expression requirements. Remove incidental cleanup and explain material compatibility or migration constraints.
 
-Understand the affected code and its conventions before proposing a different design. Weigh the concrete benefit against implementation effort, compatibility, migration risk, and ongoing maintenance.
+## Protect the affected contracts
 
-Before editing a bug fix, distinguish the observed failure from what allowed it. If semantically different arguments share a primitive type and have already been swapped, treat a local type distinction as part of the repair: changing the order and adding a runtime test leaves the same erroneous call legal. Read section 4 and implement the inexpensive protection on the touched operation, unless a concrete compatibility or migration constraint prevents it. A small fix can include this small design improvement; preserving existing conventions does not require preserving the demonstrated hazard.
+### Storage and public interfaces
 
-In legacy projects, work within the existing architecture unless it prevents a sound solution. A small fix should not become a 10,000-line refactor to satisfy a preference. Improve nearby design when it helps the task; leave unrelated debt alone. Broader changes make sense when they resolve demonstrated problems or the user requests them.
+When adding or changing a type's storage operations, make its mutable backing state private, including constructor fields. Search for callers of its public members. Narrow or remove unused generic collection/query accessors to that same mutable state; hiding a field while leaving another public path to it does not protect the state.
 
-When a tradeoff matters, briefly explain the benefit and cost. Keeping the current design is a valid outcome. Flexibility about architecture does not excuse correctness, security, or data-integrity problems.
+Preserve caller-required immutable views and operations. Known internal callers can establish that a prototype helper is unused; an external library API may need compatibility protection. An unrelated unused member alone is not a reason for cleanup. Internal convenience alone is not a reason to add a public API. Contained mutation is fine; prefer behavior preserving invariants over exposing mutable collections.
 
-## 1. Small interfaces and encapsulation
+### Types after a demonstrated mix-up
 
-Expose what callers need and keep implementation details local. Shared feature types can naturally span layers; narrowing visibility should not force needless copies or mappings. Account for framework entry points and external consumers before treating an API as unused.
+If a defect shows that different concepts sharing a primitive representation were interchanged, prevent the same mistaken call on the affected internal operations. Use inexpensive opaque types, newtypes, or nominal wrappers through **both service and repository parameters and related cache keys**. Do not keep raw overloads or convert back to primitives between these collaborators.
 
-Prefer behavior that preserves invariants over exposing mutable internals. Immutable values are a useful default; contained mutation is fine when it makes the implementation clearer or faster.
+Convert inside the adapters reading or writing primitive wire/storage values. Existing URLs and persisted records can retain their formats and primitive fields. Verify each affected service/repository API, including concrete implementations: correct typed calls compile; swapped and raw calls do not. Keep the migration local. A runtime test and argument reorder alone leave the demonstrated error legal. For unrelated primitives, weigh a real invariant against language friction before adding wrappers.
 
-When changing an existing type, inspect its public members as part of the change. Keep mutable backing state private, and remove or narrow broad helpers that have no demonstrated caller; internal convenience does not justify a public API. Preserve members required by known callers or compatibility constraints.
+Converting primitive arguments at the start of a service method leaves its callers able to repeat the mix-up. Change the service's parameter types too, and move those conversions out to its HTTP, job, or other boundary callers. Preserving wire formats does not require preserving an unsafe internal signature.
 
-Do not inspect only the requested TODOs or methods. For every type you edit,
-review the complete public surface and search the available repository for its
-callers. In an application repository where all callers are available, no
-caller is concrete evidence against keeping a public member. Narrow or remove
-unused mutable backing fields and generic collection accessors on the touched
-type when the requested operations replace them. This is a local part of the
-change, not a reason for a broader refactor. Do not preserve an unsafe escape
-hatch solely because it was present in the starter code.
+### Public responses from private records
 
-## 2. Clear dependency boundaries
+When changing a public response, inspect its consumer and source record. If the source includes credentials or private administrative/personal data, construct an explicit public projection using the existing codec, even when the request only mentions adding a field. Keep private persistence and export contracts intact.
 
-Prefer acyclic dependencies with an understandable direction. A cycle may suggest merging responsibilities or moving shared logic, but choose the least disruptive useful fix.
+Test the exact permitted serialized field set, or explicitly exclude every sensitive source field. Checking only one or two secrets can miss another leaking through the same boundary. Sharing a simple model is fine when the contracts agree; avoid copies and mappings without a meaningful benefit.
 
-A directory or package often provides enough organization. Add build modules or stronger enforcement when independent ownership, releases, dependency control, or build performance justify them. Use dependency analysis, such as Codeps when available, when structural uncertainty warrants it; ordinary edits do not require a new reporting workflow.
+## Keep rules and dependencies understandable
 
-## 3. Organize around features
+Centralize genuinely shared business invariants where operations enforce them. Similar-looking code in independent features need not share an abstraction; extract for shared meaning or simpler callers, without a fixed occurrence threshold.
 
-Keep code that changes together close together. Feature-first organization is a useful default for new code; follow an established layout when changing it would add more disruption than value. Introduce HTTP, business, and persistence layers only where their responsibilities warrant separation.
+Receive business collaborators through constructors or the project's established injection mechanism. Wire them at startup, assembly factories, or framework configuration. Controllers and jobs should receive a shared operation rather than each constructing a service from lower-level dependencies. Ordinary values and private implementation helpers can be constructed locally; no new interface or injection framework is required.
 
-Separate transport, domain, and database models when their contracts, invariants, or rate of change differ. When touching a response, inspect its consumer and the source record, not just the requested field. A public response sourced from a record containing credentials or private administrative data has a different contract: construct an explicit public projection with the existing codec so future stored fields remain private by default. Do this even when the feature request does not mention DTOs or leakage. Preserve private persistence/export consumers rather than stripping fields from their shared record. Sharing a simple model can be reasonable when those concerns align. Avoid mappings and annotation bans that buy no meaningful independence.
+Keep code that changes together close together. Feature-first organization is useful for new code; preserve an established layout when changing it adds more disruption than value. Separate transport, business, and persistence responsibilities when their contracts or invariants warrant it. A directory/package is often enough; add modules or stronger compiler/import enforcement only for demonstrated ownership, release, dependency, or build needs.
 
-## 4. Types that prevent real mistakes
+Prefer acyclic dependencies with a clear direction and the least disruptive useful repair. Use dependency analysis such as Codeps when structural uncertainty warrants it; ordinary edits do not require a reporting workflow. For contracts that must stay synchronized, choose a shared source, generation, or focused compatibility checks according to the actual failure risk.
 
-When a defect demonstrates that different concepts with the same primitive representation can be interchanged, fix the cause as well as the immediate value or argument order. Introduce distinct types on the affected internal operations when the language makes this inexpensive: opaque types, newtypes, or nominal wrappers can make the erroneous call fail to compile. Carry the distinction through related keys and collaborators; leaving a raw overload or converting back before the operation defeats the protection. Convert at external boundaries so wire formats and stored values remain compatible.
+## Choose the simplest adequate implementation
 
-Reuse suitable existing types, but their absence is not a reason to leave a demonstrated mix-up possible. Check that the correct call compiles and the swapped call does not. Keep the migration local; leave unrelated identifiers alone. For primitives without a demonstrated distinction or invariant, weigh safety against language friction and migration cost rather than wrapping everything.
+Within the requested stack, first reuse existing project code and conventions, then standard-library/platform features and installed dependencies. Add dependencies, abstractions, configuration, or extension points for a current requirement and concrete benefit. Replacing a working framework merely for a preference rarely pays off. Keeping the current design is a valid outcome.
 
-## 5. Use the simplest adequate tool
+Validate untrusted input at entry points and business invariants where operations occur. Reuse established guarantees instead of adding repeated defensive checks; authorization and changing state may need checking again. Preserve validation, error handling, security, accessibility, and data integrity. Represent meaningful absence explicitly and return errors the consumer can use.
 
-Prefer existing code, standard libraries, and familiar platform features when they meet the need. Add abstractions or dependencies for concrete benefits, accounting for what the project already uses. Replacing a working framework merely to match this preference rarely pays off.
+## Apply expression style only to necessary edits
 
-## 6. Locality over premature abstraction
+These expression preferences apply to new or necessarily changed bodies. **Do not refactor working expressions elsewhere, even in a touched method or file, to match them.** Local changes to visibility, signatures, or projections required by the contract protections above remain part of the task.
 
-Keep related behavior easy to find and change. Repeated edits across unrelated files can signal a misplaced responsibility or unnecessary indirection.
+- Split long pipelines mixing selection, transformation, ordering, and rendering into meaningful named stages. Pull nested pipelines out of argument lists. Short idioms such as `value.trim.toLowerCase` are fine.
+- Compute conditional values before string interpolation. Never put `if` expressions inside `${...}`.
+- Keep intermediate results local and name what they represent. Do not introduce helpers or layers solely to split an expression.
 
-Similar-looking code need not share an abstraction. Extract when it captures a shared rule or meaningfully simplifies callers, without a fixed occurrence threshold. Keep genuinely shared business rules consistent; avoid coupling independent features just to remove textual duplication.
+```scala
+val active = records.filter(_.active)
+val names = active.map(_.name)
+val orderedNames = names.sorted
+val text = orderedNames.mkString(", ")
 
-## 7. Validate at trust boundaries
+val mode = if (enabled) "on" else "off"
+val status = s"Mode: $mode"
+```
 
-Validate untrusted input where it enters and preserve business invariants where operations occur. Let established guarantees reduce repeated defensive checks, while recognizing that authorization and changing state may need checking again.
+Preserve surrounding formatting. Run formatters or reformat existing code only when explicitly asked or required by CI/Git hooks; scope formatting to the relevant files where those checks allow it.
 
-Shape output deliberately and report errors in a form the consumer can use. Represent absence explicitly when it matters; use empty values or no-op behavior only when they preserve the intended meaning.
-
-## 8. Make dependencies visible
-
-Prefer explicit construction and traceable contracts. When artifacts must stay in sync, consider a shared source, code generation, or focused compatibility tests according to the cost and failure risk. Existing dependency injection, reflection, or framework conventions can be reasonable; replace them only for a concrete improvement.
-
-Receive business collaborators through constructor parameters or the project's established injection mechanism. This makes dependency ownership visible and lets tests supply or swap collaborators. Construct and wire them at application composition roots, such as startup code, assembly factories, or framework configuration. When centralizing a shared operation, inject it into its consumers rather than having controllers, jobs, or other adapters construct their own service from lower-level dependencies. Local construction of ordinary values and private implementation helpers is fine; this does not require a new interface or dependency injection framework.
-
-## 9. Stronger enforcement when it pays off
-
-Compiler-enforced boundaries, import rules, and Java modules can protect important architectural constraints. Adopt them when the protection justifies setup and maintenance, especially around stable library APIs or recurring dependency problems. They are optional tools, not prerequisites for a well-designed feature.
-
-In reviews, prioritize concrete defects and costly coupling. Distinguish necessary fixes from optional improvements; a departure from these preferences is not itself a defect.
+In reviews, prioritize concrete defects and costly coupling. Distinguish required fixes from optional design preferences; a preference alone is not a defect.

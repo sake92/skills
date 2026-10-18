@@ -6,8 +6,12 @@ import reports.CourseRoster
 import teachers.*
 import java.util.UUID
 import evaluation.RecordedSuite
+import scala.concurrent.duration.*
 
 class EvaluationSuite extends RecordedSuite {
+  // The nested compiler probe has its own 180-second deadline and bounded cleanup.
+  override val munitTimeout = 210.seconds
+
   private val user = uuid(1)
   private val course = uuid(2)
   private val other = uuid(3)

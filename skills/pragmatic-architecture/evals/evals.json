@@ -79,6 +79,41 @@
         "The change stays focused on the profile boundary and preserves the existing repository and backup responsibilities.",
         "The submission adds executable MUnit coverage that would catch internal account fields leaking into a public response."
       ]
+    },
+    {
+      "id": 7,
+      "name": "invitation-preview",
+      "prompt": "Add the pending-invitation preview in InvitationMessages.pendingPreview for the classroom invitation screen.\n\nShow the cleaned course title followed by the number of pending invitations and their email addresses. Include only invitations that have not been accepted; normalize email addresses with the existing rules, remove duplicates, sort alphabetically, and join with a comma and space. Use these display forms:\n- Scala club: no pending invitations\n- Scala club: 1 pending invitation: ada@example.com\n- Scala club: 2 pending invitations: ada@example.com, grace@example.com\n\nKeep the existing accepted summary and CSV export working. Add MUnit coverage for the preview and run scala-cli test . --server=false.",
+      "expected_output": "A working preview with focused new coverage, readable new expressions, and no changes to working methods, existing tests, or formatting.",
+      "files": [
+        "tests/pragmatic-architecture/invitation-preview/starter"
+      ],
+      "expectations": [
+        "Pending previews normalize, deduplicate, and sort only unaccepted email addresses.",
+        "Empty and singular previews preserve the requested display contract.",
+        "Existing working methods retain their implementation and formatting.",
+        "Existing test bodies are preserved and project configuration is unchanged.",
+        "New or necessarily changed production expressions keep conditionals outside interpolation.",
+        "New or necessarily changed production expressions avoid long receiver chains and nested pipelines."
+      ]
+    },
+    {
+      "id": 9,
+      "name": "workspace-tags-ci",
+      "prompt": "Add WorkspaceTags.tagSummary for the workspace sidebar. Combine the tags from documents that are not archived, use the existing tag normalization rules, discard empty tags, remove duplicates, and sort alphabetically. Use the cleaned workspace name in the heading. Preserve the existing exports and archived-tag list, including their current data contracts.\n\nUse these display forms:\n- Demo: no tags\n- Demo: 1 tag [scala]\n- Demo: 2 tags [build, scala]\n\nAdd MUnit coverage and run the repository checks documented in README.md. The formatter CI job was recently enabled.",
+      "expected_output": "Exact tag display contracts, preserved working logic, readable new expressions, and passing actual CI formatting.",
+      "files": [
+        "tests/pragmatic-architecture/workspace-tags-ci/starter"
+      ],
+      "expectations": [
+        "Workspace summaries flatten only active documents, normalize nonempty tags, deduplicate, and sort.",
+        "Empty and singular tag summaries preserve the exact requested display forms.",
+        "Working production methods retain their syntax trees while CI-required formatting is allowed.",
+        "The original tests and formatter/CI contracts are preserved.",
+        "The candidate passes the actual formatter check required by CI.",
+        "New or changed production expressions keep conditionals outside interpolation.",
+        "New or changed production expressions avoid long receiver chains and nested pipelines."
+      ]
     }
   ]
 }

@@ -38,6 +38,12 @@ def parseJudgeReport(text: String): JudgeReport =
   require(start >= 0 && end >= start, "Judge did not return a JSON object")
   text.substring(start, end + 1).parseJson[JudgeReport]
 
+def terminalAssistantError(events: List[PiEvent]): Option[String] =
+  events.filter(_.`type` == "message_end").flatMap(_.message)
+    .filter(_.role == "assistant").lastOption
+    .filter(_.stopReason.contains("error"))
+    .map(_.errorMessage.getOrElse("Assistant stopped with an unspecified provider error"))
+
 def metrics(
     work: os.Path,
     outputs: os.Path,
@@ -65,13 +71,30 @@ def metrics(
     ),
     output_chars = Seq(patch, finalMessage).filter(os.isFile).map(os.size).sum,
     transcript_chars = transcriptText.length,
-    skill_invoked = skillName.map: name =>
-      val skillPath = s"skills/$name/SKILL.md"
-      events
-        .filter(event => event.`type` == "tool_execution_start" && event.toolName.contains("read"))
-        .flatMap(_.args.flatMap(_.path))
-        .exists(_.contains(skillPath))
+    skill_invoked = skillName.map(name => skillWasRead(events, name))
   )
+
+private def skillWasRead(events: List[PiEvent], name: String): Boolean =
+  val skillPath = s"skills/$name/SKILL.md"
+  val starts = events.filter(_.`type` == "tool_execution_start")
+  val identifiedStarts = starts.flatMap(event => event.toolCallId.map(id => id -> event))
+  val byId = identifiedStarts.toMap
+  val successful = events.filter(event =>
+    event.`type` == "tool_execution_end" && event.isError.contains(false)
+  )
+  successful.exists: completed =>
+    val started = completed.toolCallId.flatMap(byId.get)
+    val requested = started.exists: event =>
+      if event.toolName.contains("read") then event.args.flatMap(_.path).exists(_.contains(skillPath))
+      else if event.toolName.contains("bash") then event.args.flatMap(_.command).exists(_.contains(skillPath))
+      else false
+    val content = completed.result.toList.flatMap(_.content)
+    val textBlocks = content.flatMap(_.text)
+    val text = textBlocks.mkString("\n").replace("\r\n", "\n")
+    val sections = text.split("(?m)^---[ \\t]*$", 3)
+    val document = sections.length == 3 &&
+      sections(1).linesIterator.exists(_.trim == s"name: $name") && sections(2).trim.nonEmpty
+    requested && document
 
 def judgeExpectations(rubric: String): List[String] =
   rubric.linesIterator

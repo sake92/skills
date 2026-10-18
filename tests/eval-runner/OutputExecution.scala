@@ -124,7 +124,11 @@ def runOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(con
   Candidate(context, process, used, measured)
 
 def validateOutputCandidates(candidates: List[Candidate]): Unit = {
-  val failed = candidates.filter(_.process.exit_code != 0)
+  val failed = candidates.filter: candidate =>
+    val transcript = candidate.context.runDir / "outputs/transcript.jsonl"
+    val providerError = terminalAssistantError(parseEvents(transcript))
+    providerError.foreach(error => System.err.println(s"Candidate provider error: $error"))
+    candidate.process.exit_code != 0 || providerError.nonEmpty
   failed.foreach: candidate =>
     System.err.println(
       s"Candidate failed: ${candidate.context.eval.name} ${candidate.context.configuration} " +
