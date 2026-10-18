@@ -126,19 +126,9 @@ def runOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(con
 def validateOutputCandidates(candidates: List[Candidate]): Unit = {
   val failed = candidates.flatMap: candidate =>
     val transcript = candidate.context.runDir / "outputs/transcript.jsonl"
-    val lastAssistant = parseEvents(transcript)
-      .filter(_.`type` == "message_end")
-      .flatMap(_.message)
-      .filter(_.role == "assistant")
-      .lastOption
     val failure =
       if candidate.process.exit_code != 0 then Some(s"process exit ${candidate.process.exit_code}")
-      else
-        lastAssistant match
-          case None => Some("no completed assistant response")
-          case Some(message) if message.stopReason.exists(Set("error", "aborted")) =>
-            Some(message.errorMessage.getOrElse(s"assistant ${message.stopReason.get}"))
-          case _ => None
+      else terminalAssistantError(parseEvents(transcript))
     failure.map(reason => candidate -> reason)
   failed.foreach: (candidate, reason) =>
     System.err.println(

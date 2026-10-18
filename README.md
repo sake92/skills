@@ -33,7 +33,7 @@ execution, excluding grading; tokens count input and output, excluding cached in
 | [Pragmatic architecture](skills/pragmatic-architecture/README.md) | 26/35 (74.3%) | 35/35 (100%) | +25.7 pp |
 | [Process hygiene](skills/process-hygiene/README.md) | 23/29 (79.3%) | 28/29 (96.6%) | +17.2 pp |
 | [Twelve-Factor app](skills/twelve-factor-app/README.md) | 7/8 (87.5%) | 8/8 (100%) | +12.5 pp |
-| [Codeps](skills/codeps/README.md) | 8/13 (61.5%) | 13/13 (100%) | +38.5 pp |
+| [Codeps](skills/codeps/README.md) | 9/13 (69.2%) | 12/13 (92.3%) | +23.1 pp |
 | [Pragmatic testing](skills/pragmatic-testing/README.md) | 5/8 (62.5%) | 7/8 (87.5%) | +25.0 pp |
 | [CLI design](skills/cli-design/README.md) | 5/9 (55.6%) | 9/9 (100%) | +44.4 pp |
 

@@ -1,0 +1,10 @@
+name: checks
+on: [push, pull_request]
+jobs:
+  scala:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: VirtusLab/scala-cli-setup@v1
+      - run: scala-cli fmt . --check --server=false
+      - run: scala-cli test . --server=false

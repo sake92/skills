@@ -20,6 +20,35 @@ def copyTree(
         if os.isDir(source) then os.makeDir.all(target)
         else os.copy(source, target, replaceExisting = true, createFolders = true)
 
+/** Preserve repository-relative Scala CLI file imports in each isolated grader snapshot. */
+def snapshotGradingSources(root: os.Path, sources: List[os.Path], target: os.Path): List[os.Path] =
+  val excluded = Set(".git", ".scala-build", ".bsp")
+  val visited = scala.collection.mutable.Set.empty[os.Path]
+  val directive = "(?m)^\\s*//>\\s+using\\s+file\\s+([^\\r\\n]+)".r
+  val argument = "\"([^\"]+)\"|'([^']+)'|(\\S+)".r
+  def snapshotFile(source: os.Path): Unit =
+    require(source.startsWith(root), s"Grader source must be inside the repository: $source")
+    if visited.add(source) then
+      os.copy(source, target / source.relativeTo(root), replaceExisting = true, createFolders = true)
+      if source.ext == "scala" then
+        directive
+          .findAllMatchIn(os.read(source))
+          .foreach: line =>
+            argument
+              .findAllMatchIn(line.group(1))
+              .foreach: value =>
+                val path = (1 to 3).iterator.map(value.group).find(_ != null).get
+                val dependency = os.Path(path, source / os.up)
+                if os.isDir(dependency) then snapshotDirectory(dependency)
+                else snapshotFile(dependency)
+  def snapshotDirectory(source: os.Path): Unit =
+    os.walk(source)
+      .filter(os.isFile)
+      .filterNot(_.relativeTo(source).segments.exists(excluded))
+      .foreach(snapshotFile)
+  sources.foreach(snapshotDirectory)
+  sources.map(source => target / source.relativeTo(root))
+
 def runProcess(
     label: String,
     command: Seq[String],

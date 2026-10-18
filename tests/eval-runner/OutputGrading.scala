@@ -9,14 +9,18 @@ def gradeOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(c
   val qualitative = judgeExpectations(rubric)
   val deterministicTexts = context.eval.expectations.filterNot(qualitative.toSet)
   val deterministicPath = context.runDir / "deterministic-grading.json"
+  val graderRoot = context.runDir / "protected-grading"
+  val gradingSources = snapshotGradingSources(
+    environment.root,
+    List(environment.evalRoot / "grading", environment.evalRoot / context.eval.name / "grading"),
+    graderRoot
+  )
   val deterministic = runProcess(
     s"${context.eval.name} ${context.configuration} deterministic grade ${context.runNumber}",
     Seq(
       "scala-cli",
-      "test",
-      (environment.evalRoot / "grading").toString,
-      (environment.evalRoot / context.eval.name / "grading").toString
-    ) ++
+      "test"
+    ) ++ gradingSources.map(_.toString) ++
       // Replay graders compile submissions in child processes; keep candidate dependencies out of their classpath.
       Option
         .unless(os.isFile(environment.evalRoot / context.eval.name / "grading/replays-submission"))(
@@ -47,7 +51,7 @@ def gradeOutputCandidate(environment: OutputEnvironment, config: OutputConfig)(c
   )
 
   val judged =
-    if config.runJudge then qualitativeJudge(environment, config, context, rubric, qualitative)
+    if config.runJudge && qualitative.nonEmpty then qualitativeJudge(environment, config, context, rubric, qualitative)
     else Nil
   val allByText = (deterministicReport.expectations ++ judged).map(result => result.text -> result).toMap
   val included = if config.runJudge then context.eval.expectations else deterministicTexts

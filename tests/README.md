@@ -55,12 +55,27 @@ scala tests/run-eval.scala --server=false -- output \
 
 Single-configuration runs write `runs.json` and the normal per-run artifacts.
 Comparative runs additionally write `benchmark.json`.
+Provider errors invalidate candidate runs even when Pi exits successfully;
+they must not be interpreted as skill failures or included in benchmark scores.
 
 The caller-compatibility scenario can be selected with
 `--case repository-with-callers`. Its starter includes passing lookup/export
 tests and an existing consumer of the immutable snapshot API. The task requests
 email lookup support; protected grading checks the enhancement and preservation
 of the needed API alongside removal of unused mutable escape hatches.
+
+Expression and change-scope cases:
+
+- `--case invitation-preview`: pending-invitation text with exact empty/singular/plural forms.
+  Protected checks preserve existing working methods and formatting while checking
+  new expressions for conditional interpolation and long chains.
+- `--case workspace-tags-ci`: a summary across nested tag lists with an actual
+  formatter check required by CI. Existing methods and tests retain their syntax
+  trees; formatting changes are allowed, semantic cleanup is rejected.
+
+The expression checks inspect new or changed methods in each fixture's production
+file. Receiver depth above three is a syntax proxy, not a general readability
+metric. Existing dense expressions are deliberately permitted.
 
 Two FlowRun-inspired cases add positive type-safety and response-model coverage:
 
@@ -154,3 +169,14 @@ outputs, and grades and produces a standalone HTML viewer with `--static`.
 The Scala runner writes grading and benchmark artifacts; it does not
 automatically generate the viewer. Supply `--benchmark` when reviewing a paired
 comparison. Single-configuration smoke runs have no comparison benchmark.
+
+Runner regression checks:
+
+```bash
+scala test tests/run-eval.scala tests/eval-runner/Metrics.test.scala --server=false
+```
+
+Skill-read detection requires a successful matching tool result containing the
+skill's frontmatter and instructions. Both `read` and shell reads are supported;
+failed reads and commands that merely mention the path do not count. Protected
+graders compile in separate per-run directories outside candidate workspaces.
